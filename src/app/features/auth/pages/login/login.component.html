@@ -1,0 +1,137 @@
+<div class="sass-login min-h-screen flex flex-col lg:flex-row relative bg-white">
+
+  @if (serverError()) {
+    <div class="sass-alert sass-alert--error absolute top-5 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4 animate-fade-in">
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+        <span class="material-icons text-red-600">error</span>
+        <div class="flex-1">
+          <h3 class="text-sm font-bold text-red-900">Error de conexión</h3>
+          <p class="text-xs text-red-700 mt-0.5">{{ serverError() }}</p>
+        </div>
+        <button type="button" (click)="closeServerError()" class="sass-action text-red-400 hover:text-red-700">
+          <span class="material-icons text-lg">close</span>
+        </button>
+      </div>
+    </div>
+  }
+
+  <div class="sass-login__content flex-1 flex items-center justify-center px-6 py-12 lg:w-1/2 bg-white">
+    <div class="sass-login__form-container w-full max-w-sm animate-fade-in">
+
+      <div class="sass-login__brand flex items-center gap-3 mb-12">
+        <div class="sass-login__brand-icon w-12 h-12 rounded-lg bg-teal-800 flex items-center justify-center shrink-0">
+          <span class="material-icons text-white">local_hospital</span>
+        </div>
+        <div>
+          <p class="text-xl font-bold text-slate-900 leading-none">SaludConsultorio</p>
+          <p class="text-[10px] text-teal-700 font-bold uppercase tracking-widest mt-1">Sistema Médico</p>
+        </div>
+      </div>
+
+      <div class="mb-8">
+        <h1 class="text-3xl font-bold text-slate-900">Bienvenido</h1>
+        <p class="mt-2 text-sm text-slate-500 font-medium">Ingresa tus credenciales para acceder</p>
+      </div>
+
+      @if (error()) {
+        <div class="sass-alert sass-alert--error mb-5 p-3 text-xs bg-red-50 text-red-700 rounded-lg border border-red-200 font-bold">
+          {{ error() }}
+        </div>
+      }
+
+      <form (submit)="handleSubmit($event)" class="sass-form space-y-5">
+        <div class="space-y-2">
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Usuario</label>
+          <div class="relative">
+            <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">person</span>
+            <input
+              type="text"
+              required
+              placeholder="nombre.usuario"
+              [value]="usuario()"
+              (input)="usuario.set($any($event.target).value)"
+              class="sass-control w-full h-11 pl-10 pr-3 bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:bg-white focus:border-teal-700 focus:outline-none transition-colors"
+            />
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Contraseña</label>
+          <div class="relative">
+            <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">lock</span>
+            <input
+              [type]="showPass() ? 'text' : 'password'"
+              required
+              placeholder="••••••••"
+              [value]="claveAcceso()"
+              (input)="claveAcceso.set($any($event.target).value)"
+              class="sass-control w-full h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 text-slate-900 text-sm rounded-lg focus:bg-white focus:border-teal-700 focus:outline-none transition-colors"
+            />
+            <button
+              type="button"
+              (click)="toggleShowPass()"
+              class="sass-action absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-teal-800 transition-colors"
+            >
+              <span class="material-icons text-lg">{{ showPass() ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="cargando()"
+          class="sass-action sass-submit-button w-full h-12 mt-4 bg-teal-800 hover:bg-teal-900 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2 disabled:bg-slate-200 disabled:text-slate-400"
+        >
+          @if (cargando()) {
+            <span class="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            <span>Autenticando...</span>
+          } @else {
+            <span>Iniciar sesión</span>
+          }
+        </button>
+      </form>
+
+      <p class="mt-10 text-center text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        © 2026 SaludConsultorio
+      </p>
+    </div>
+  </div>
+
+  <div class="sass-login__image relative lg:flex-1 lg:w-1/2 min-h-[400px] lg:min-h-screen bg-slate-100 order-first lg:order-last">
+
+    <img
+      src="/h2.jpg"
+      alt="Consultorio"
+      class="absolute inset-0 w-full h-full object-cover"
+    />
+
+    <div class="absolute inset-0 bg-teal-950/30"></div>
+
+    <div class="relative h-full flex flex-col justify-end p-8 lg:p-12">
+      <div class="sass-login__info-card bg-teal-900 border border-teal-800 p-8 rounded-xl w-full max-w-lg">
+
+        <div class="sass-status sass-status--active inline-flex items-center gap-2 px-3 py-1.5 bg-teal-950 border border-teal-800 rounded-md mb-6">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-teal-300 text-[10px] font-bold uppercase tracking-widest">Sistema activo</span>
+        </div>
+
+        <h2 class="text-3xl lg:text-4xl font-bold text-white leading-tight mb-4">
+          Cuidamos la salud,<br>simplificamos la gestión
+        </h2>
+
+        <p class="text-teal-100 text-sm mb-8 font-medium">
+          Administra pacientes, doctores, citas y especialidades desde un solo panel diseñado para consultorios médicos.
+        </p>
+
+        <div class="sass-login__stats grid grid-cols-3 gap-4 pt-6 border-t border-teal-800">
+          @for (item of stats(); track item.label) {
+            <div class="sass-login__stat">
+              <p class="text-2xl font-bold text-white">{{ item.value }}</p>
+              <p class="text-teal-400 text-[10px] font-bold uppercase tracking-wider mt-1">{{ item.label }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
