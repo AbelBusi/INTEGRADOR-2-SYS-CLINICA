@@ -1,4 +1,4 @@
-package com.backend.salud;
+package com.backend.salud.repository;
 
 import com.salud.consultorio.dto.persona.PersonaLeerDTO;
 import com.salud.consultorio.model.entity.Persona;

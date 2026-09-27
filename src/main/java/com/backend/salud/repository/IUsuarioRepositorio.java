@@ -1,4 +1,4 @@
-package com.backend.salud;
+package com.backend.salud.repository;
 
 import com.salud.consultorio.dto.usuario.UsuarioDetalleLeerDTO;
 import com.salud.consultorio.dto.usuario.UsuarioListaDTO;

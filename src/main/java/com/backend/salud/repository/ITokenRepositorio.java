@@ -1,4 +1,4 @@
-package com.backend.salud;
+package com.backend.salud.repository;
 
 import com.salud.consultorio.model.entity.Token;
 import org.springframework.data.jpa.repository.JpaRepository;
