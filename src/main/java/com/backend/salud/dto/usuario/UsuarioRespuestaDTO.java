@@ -1,7 +1,7 @@
 package com.backend.salud.dto.usuario;
 
-import com.salud.consultorio.dto.persona.PersonaRefDTO;
-import com.salud.consultorio.dto.rol.RolRefDTO;
+import com.backend.salud.dto.persona.PersonaRefDTO;
+import com.backend.salud.dto.rol.RolRefDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 

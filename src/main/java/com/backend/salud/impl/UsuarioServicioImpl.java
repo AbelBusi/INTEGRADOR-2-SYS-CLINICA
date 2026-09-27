@@ -1,11 +1,11 @@
 package com.backend.salud.impl;
 
-import com.salud.consultorio.dto.usuario.UsuarioDetalleLeerDTO;
-import com.salud.consultorio.dto.usuario.UsuarioListaDTO;
-import com.salud.consultorio.dto.usuario.UsuarioRespuestaDTO;
-import com.salud.consultorio.dto.usuario.UsuarioRolDTO;
-import com.salud.consultorio.repository.IUsuarioRepositorio;
-import com.salud.consultorio.service.IUsuarioServicio;
+import com.backend.salud.dto.usuario.UsuarioDetalleLeerDTO;
+import com.backend.salud.dto.usuario.UsuarioListaDTO;
+import com.backend.salud.dto.usuario.UsuarioRespuestaDTO;
+import com.backend.salud.dto.usuario.UsuarioRolDTO;
+import com.backend.salud.repository.IUsuarioRepositorio;
+import com.backend.salud.service.IUsuarioServicio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
