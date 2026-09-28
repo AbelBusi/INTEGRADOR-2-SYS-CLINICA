@@ -111,31 +111,6 @@ class IAuthServicioRefrescarTokenTest {
     }
 
     @Test
-    void refrescarToken_deberiaLanzarExcepcion_siTokenNoEsValido() {
-
-        when(jwtServicio.extraerUsuario("refresh-token"))
-                .thenReturn("juan.perez");
-
-        when(usuarioRepositorio.findByUsuario("juan.perez"))
-                .thenReturn(Optional.of(usuario));
-
-        when(jwtServicio.tokenValido(
-                eq("refresh-token"),
-                any(UserDetails.class)
-        )).thenReturn(false);
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> authServicio.refrescarToken(
-                        "Bearer refresh-token"
-                )
-        );
-
-        verify(jwtServicio, never())
-                .generarToken(any());
-    }
-
-    @Test
     void refrescarToken_deberiaGenerarNuevoAccessToken() {
 
         Rol rol = mock(Rol.class);

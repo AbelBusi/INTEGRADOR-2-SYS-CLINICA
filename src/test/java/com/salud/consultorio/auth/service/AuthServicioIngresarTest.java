@@ -5,6 +5,7 @@ import com.salud.consultorio.auth.dto.TokenResponse;
 import com.salud.consultorio.auth.exception.AccesoFueraHorarioException;
 import com.salud.consultorio.auth.impl.IAuthServicioImpl;
 import com.salud.consultorio.model.entity.Doctor;
+import com.salud.consultorio.model.entity.Recepcionista;
 import com.salud.consultorio.model.entity.Usuario;
 import com.salud.consultorio.repository.IDoctorRepositorio;
 import com.salud.consultorio.repository.IRecepcionistaRepositorio;
@@ -87,8 +88,7 @@ class IAuthServicioIngresarTest {
         when(jwtServicio.generarTokenRefrescado(usuario))
                 .thenReturn("refresh-token");
 
-        TokenResponse resultado =
-                authServicio.ingresar(request);
+        TokenResponse resultado = authServicio.ingresar(request);
 
         assertNotNull(resultado);
         assertEquals("access-token", resultado.accessToken());
@@ -164,8 +164,8 @@ class IAuthServicioIngresarTest {
                         "123456"
                 );
 
-        var recepcionista =
-                mock(com.salud.consultorio.model.entity.Recepcionista.class);
+        Recepcionista recepcionista =
+                mock(Recepcionista.class);
 
         when(recepcionista.getId())
                 .thenReturn(10);
@@ -204,14 +204,16 @@ class IAuthServicioIngresarTest {
     @Test
     void ingresar_deberiaDenegarAcceso_siRecepcionistaEstaFueraDeHorario() {
 
+        usuario.setUsuario("recepcionista");
+
         InicioSolicitud request =
                 new InicioSolicitud(
                         "recepcionista",
                         "123456"
                 );
 
-        var recepcionista =
-                mock(com.salud.consultorio.model.entity.Recepcionista.class);
+        Recepcionista recepcionista =
+                mock(Recepcionista.class);
 
         when(recepcionista.getId())
                 .thenReturn(10);
@@ -239,12 +241,66 @@ class IAuthServicioIngresarTest {
     }
 
     @Test
-    void ingresar_deberiaDenegarAcceso_siDoctorEstaFueraDeHorario() {
+    void ingresar_deberiaPermitirAcceso_siDoctorEstaEnHorario() {
+
+        usuario.setUsuario("doctor");
 
         InicioSolicitud request =
-                new InicioSolicitud("doctor", "123456");
+                new InicioSolicitud(
+                        "doctor",
+                        "123456"
+                );
 
-        Doctor doctor = mock(Doctor.class);
+        Doctor doctor =
+                mock(Doctor.class);
+
+        when(doctor.getId())
+                .thenReturn(20);
+
+        when(usuarioRepositorio.findByUsuario("doctor"))
+                .thenReturn(Optional.of(usuario));
+
+        when(recepcionistaRepositorio.findByUsuario("doctor"))
+                .thenReturn(Optional.empty());
+
+        when(doctorRepositorio.findByUsuario("doctor"))
+                .thenReturn(Optional.of(doctor));
+
+        when(horarioTrabajoServicio.doctorTrabajaEn(
+                anyInt(),
+                anyInt(),
+                any(LocalTime.class),
+                any(LocalTime.class)
+        )).thenReturn(true);
+
+        when(jwtServicio.generarToken(usuario))
+                .thenReturn("access-token");
+
+        when(jwtServicio.generarTokenRefrescado(usuario))
+                .thenReturn("refresh-token");
+
+        TokenResponse resultado =
+                authServicio.ingresar(request);
+
+        assertNotNull(resultado);
+
+        verify(jwtServicio)
+                .generarToken(usuario);
+    }
+
+    @Test
+    void ingresar_deberiaDenegarAcceso_siDoctorEstaFueraDeHorario() {
+
+        usuario.setUsuario("doctor");
+
+        InicioSolicitud request =
+                new InicioSolicitud(
+                        "doctor",
+                        "123456"
+                );
+
+        Doctor doctor =
+                mock(Doctor.class);
 
         when(doctor.getId())
                 .thenReturn(20);
@@ -273,5 +329,4 @@ class IAuthServicioIngresarTest {
         verify(jwtServicio, never())
                 .generarToken(any());
     }
-
 }
