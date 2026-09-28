@@ -1,8 +1,8 @@
 package com.backend.salud.service;
 
-import com.salud.consultorio.dto.paciente.*;
-import com.salud.consultorio.dto.paciente.NombrePacientesDTO;
-import com.salud.consultorio.model.entity.Paciente;
+import com.backend.salud.dto.paciente.*;
+import com.backend.salud.dto.paciente.NombrePacientesDTO;
+import com.backend.salud.model.entity.Paciente;
 
 import java.util.List;
 import java.util.Optional;
