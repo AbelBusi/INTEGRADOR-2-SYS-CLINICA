@@ -45,3 +45,12 @@ jobs:
 
       - name: Ejecutar pruebas
         run: mvn test
+
+      - name: Publicar resultados de pruebas
+        if: ${{ !cancelled() }}
+        uses: dorny/test-reporter@v2
+        with:
+          name: Resultados de pruebas JUnit
+          path: target/surefire-reports/*.xml
+          reporter: java-junit
+          fail-on-error: true
