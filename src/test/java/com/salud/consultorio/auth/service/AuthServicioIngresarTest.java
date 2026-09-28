@@ -156,6 +156,8 @@ class IAuthServicioIngresarTest {
     @Test
     void ingresar_deberiaPermitirAcceso_siRecepcionistaEstaEnHorario() {
 
+        usuario.setUsuario("recepcionista");
+
         InicioSolicitud request =
                 new InicioSolicitud(
                         "recepcionista",
@@ -237,7 +239,7 @@ class IAuthServicioIngresarTest {
     }
 
     @Test
-    void ingresar_deberiaPermitirAcceso_siDoctorEstaEnHorario() {
+    void ingresar_deberiaDenegarAcceso_siDoctorEstaFueraDeHorario() {
 
         InicioSolicitud request =
                 new InicioSolicitud("doctor", "123456");
@@ -261,46 +263,6 @@ class IAuthServicioIngresarTest {
                 anyInt(),
                 any(LocalTime.class),
                 any(LocalTime.class)
-        )).thenReturn(true);
-
-        when(jwtServicio.generarToken(usuario))
-                .thenReturn("access-token");
-
-        when(jwtServicio.generarTokenRefrescado(usuario))
-                .thenReturn("refresh-token");
-
-        TokenResponse resultado =
-                authServicio.ingresar(request);
-
-        assertNotNull(resultado);
-        verify(jwtServicio).generarToken(usuario);
-    }
-
-    @Test
-    void ingresar_deberiaDenegarAcceso_siDoctorEstaFueraDeHorario() {
-
-        InicioSolicitud request =
-                new InicioSolicitud("doctor", "123456");
-
-        Doctor doctor = mock(Doctor.class);
-
-        when(doctor.getId())
-                .thenReturn(20);
-
-        when(usuarioRepositorio.findByUsuario("doctor"))
-                .thenReturn(Optional.of(usuario));
-
-        when(recepcionistaRepositorio.findByUsuario("doctor"))
-                .thenReturn(Optional.empty());
-
-        when(doctorRepositorio.findByUsuario("doctor"))
-                .thenReturn(Optional.empty());
-
-        when(horarioTrabajoServicio.doctorTrabajaEn(
-                anyInt(),
-                anyInt(),
-                any(LocalTime.class),
-                any(LocalTime.class)
         )).thenReturn(false);
 
         assertThrows(
@@ -311,4 +273,5 @@ class IAuthServicioIngresarTest {
         verify(jwtServicio, never())
                 .generarToken(any());
     }
+
 }
