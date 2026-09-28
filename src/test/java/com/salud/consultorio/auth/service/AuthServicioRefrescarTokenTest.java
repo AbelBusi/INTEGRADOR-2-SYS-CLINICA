@@ -2,6 +2,7 @@ package com.salud.consultorio.auth.service;
 
 import com.salud.consultorio.auth.dto.TokenResponse;
 import com.salud.consultorio.auth.impl.IAuthServicioImpl;
+import com.salud.consultorio.model.entity.Rol;
 import com.salud.consultorio.model.entity.Usuario;
 import com.salud.consultorio.repository.ITokenRepositorio;
 import com.salud.consultorio.repository.IUsuarioRepositorio;
@@ -14,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -135,6 +137,13 @@ class IAuthServicioRefrescarTokenTest {
 
     @Test
     void refrescarToken_deberiaGenerarNuevoAccessToken() {
+
+        Rol rol = mock(Rol.class);
+
+        when(rol.getRolPermisos())
+                .thenReturn(Collections.emptyList());
+
+        usuario.setRol(rol);
 
         when(jwtServicio.extraerUsuario("refresh-token"))
                 .thenReturn("juan.perez");
