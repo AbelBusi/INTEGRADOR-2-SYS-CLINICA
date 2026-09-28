@@ -27,6 +27,7 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
 
         return especialidadRepositorio.leerEspecialidades();
 
+
     }
 
     @Transactional(readOnly = true)
@@ -40,6 +41,8 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
     public List<EspecialidadLeerDTO> listarInactivo() {
         return especialidadRepositorio.leerEspecialidadesInactivas();
     }
+
+
 
     @Transactional(readOnly = true)
     @Override
@@ -57,6 +60,9 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
 
     }
 
+
+
+
     @Transactional
     @Override
     public EspecialidadRespuestaDTO crear(EspecialidadCrearDTO dto) {
@@ -66,6 +72,7 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
             throw new DataIntegrityViolationException("No se puede tener dos especialidades con el mismo nombre");
 
         }
+
 
         Especialidad especialidad = especialidadMapper.especialidadDtoToEspecialidad(dto);
 
@@ -105,11 +112,16 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
         return especialidadRepositorio.existsById(id);
     }
 
+
+    
     @Transactional(readOnly = true)
     @Override
     public boolean existeEspecialidadNombre(String nombre) {
         return especialidadRepositorio.existsByNombre(nombre);
     }
+
+
+
 
     @Transactional(readOnly = true)
     @Override

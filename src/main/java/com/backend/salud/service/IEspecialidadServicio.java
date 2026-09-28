@@ -49,5 +49,5 @@ public interface IEspecialidadServicio {
     boolean existeEspecialidadNombre(String nombre);
 
 
-    
+
 }
