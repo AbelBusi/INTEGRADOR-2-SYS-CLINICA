@@ -3,6 +3,8 @@ package com.salud.consultorio.auth.service;
 import com.salud.consultorio.auth.dto.TokenResponse;
 import com.salud.consultorio.auth.dto.UsuarioCrearDTO;
 import com.salud.consultorio.auth.impl.IAuthServicioImpl;
+import com.salud.consultorio.dto.persona.PersonaRefDTO;
+import com.salud.consultorio.dto.rol.RolRefDTO;
 import com.salud.consultorio.model.entity.Persona;
 import com.salud.consultorio.model.entity.Rol;
 import com.salud.consultorio.model.entity.Token;
@@ -68,7 +70,9 @@ class IAuthServicioRegistrarTest {
 
     @BeforeEach
     void setUp() {
+
         persona = new Persona();
+
         rol = new Rol();
 
         usuario = new Usuario();
@@ -78,6 +82,10 @@ class IAuthServicioRegistrarTest {
         usuario.setRol(rol);
 
         dto = new UsuarioCrearDTO();
+        dto.setUsuario("juan.perez");
+        dto.setClaveAcceso("123456");
+        dto.setRol(new RolRefDTO(1));
+        dto.setPersona(new PersonaRefDTO(1));
     }
 
     @Test
@@ -101,7 +109,7 @@ class IAuthServicioRegistrarTest {
         when(rolMapper.rolRefDtoToRol(any()))
                 .thenReturn(rol);
 
-        when(passwordEncoder.encode(anyString()))
+        when(passwordEncoder.encode("123456"))
                 .thenReturn("password-encriptado");
 
         when(usuarioRepositorio.save(usuario))
@@ -116,14 +124,31 @@ class IAuthServicioRegistrarTest {
         TokenResponse resultado = authServicio.registrar(dto);
 
         assertNotNull(resultado);
-        assertEquals("access-token", resultado.accessToken());
-        assertEquals("refresh-token", resultado.refreshToken());
 
-        verify(usuarioRepositorio).save(usuario);
-        verify(passwordEncoder).encode(anyString());
-        verify(jwtServicio).generarToken(usuario);
-        verify(jwtServicio).generarTokenRefrescado(usuario);
-        verify(tokenRepositorio).save(any(Token.class));
+        assertEquals(
+                "access-token",
+                resultado.accessToken()
+        );
+
+        assertEquals(
+                "refresh-token",
+                resultado.refreshToken()
+        );
+
+        verify(usuarioRepositorio)
+                .save(usuario);
+
+        verify(passwordEncoder)
+                .encode("123456");
+
+        verify(jwtServicio)
+                .generarToken(usuario);
+
+        verify(jwtServicio)
+                .generarTokenRefrescado(usuario);
+
+        verify(tokenRepositorio)
+                .save(any(Token.class));
     }
 
     @Test
