@@ -113,7 +113,7 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
     }
 
 
-    
+
     @Transactional(readOnly = true)
     @Override
     public boolean existeEspecialidadNombre(String nombre) {
