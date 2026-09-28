@@ -1,14 +1,14 @@
 package com.backend.salud.impl;
 
-import com.salud.consultorio.dto.paciente.*;
-import com.salud.consultorio.dto.paciente.NombrePacientesDTO;
-import com.salud.consultorio.model.entity.Paciente;
-import com.salud.consultorio.model.entity.Persona;
-import com.salud.consultorio.model.mapper.IPacienteMapper;
-import com.salud.consultorio.model.mapper.IPersonaMapper;
-import com.salud.consultorio.repository.IPacienteRepositorio;
-import com.salud.consultorio.service.IPacienteServicio;
-import com.salud.consultorio.service.IPersonaServicio;
+import com.backend.salud.dto.paciente.*;
+import com.backend.salud.dto.paciente.NombrePacientesDTO;
+import com.backend.salud.model.entity.Paciente;
+import com.backend.salud.model.entity.Persona;
+import com.backend.salud.model.mapper.IPacienteMapper;
+import com.backend.salud.model.mapper.IPersonaMapper;
+import com.backend.salud.repository.IPacienteRepositorio;
+import com.backend.salud.service.IPacienteServicio;
+import com.backend.salud.service.IPersonaServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
