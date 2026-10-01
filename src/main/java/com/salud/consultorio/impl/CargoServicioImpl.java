@@ -4,11 +4,14 @@ import com.salud.consultorio.dto.cargo.CargoActualizarDTO;
 import com.salud.consultorio.dto.cargo.CargoCrearDTO;
 import com.salud.consultorio.dto.cargo.CargoRespuestaDTO;
 import com.salud.consultorio.dto.paciente.PacienteLeerDTO;
+import com.salud.consultorio.model.entity.Cargo;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.mapper.ICargoMapper;
 import com.salud.consultorio.repository.ICargoRepositorio;
 import com.salud.consultorio.service.ICargoServicio;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,13 +33,26 @@ public class CargoServicioImpl implements ICargoServicio  {
     @Transactional(readOnly = true)
     @Override
     public CargoRespuestaDTO entidadPorID(Integer id) {
-        return null;
+        return cargoRepositorio.findById(id).map(
+                cargoMapper::toDto
+        ).orElseThrow( () -> new EntityNotFoundException("El cargo no existe."));
     }
 
     @Transactional
     @Override
     public CargoRespuestaDTO crear(CargoCrearDTO dto) {
-        return null;
+
+        if (cargoRepositorio.existsByNombre(dto.nombre())){
+            throw new DataIntegrityViolationException("No se puede duplicar un cargo");
+        }
+
+        Cargo cargo = cargoMapper.toEntity(dto);
+
+
+        cargoRepositorio.save(cargo);
+
+        return cargoMapper.toDto(cargo);
+
     }
 
     @Transactional

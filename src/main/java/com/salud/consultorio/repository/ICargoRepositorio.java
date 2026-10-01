@@ -13,6 +13,8 @@ import java.util.List;
 @Repository
 public interface ICargoRepositorio extends JpaRepository<Cargo, Integer> {
 
+    boolean existsByNombre(String nombre);
+
     @Query("""
             SELECT new com.salud.consultorio.dto.cargo.CargoRespuestaDTO(
                 c.id,

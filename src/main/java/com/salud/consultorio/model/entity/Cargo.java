@@ -17,7 +17,7 @@ public class Cargo {
     @Column(name = "id_cargo")
     private Integer id;
 
-    @Column(name = "nombre", nullable = false, length = 60)
+    @Column(name = "nombre", nullable = false, length = 60, unique = true)
     private String nombre;
 
     @Column(name = "descripcion", nullable = false, length = 200)

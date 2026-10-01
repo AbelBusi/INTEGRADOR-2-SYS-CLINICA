@@ -13,12 +13,12 @@ public interface ICargoMapper {
 
 
     @Mapping(target = "id",ignore = true)
+    @Mapping(target = "estado",ignore = true)
     Cargo toEntity(CargoCrearDTO dto);
 
     CargoRespuestaDTO toDto(Cargo entidad);
 
     void updateFromDto(CargoActualizarDTO dto, @MappingTarget Cargo entidad);
-
 
 
 }
