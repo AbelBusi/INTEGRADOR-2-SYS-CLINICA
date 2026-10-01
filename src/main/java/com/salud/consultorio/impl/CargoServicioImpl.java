@@ -8,6 +8,7 @@ import com.salud.consultorio.repository.ICargoRepositorio;
 import com.salud.consultorio.service.ICargoServicio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -17,31 +18,37 @@ public class CargoServicioImpl implements ICargoServicio  {
 
     private final ICargoRepositorio cargoRepositorio;
 
+    @Transactional(readOnly = true)
     @Override
     public List<CargoRespuestaDTO> lista(EntidadEstado estado) {
         return List.of();
     }
 
+    @Transactional(readOnly = true)
     @Override
     public CargoRespuestaDTO entidadPorID(Integer id) {
         return null;
     }
 
+    @Transactional
     @Override
     public CargoRespuestaDTO crear(CargoCrearDTO dto) {
         return null;
     }
 
+    @Transactional
     @Override
     public CargoRespuestaDTO actualizar(CargoActualizarDTO dto) {
         return null;
     }
 
+    @Transactional
     @Override
     public void eliminarPorId(Integer id) {
 
     }
 
+    @Transactional
     @Override
     public void cambiarEstado(Integer id, EntidadEstado estado) {
 
