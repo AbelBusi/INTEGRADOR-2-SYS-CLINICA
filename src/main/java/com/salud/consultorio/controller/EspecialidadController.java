@@ -43,36 +43,19 @@ public class EspecialidadController {
 
     }
 
-    @Operation(summary = "Listar especialidades")
+    @Operation(summary = "Listar especialidades por estado")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de especialidades obtenida correctamente")
     })
     @GetMapping
-    public ResponseEntity<MensajeResponse> leerEspecialidades(
+    public ResponseEntity<MensajeResponse> listar(
             @RequestParam(required = false,name = "estado") EntidadEstado estado){
 
-        if (estado!=null){
-
-            if (estado.equals(estado.ACTIVO)){
-                List<EspecialidadLeerDTO> especialidades =especialidadServicio.listarActivos();
-                return new ResponseEntity<>(MensajeResponse.builder()
-                        .mensaje("LISTA DE ESPECIALIDADES POR ESTADO ACTIVO")
-                        .object(especialidades).build(),HttpStatus.OK);
-            }
-
-            if (estado.equals(estado.INACTIVO)){
-                    List<EspecialidadLeerDTO> especialidades =especialidadServicio.listarInactivo();
-                return new ResponseEntity<>(MensajeResponse.builder()
-                        .mensaje("LISTA DE ESPECIALIDADES POR ESTADO INACTIVO")
-                        .object(especialidades).build(),HttpStatus.OK);
-            }
-
-        }
-        List<EspecialidadLeerDTO> especialidades =especialidadServicio.listarTodos();
+        List<EspecialidadRespuestaDTO> listaEntidades =especialidadServicio.lista(estado);
 
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("LISTA DE ESPECIALIDADES")
-                .object(especialidades).build(),HttpStatus.OK);
+                .object(listaEntidades).build(),HttpStatus.OK);
 
     }
 
@@ -86,11 +69,11 @@ public class EspecialidadController {
     @GetMapping("/{id}")
     public ResponseEntity<MensajeResponse> leerEspecialidadPorId(@PathVariable Integer id){
 
-        EspecialidadLeerDTO leer = especialidadServicio.leerPorId(id);
+        EspecialidadRespuestaDTO entidad = especialidadServicio.entidadPorID(id);
 
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Informacion del especialidad solicitado")
-                .object(leer).build(),HttpStatus.OK);
+                .object(entidad).build(),HttpStatus.OK);
 
     }
 
@@ -126,6 +109,20 @@ public class EspecialidadController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Especialidad eliminada con exito")
                 .object(null).build(),HttpStatus.NO_CONTENT);
+
+    }
+
+    @PostMapping("/{id}")
+    public ResponseEntity<MensajeResponse> cambiarEstado(
+            @PathVariable Integer id,
+            @RequestParam(name = "estado", required = true) EntidadEstado estado
+    ) {
+
+        especialidadServicio.cambiarEstado(id, estado);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("ESTADO DE LA ESPECIALIDAD CAMBIADA CORRECTAMENTE")
+                .build(), HttpStatus.OK);
 
     }
 

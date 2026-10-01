@@ -24,6 +24,7 @@ public class Especialidad {
     private String descripcion;
 
     @Column(name = "estado",nullable = false)
-    private Integer estado;
+    @Builder.Default
+    private Integer estado = 1;
 
 }

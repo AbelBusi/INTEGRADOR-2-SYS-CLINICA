@@ -29,7 +29,7 @@ public class PacienteServicioImpl implements IPacienteServicio {
 
     @Transactional(readOnly = true)
     @Override
-    public PacienteDetalleDTO traerPacientePorId(Integer id) {
+    public PacienteDetalleDTO entidadPorID(Integer id) {
 
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("El ID del paciente debe ser válido");
@@ -66,11 +66,7 @@ public class PacienteServicioImpl implements IPacienteServicio {
 
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public Optional<Paciente> obtenerPorId(Integer id) {
-        return pacienteRepositorio.findById(id);
-    }
+
 
     @Transactional
     @Override
@@ -148,7 +144,7 @@ public class PacienteServicioImpl implements IPacienteServicio {
             throw new IllegalArgumentException("El id y el estado son obligatorios.");
         }
 
-        return obtenerPorId(id).orElseThrow(
+        return pacienteRepositorio.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("El paciente que desea cambiarle el estado, no existe.")
         );
 

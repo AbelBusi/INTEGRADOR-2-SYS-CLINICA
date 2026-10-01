@@ -1,7 +1,11 @@
 package com.salud.consultorio.impl;
 
+import com.salud.consultorio.dto.cargo.CargoActualizarDTO;
+import com.salud.consultorio.dto.cargo.CargoRespuestaDTO;
 import com.salud.consultorio.dto.especialidad.*;
+import com.salud.consultorio.model.entity.Cargo;
 import com.salud.consultorio.model.entity.Especialidad;
+import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.mapper.IEspecialidadMapper;
 import com.salud.consultorio.repository.IEspecialidadRepositorio;
 import com.salud.consultorio.service.IEspecialidadServicio;
@@ -23,37 +27,17 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
 
     @Transactional(readOnly = true)
     @Override
-    public List<EspecialidadLeerDTO> listarTodos() {
-
-        return especialidadRepositorio.leerEspecialidades();
-
+    public List<EspecialidadRespuestaDTO> lista(EntidadEstado estado) {
+        return listaPorEstado(estado);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<EspecialidadLeerDTO> listarActivos() {
-        return especialidadRepositorio.leerEspecialidadesActivas();
-    }
+    public EspecialidadRespuestaDTO entidadPorID(Integer integer) {
 
-    @Transactional(readOnly = true)
-    @Override
-    public List<EspecialidadLeerDTO> listarInactivo() {
-        return especialidadRepositorio.leerEspecialidadesInactivas();
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public EspecialidadLeerDTO leerPorId(Integer id) {
-        return especialidadRepositorio.leerEspecialidadPorId(id).orElseThrow(
-                ()-> new EntityNotFoundException("No existe la especialidad en la entidad")
-        );
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public Optional<Especialidad> obtenerPorId(Integer integer) {
-
-        return especialidadRepositorio.findById(integer);
+        return especialidadRepositorio.findById(integer).map(
+                especialidadMapper::toDto
+        ).orElseThrow(() -> new EntityNotFoundException("No existe la especialidad"));
 
     }
 
@@ -61,7 +45,7 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
     @Override
     public EspecialidadRespuestaDTO crear(EspecialidadCrearDTO dto) {
 
-        if (existeEspecialidadNombre(dto.getNombre())){
+        if (existeEspecialidadNombre(dto.nombre())){
 
             throw new DataIntegrityViolationException("No se puede tener dos especialidades con el mismo nombre");
 
@@ -72,15 +56,18 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
         Especialidad guardado = especialidadRepositorio.save(especialidad);
 
         return especialidadMapper.toDto(guardado);
+
     }
 
     @Transactional
     @Override
     public EspecialidadRespuestaDTO actualizar(EspecialidadActualizarDTO dto, Integer id) {
 
-        Especialidad especialidad = obtenerPorId(id).orElseThrow(
+        Especialidad especialidad = especialidadRepositorio.findById(id).orElseThrow(
                 ()-> new EntityNotFoundException("No se encuentra la especialidad en la entidad")
         );
+
+        validarDatosUnicos(dto,id);
 
         especialidadMapper.updateFromDto(dto, especialidad);
 
@@ -96,19 +83,96 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
             throw new RuntimeException("Especialidad no encontrada en la entidad ");
         }
 
-        especialidadRepositorio.EspecialidadCambiarEstado(0,id);
-    }
+        especialidadRepositorio.eliminarLogicamente(id);
 
-    @Transactional(readOnly = true)
-    @Override
-    public boolean existeEspecialidad(Integer id) {
-        return especialidadRepositorio.existsById(id);
     }
 
     @Transactional(readOnly = true)
     @Override
     public boolean existeEspecialidadNombre(String nombre) {
         return especialidadRepositorio.existsByNombre(nombre);
+    }
+
+    @Transactional
+    @Override
+    public void cambiarEstado(Integer id, EntidadEstado estado) {
+
+        Especialidad especialidad = validarCambiarEstado(id, estado);
+
+        if (especialidad.getEstado() == 0) {
+            throw new IllegalArgumentException("No se puede cambiar el estado de un cargo eliminado.");
+        }
+
+        if (estado == EntidadEstado.ACTIVO) {
+
+            if (especialidad.getEstado() == 1) {
+                throw new IllegalArgumentException("No se puede activar un estado que ya se encuentra Activo");
+            }
+
+            especialidadRepositorio.activarLogicamente(especialidad.getId());
+
+        }
+
+        if (estado == EntidadEstado.INACTIVO) {
+
+            if (especialidad.getEstado() == 2) {
+                throw new IllegalArgumentException("No se puede desactivar un estado que ya se encuentra desactivado");
+            }
+
+            especialidadRepositorio.desactivarLogicamente(especialidad.getId());
+
+        }
+
+    }
+
+    @Transactional(readOnly = true)
+    private Especialidad validarCambiarEstado(Integer id, EntidadEstado estado) {
+
+        if (id == null || estado == null) {
+            throw new IllegalArgumentException("El id y el estado son obligatorios.");
+        }
+
+        return especialidadRepositorio.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("El estado que desea cambiarle el estado, no existe.")
+        );
+
+    }
+
+
+    @Transactional(readOnly = true)
+    private List<EspecialidadRespuestaDTO> listaPorEstado(EntidadEstado estado) {
+
+        if (estado != null) {
+
+            if (estado == EntidadEstado.ACTIVO) {
+
+                return especialidadRepositorio.listaPorEstado(1);
+
+            }
+
+            if (estado == EntidadEstado.INACTIVO) {
+
+                return especialidadRepositorio.listaPorEstado(2);
+
+            }
+
+        }
+
+        return especialidadRepositorio.listaPorEstadoActivoInactivo();
+
+    }
+
+    @Transactional(readOnly = true)
+    private void validarDatosUnicos(EspecialidadActualizarDTO dto, Integer id) {
+
+        if (especialidadRepositorio.existsByNombreAndIdNot(
+                dto.nombre(), id)) {
+
+            throw new DataIntegrityViolationException(
+                    "El nombre ya pertenece a otra especialidad."
+            );
+        }
+
     }
 
 }

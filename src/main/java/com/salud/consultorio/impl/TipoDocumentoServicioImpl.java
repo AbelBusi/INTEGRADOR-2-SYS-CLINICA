@@ -17,7 +17,7 @@ public class TipoDocumentoServicioImpl implements ITipoDocumentoServicio {
 
     @Transactional(readOnly = true)
     @Override
-    public Optional<TipoDocumento> obtenerEntidadPorID(Integer id) {
+    public Optional<TipoDocumento> entidadPorID(Integer id) {
         return tipoDocumentoRepositorio.findById(id);
     }
 

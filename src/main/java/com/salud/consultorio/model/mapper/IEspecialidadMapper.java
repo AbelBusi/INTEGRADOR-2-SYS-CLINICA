@@ -13,11 +13,14 @@ public interface IEspecialidadMapper {
 
 
     @Mapping(target = "id",ignore = true)
-    Especialidad toEntity(EspecialidadCrearDTO especialidadCrearDTO);
+    @Mapping(target = "estado",ignore = true)
+    Especialidad toEntity(EspecialidadCrearDTO dto);
 
-    EspecialidadRespuestaDTO toDto(Especialidad especialidad);
+    EspecialidadRespuestaDTO toDto(Especialidad entidad);
 
-    void updateFromDto(EspecialidadActualizarDTO dto, @MappingTarget Especialidad especialidad);
+    @Mapping(target = "id",ignore = true)
+    @Mapping(target = "estado",ignore = true)
+    void updateFromDto(EspecialidadActualizarDTO dto, @MappingTarget Especialidad entidad);
 
 
 

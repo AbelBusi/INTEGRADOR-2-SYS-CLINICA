@@ -26,7 +26,7 @@ public class IPersonaServicioImpl implements IPersonaServicio {
     @Override
     public Persona crear(PersonaCrearDTO dto) {
 
-        TipoDocumento tipoDocumento = tipoDocumentoServicio.obtenerEntidadPorID(dto.tipoDocumento())
+        TipoDocumento tipoDocumento = tipoDocumentoServicio.entidadPorID(dto.tipoDocumento())
                 .orElseThrow(()->
                         new EntityNotFoundException("No se encuentra el tipo de documento seleccionado")
                 );
@@ -47,7 +47,7 @@ public class IPersonaServicioImpl implements IPersonaServicio {
 
         validarDatosUnicos(dto,id);
 
-        TipoDocumento tipoDocumento = tipoDocumentoServicio.obtenerEntidadPorID(dto.tipoDocumento()).orElseThrow(
+        TipoDocumento tipoDocumento = tipoDocumentoServicio.entidadPorID(dto.tipoDocumento()).orElseThrow(
                 ()-> new EntityNotFoundException("No existe el tipo de documento seleccionado")
         );
 

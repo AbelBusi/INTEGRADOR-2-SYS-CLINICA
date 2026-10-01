@@ -6,6 +6,6 @@ import java.util.Optional;
 
 public interface ITipoDocumentoServicio {
 
-    Optional<TipoDocumento> obtenerEntidadPorID(Integer id);
+    Optional<TipoDocumento> entidadPorID(Integer id);
 
 }
