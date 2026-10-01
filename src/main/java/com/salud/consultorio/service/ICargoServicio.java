@@ -15,7 +15,7 @@ public interface ICargoServicio {
 
     CargoRespuestaDTO crear(CargoCrearDTO dto);
 
-    CargoRespuestaDTO actualizar(CargoActualizarDTO dto);
+    CargoRespuestaDTO actualizar(CargoActualizarDTO dto, Integer id);
 
     void eliminarPorId(Integer id);
 

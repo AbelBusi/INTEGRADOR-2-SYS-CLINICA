@@ -3,7 +3,6 @@ package com.salud.consultorio.impl;
 import com.salud.consultorio.dto.cargo.CargoActualizarDTO;
 import com.salud.consultorio.dto.cargo.CargoCrearDTO;
 import com.salud.consultorio.dto.cargo.CargoRespuestaDTO;
-import com.salud.consultorio.dto.paciente.PacienteLeerDTO;
 import com.salud.consultorio.model.entity.Cargo;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.mapper.ICargoMapper;
@@ -57,7 +56,7 @@ public class CargoServicioImpl implements ICargoServicio  {
 
     @Transactional
     @Override
-    public CargoRespuestaDTO actualizar(CargoActualizarDTO dto) {
+    public CargoRespuestaDTO actualizar(CargoActualizarDTO dto, Integer id) {
         return null;
     }
 
