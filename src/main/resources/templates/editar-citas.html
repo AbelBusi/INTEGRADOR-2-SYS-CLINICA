@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Editar Cita</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body { background: #eef2f7; }
+
+        .form-container {
+            max-width: 500px;
+            margin: auto;
+            margin-top: 60px;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="form-container">
+
+    <h3 class="mb-4 text-center">Editar Cita</h3>
+
+    <!-- 🔥 CORREGIDO AQUÍ -->
+    <form th:action="@{/citas/editar/{id}(id=${cita.id})}" method="post">
+
+        <div class="mb-3">
+            <label class="form-label">Paciente</label>
+            <input type="text" name="paciente" class="form-control"
+                   th:value="${cita.paciente}" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Doctor</label>
+            <input type="text" name="doctor" class="form-control"
+                   th:value="${cita.doctor}" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Fecha</label>
+            <input type="date" name="fecha" class="form-control"
+                   th:value="${cita.fecha}" required>
+        </div>
+
+        <button type="submit" class="btn btn-warning w-100">
+            Actualizar
+        </button>
+
+        <a href="/citas" class="btn btn-secondary w-100 mt-2">
+            Cancelar
+        </a>
+
+    </form>
+
+</div>
+
+</body>
+</html>
