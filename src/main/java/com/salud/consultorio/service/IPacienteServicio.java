@@ -1,7 +1,6 @@
 package com.salud.consultorio.service;
 
 import com.salud.consultorio.dto.paciente.*;
-import com.salud.consultorio.dto.paciente.NombrePacientesDTO;
 import com.salud.consultorio.model.entity.Paciente;
 import com.salud.consultorio.model.enums.EntidadEstado;
 

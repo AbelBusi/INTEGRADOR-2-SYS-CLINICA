@@ -2,7 +2,6 @@ package com.salud.consultorio.model.mapper;
 
 import com.salud.consultorio.dto.persona.PersonaActualizarDTO;
 import com.salud.consultorio.dto.persona.PersonaCrearDTO;
-import com.salud.consultorio.dto.persona.PersonaRefDTO;
 import com.salud.consultorio.model.entity.Persona;
 import com.salud.consultorio.model.entity.TipoDocumento;
 import org.mapstruct.Mapper;
@@ -27,6 +26,5 @@ public interface IPersonaMapper {
     @Mapping(target = "tipoDocumento", source = "tipoDocumento.idTipoDocumento")
     PersonaActualizarDTO toDto(Persona persona);
 
-    Persona personaRefDtoToPersona(PersonaRefDTO dto);
 
 }

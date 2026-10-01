@@ -2,7 +2,6 @@ package com.salud.consultorio.impl;
 
 import com.salud.consultorio.dto.persona.PersonaActualizarDTO;
 import com.salud.consultorio.dto.persona.PersonaCrearDTO;
-import com.salud.consultorio.dto.persona.PersonaLeerDTO;
 import com.salud.consultorio.model.entity.Persona;
 import com.salud.consultorio.model.entity.TipoDocumento;
 import com.salud.consultorio.model.mapper.IPersonaMapper;
@@ -14,9 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
