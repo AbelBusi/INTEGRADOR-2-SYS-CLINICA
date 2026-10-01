@@ -29,10 +29,6 @@ public interface IPacienteServicio{
 
     void eliminarPorId(Integer id);
 
-    List<PacienteLeerDTO> listarPacientesActivos();
-
-    List<PacienteLeerDTO> listarPacientesInativos();
-
     boolean existeNrCodigoAegurado(String codigo);
 
     void cambiarEstado(Integer id, EntidadEstado estado);

@@ -122,16 +122,6 @@ public class PacienteServicioImpl implements IPacienteServicio {
     }
 
     @Override
-    public List<PacienteLeerDTO> listarPacientesActivos() {
-        return List.of();
-    }
-
-    @Override
-    public List<PacienteLeerDTO> listarPacientesInativos() {
-        return List.of();
-    }
-
-    @Override
     public boolean existeNrCodigoAegurado(String codigo) {
         return false;
     }
