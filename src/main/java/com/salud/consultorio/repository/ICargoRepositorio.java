@@ -1,9 +1,9 @@
 package com.salud.consultorio.repository;
 
 import com.salud.consultorio.dto.cargo.CargoRespuestaDTO;
-import com.salud.consultorio.dto.paciente.PacienteLeerDTO;
 import com.salud.consultorio.model.entity.Cargo;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -38,5 +38,17 @@ public interface ICargoRepositorio extends JpaRepository<Cargo, Integer> {
             WHERE c.estado=1 OR c.estado=2
             """)
     List<CargoRespuestaDTO> listaPorEstadoActivoInactivo();
+
+    @Modifying
+    @Query("UPDATE Cargo c SET c.estado =2 WHERE c.id=:id")
+    void desactivarLogicamente(@Param("id") Integer id);
+
+    @Modifying
+    @Query("UPDATE Cargo c SET c.estado =1 WHERE c.id=:id")
+    void activarLogicamente(@Param("id") Integer id);
+
+    @Modifying
+    @Query("UPDATE Cargo c SET c.estado =0 WHERE c.id=:id")
+    void eliminarLogicamente(@Param("id") Integer id);
 
 }
