@@ -3,6 +3,7 @@ package com.salud.consultorio.controller;
 import com.salud.consultorio.dto.cargo.CargoActualizarDTO;
 import com.salud.consultorio.dto.cargo.CargoCrearDTO;
 import com.salud.consultorio.dto.cargo.CargoRespuestaDTO;
+import com.salud.consultorio.dto.especialidad.EspecialidadLeerDTO;
 import com.salud.consultorio.dto.paciente.PacienteActualizarDTO;
 import com.salud.consultorio.dto.paciente.PacienteCrearDTO;
 import com.salud.consultorio.dto.paciente.PacienteLeerDTO;
@@ -77,6 +78,36 @@ public class CargoController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Cargo actualizado con exito")
                 .object(entidad).build(), HttpStatus.CREATED);
+
+    }
+
+    @PostMapping("/{id}")
+    public ResponseEntity<MensajeResponse> cambiarEstado(
+            @PathVariable Integer id,
+            @RequestParam(name = "estado", required = true) EntidadEstado estado
+    ) {
+
+        cargoServicio.cambiarEstado(id, estado);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("ESTADO DEL CARGO CAMBIADO CORRECTAMENTE")
+                .build(), HttpStatus.OK);
+
+    }
+
+    @Operation(summary = "Obtener Cargo por ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Cargo encontrado"),
+            @ApiResponse(responseCode = "404", description = "Cargo no encontrado")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<MensajeResponse> leerPorId(@PathVariable Integer id){
+
+        CargoRespuestaDTO entidad = cargoServicio.entidadPorID(id);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Informacion del cargo solicitado")
+                .object(entidad).build(),HttpStatus.OK);
 
     }
 

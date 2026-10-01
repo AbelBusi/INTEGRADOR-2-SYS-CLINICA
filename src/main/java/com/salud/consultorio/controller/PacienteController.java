@@ -1,6 +1,7 @@
 package com.salud.consultorio.controller;
 
 
+import com.salud.consultorio.dto.especialidad.EspecialidadLeerDTO;
 import com.salud.consultorio.dto.paciente.*;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.payload.MensajeResponse;
