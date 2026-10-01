@@ -4,6 +4,7 @@ import com.salud.consultorio.dto.cargo.CargoActualizarDTO;
 import com.salud.consultorio.dto.cargo.CargoCrearDTO;
 import com.salud.consultorio.dto.cargo.CargoRespuestaDTO;
 import com.salud.consultorio.model.enums.EntidadEstado;
+import com.salud.consultorio.model.mapper.ICargoMapper;
 import com.salud.consultorio.repository.ICargoRepositorio;
 import com.salud.consultorio.service.ICargoServicio;
 import lombok.RequiredArgsConstructor;
@@ -17,11 +18,14 @@ import java.util.List;
 public class CargoServicioImpl implements ICargoServicio  {
 
     private final ICargoRepositorio cargoRepositorio;
+    private final ICargoMapper cargoMapper;
 
     @Transactional(readOnly = true)
     @Override
     public List<CargoRespuestaDTO> lista(EntidadEstado estado) {
-        return List.of();
+        return cargoRepositorio.findAll().stream().map(
+                cargoMapper::toDto
+        ).toList();
     }
 
     @Transactional(readOnly = true)
