@@ -51,4 +51,6 @@ public interface ICargoRepositorio extends JpaRepository<Cargo, Integer> {
     @Query("UPDATE Cargo c SET c.estado =0 WHERE c.id=:id")
     void eliminarLogicamente(@Param("id") Integer id);
 
+    boolean existsByNombreAndIdNot(String nombre, Integer id);
+
 }
