@@ -26,22 +26,6 @@ public class IPersonaServicioImpl implements IPersonaServicio {
     private final ITipoDocumentoServicio tipoDocumentoServicio;
     private final IPersonaMapper personaMapper;
 
-
-    @Override
-    public List<Persona> listarTodos() {
-        return List.of();
-    }
-
-    @Override
-    public List<PersonaLeerDTO> listarPersonasSinCuenta() {
-        return List.of();
-    }
-
-    @Override
-    public Optional<Persona> obtenerPorId(Integer id) {
-        return Optional.empty();
-    }
-
     @Transactional
     @Override
     public Persona crear(PersonaCrearDTO dto) {
@@ -76,11 +60,6 @@ public class IPersonaServicioImpl implements IPersonaServicio {
         persona.setTipoDocumento(tipoDocumento);
 
         return persona;
-
-    }
-
-    @Override
-    public void eliminarPorId(Integer id) {
 
     }
 

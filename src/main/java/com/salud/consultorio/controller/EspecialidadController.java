@@ -76,26 +76,7 @@ public class EspecialidadController {
 
     }
 
-    @Operation(summary = "Listar nombres de especialidades")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de nombres obtenida correctamente"),
-            @ApiResponse(responseCode = "404", description = "No existen especialidades")
-    })
-    @GetMapping("/resumen")
-    public ResponseEntity<MensajeResponse> listaNombres() {
-        List<NombreEspecialidadesDTO> leerNombreEspecialidadesDTOS = especialidadServicio.listaNombres();
 
-        if (leerNombreEspecialidadesDTOS == null) {
-
-            return new ResponseEntity<>(MensajeResponse.builder()
-                    .mensaje("No existen especialidades todavia")
-                    .object(null).build(), HttpStatus.NOT_FOUND);
-
-        }
-        return new ResponseEntity<>(MensajeResponse.builder()
-                .mensaje("LISTA DE ESPECIALIDADES")
-                .object(leerNombreEspecialidadesDTOS).build(), HttpStatus.OK);
-    }
 
     @Operation(summary = "Obtener especialidad por ID")
     @ApiResponses(value = {

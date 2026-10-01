@@ -9,7 +9,6 @@ import java.util.Optional;
 
 public interface IEspecialidadServicio{
 
-    List<NombreEspecialidadesDTO> listaNombres();
 
     List<EspecialidadLeerDTO> listarTodos();
 

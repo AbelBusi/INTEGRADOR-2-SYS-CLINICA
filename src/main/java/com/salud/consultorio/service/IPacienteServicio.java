@@ -11,8 +11,6 @@ import java.util.Optional;
 public interface IPacienteServicio{
 
 
-    List<NombrePacientesDTO> listarPacientesDtoList();
-
     PacienteDetalleDTO traerPacientePorId(Integer id);
 
     List<PacienteLeerDTO> lista(EntidadEstado estado);
@@ -20,10 +18,6 @@ public interface IPacienteServicio{
     PacienteRespuestaDTO actualizar(PacienteActualizarDTO actualizarDTO, Integer id);
 
     Optional<Paciente> obtenerPorId(Integer id);
-
-    Optional<Paciente> obtenerPorUsuario(String usuario);
-
-    Boolean existePaciente(Integer id);
 
     PacienteRespuestaDTO crear(PacienteCrearDTO dto);
 

@@ -27,11 +27,6 @@ public class PacienteServicioImpl implements IPacienteServicio {
     private final IPersonaServicio personaServicio;
     private final IPacienteMapper pacienteMapper;
 
-    @Override
-    public List<NombrePacientesDTO> listarPacientesDtoList() {
-        return List.of();
-    }
-
     @Transactional(readOnly = true)
     @Override
     public PacienteDetalleDTO traerPacientePorId(Integer id) {
@@ -75,16 +70,6 @@ public class PacienteServicioImpl implements IPacienteServicio {
     @Override
     public Optional<Paciente> obtenerPorId(Integer id) {
         return pacienteRepositorio.findById(id);
-    }
-
-    @Override
-    public Optional<Paciente> obtenerPorUsuario(String usuario) {
-        return Optional.empty();
-    }
-
-    @Override
-    public Boolean existePaciente(Integer id) {
-        return null;
     }
 
     @Transactional

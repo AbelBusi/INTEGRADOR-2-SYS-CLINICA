@@ -111,9 +111,4 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
         return especialidadRepositorio.existsByNombre(nombre);
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public List<NombreEspecialidadesDTO> listaNombres() {
-        return especialidadRepositorio.listarEspecialidades();
-    }
 }

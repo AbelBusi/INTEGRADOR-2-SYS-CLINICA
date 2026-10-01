@@ -1,7 +1,6 @@
 package com.salud.consultorio.repository;
 
 import com.salud.consultorio.dto.especialidad.EspecialidadLeerDTO;
-import com.salud.consultorio.dto.especialidad.NombreEspecialidadesDTO;
 import com.salud.consultorio.model.entity.Especialidad;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -14,16 +13,6 @@ import java.util.Optional;
 
 @Repository
 public interface IEspecialidadRepositorio extends JpaRepository<Especialidad, Integer> {
-
-    @Query("""
-    SELECT new com.salud.consultorio.dto.especialidad.NombreEspecialidadesDTO(
-         e.id AS id,
-         e.nombre
-        )
-        FROM Especialidad e
-        WHERE e.estado=1
-    """)
-    List<NombreEspecialidadesDTO> listarEspecialidades();
 
     boolean existsByNombre(String codigo);
 
