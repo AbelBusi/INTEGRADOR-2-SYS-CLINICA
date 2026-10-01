@@ -3,6 +3,7 @@ package com.salud.consultorio.impl;
 import com.salud.consultorio.dto.cargo.CargoActualizarDTO;
 import com.salud.consultorio.dto.cargo.CargoCrearDTO;
 import com.salud.consultorio.dto.cargo.CargoRespuestaDTO;
+import com.salud.consultorio.dto.paciente.PacienteLeerDTO;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.mapper.ICargoMapper;
 import com.salud.consultorio.repository.ICargoRepositorio;
@@ -23,9 +24,7 @@ public class CargoServicioImpl implements ICargoServicio  {
     @Transactional(readOnly = true)
     @Override
     public List<CargoRespuestaDTO> lista(EntidadEstado estado) {
-        return cargoRepositorio.findAll().stream().map(
-                cargoMapper::toDto
-        ).toList();
+        return listaPorEstado(estado);
     }
 
     @Transactional(readOnly = true)
@@ -57,4 +56,28 @@ public class CargoServicioImpl implements ICargoServicio  {
     public void cambiarEstado(Integer id, EntidadEstado estado) {
 
     }
+
+    @Transactional(readOnly = true)
+    private List<CargoRespuestaDTO> listaPorEstado(EntidadEstado estado) {
+
+        if (estado != null) {
+
+            if (estado == EntidadEstado.ACTIVO) {
+
+                return cargoRepositorio.listaPorEstado(1);
+
+            }
+
+            if (estado == EntidadEstado.INACTIVO) {
+
+                return cargoRepositorio.listaPorEstado(2);
+
+            }
+
+        }
+
+        return cargoRepositorio.listaPorEstadoActivoInactivo();
+
+    }
+
 }
