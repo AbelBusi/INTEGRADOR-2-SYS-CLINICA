@@ -1,0 +1,97 @@
+package com.salud.consultorio.repository;
+
+import com.salud.consultorio.dto.empleado.EmpleadoDetalleDTO;
+import com.salud.consultorio.dto.empleado.EmpleadoLeerDTO;
+import com.salud.consultorio.model.entity.Empleado;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.empleado.EmpleadoLeerDTO(
+                em.id,
+                CONCAT(pe.nombre, ' ', pe.apellidos),
+                pe.numeroDocumento,
+                pe.telefono,
+                ca.nombre,
+                em.fechaIngreso,
+                em.foto,
+                em.estado
+            )
+            FROM Empleado em
+            JOIN em.persona pe
+            JOIN em.cargo ca
+            WHERE em.estado = :estado
+            """)
+    List<EmpleadoLeerDTO> listaPorEstado(@Param("estado") Integer estado);
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.empleado.EmpleadoLeerDTO(
+                em.id,
+                CONCAT(pe.nombre, ' ', pe.apellidos),
+                pe.numeroDocumento,
+                pe.telefono,
+                ca.nombre,
+                em.fechaIngreso,
+                em.foto,
+                em.estado
+            )
+            FROM Empleado em
+            JOIN em.persona pe
+            JOIN em.cargo ca
+            WHERE em.estado IN (1, 2)
+            """)
+    List<EmpleadoLeerDTO> listaPorEstadoActivoInactivo();
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.empleado.EmpleadoDetalleDTO(
+                em.id,
+                td.idTipoDocumento,
+                td.codigo,
+                td.descripcion,
+                pe.numeroDocumento,
+                pe.nombre,
+                pe.apellidos,
+                pe.fechaNacimiento,
+                pe.genero,
+                pe.telefono,
+                pe.direccion,
+                pe.correo,
+                pe.nacionalidad,
+                pe.fechaCreacion,
+                pe.fechaActualizacion,
+                ca.id,
+                ca.nombre,
+                em.fechaIngreso,
+                em.fechaRetiro,
+                em.foto,
+                em.estado
+            )
+            FROM Empleado em
+            JOIN em.persona pe
+            JOIN pe.tipoDocumento td
+            JOIN em.cargo ca
+            WHERE em.id = :id
+              AND em.estado <> 0
+            """)
+    Optional<EmpleadoDetalleDTO> buscarDetallePorId(@Param("id") Integer id);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Empleado em SET em.estado = 2 WHERE em.id = :id")
+    void desactivarLogicamente(@Param("id") Integer id);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Empleado em SET em.estado = 1 WHERE em.id = :id")
+    void activarLogicamente(@Param("id") Integer id);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE Empleado em SET em.estado = 0 WHERE em.id = :id")
+    void eliminarLogicamente(@Param("id") Integer id);
+
+}

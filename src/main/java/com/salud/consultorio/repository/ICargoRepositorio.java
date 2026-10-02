@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ICargoRepositorio extends JpaRepository<Cargo, Integer> {
@@ -52,5 +53,7 @@ public interface ICargoRepositorio extends JpaRepository<Cargo, Integer> {
     void eliminarLogicamente(@Param("id") Integer id);
 
     boolean existsByNombreAndIdNot(String nombre, Integer id);
+
+    Optional<Cargo> findByIdAndEstado(Integer id, Integer estado);
 
 }

@@ -1,0 +1,184 @@
+package com.salud.consultorio.impl;
+
+import com.salud.consultorio.dto.empleado.*;
+import com.salud.consultorio.model.entity.Cargo;
+import com.salud.consultorio.model.entity.Empleado;
+import com.salud.consultorio.model.entity.Persona;
+import com.salud.consultorio.model.enums.EntidadEstado;
+import com.salud.consultorio.model.mapper.IEmpleadoMapper;
+import com.salud.consultorio.repository.ICargoRepositorio;
+import com.salud.consultorio.repository.IEmpleadoRepositorio;
+import com.salud.consultorio.service.IEmpleadoServicio;
+import com.salud.consultorio.service.IPersonaServicio;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class EmpleadoServicioImpl implements IEmpleadoServicio {
+
+    private static final int ESTADO_ELIMINADO = 0;
+    private static final int ESTADO_ACTIVO = 1;
+    private static final int ESTADO_INACTIVO = 2;
+
+    private final IEmpleadoRepositorio empleadoRepositorio;
+    private final ICargoRepositorio cargoRepositorio;
+    private final IPersonaServicio personaServicio;
+    private final IEmpleadoMapper empleadoMapper;
+
+    @Transactional(readOnly = true)
+    @Override
+    public EmpleadoDetalleDTO entidadPorID(Integer id) {
+
+        validarId(id);
+
+        return empleadoRepositorio.buscarDetallePorId(id)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("No se encontró el empleado con ID: " + id)
+                );
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<EmpleadoLeerDTO> lista(EntidadEstado estado) {
+
+        if (estado == EntidadEstado.ACTIVO) {
+            return empleadoRepositorio.listaPorEstado(ESTADO_ACTIVO);
+        }
+
+        if (estado == EntidadEstado.INACTIVO) {
+            return empleadoRepositorio.listaPorEstado(ESTADO_INACTIVO);
+        }
+
+        return empleadoRepositorio.listaPorEstadoActivoInactivo();
+    }
+
+    @Transactional
+    @Override
+    public EmpleadoRespuestaDTO crear(EmpleadoCrearDTO dto) {
+
+        if (dto == null || dto.persona() == null || dto.idCargo() == null) {
+            throw new IllegalArgumentException("Los datos del empleado son obligatorios.");
+        }
+
+        // Se valida el cargo antes de crear la persona para fallar temprano.
+        Cargo cargo = obtenerCargoActivo(dto.idCargo());
+
+        Empleado empleado = empleadoMapper.toEntity(dto);
+
+        Persona persona = personaServicio.crear(dto.persona());
+
+        empleado.setPersona(persona);
+        empleado.setCargo(cargo);
+
+        Empleado guardado = empleadoRepositorio.save(empleado);
+
+        return empleadoMapper.toDto(guardado);
+    }
+
+    @Transactional
+    @Override
+    public EmpleadoRespuestaDTO actualizar(EmpleadoActualizarDTO dto, Integer id) {
+
+        validarId(id);
+
+        if (dto == null || dto.persona() == null || dto.idCargo() == null) {
+            throw new IllegalArgumentException("Los datos del empleado son obligatorios.");
+        }
+
+        Empleado empleado = empleadoRepositorio.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("El empleado que desea actualizar no existe.")
+        );
+
+        if (empleado.getEstado() == ESTADO_ELIMINADO) {
+            throw new IllegalArgumentException("No se puede actualizar un empleado eliminado.");
+        }
+
+        // Solo se consulta el cargo si realmente cambió.
+        if (!empleado.getCargo().getId().equals(dto.idCargo())) {
+            empleado.setCargo(obtenerCargoActivo(dto.idCargo()));
+        }
+
+        personaServicio.actualizar(dto.persona(), empleado.getPersona().getId());
+
+        empleadoMapper.updateFromDto(dto, empleado);
+
+        return empleadoMapper.toDto(empleado);
+    }
+
+    @Transactional
+    @Override
+    public void eliminarPorId(Integer id) {
+
+        validarId(id);
+
+        Empleado empleado = empleadoRepositorio.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("El empleado que desea eliminar no existe.")
+        );
+
+        if (empleado.getEstado() == ESTADO_ELIMINADO) {
+            throw new IllegalArgumentException("El empleado ya se encuentra eliminado.");
+        }
+
+        empleadoRepositorio.eliminarLogicamente(id);
+    }
+
+    @Transactional
+    @Override
+    public void cambiarEstado(Integer id, EntidadEstado estado) {
+
+        validarId(id);
+
+        if (estado == null) {
+            throw new IllegalArgumentException("El estado es obligatorio.");
+        }
+
+        Empleado empleado = empleadoRepositorio.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("El empleado que desea cambiarle el estado no existe.")
+        );
+
+        if (empleado.getEstado() == ESTADO_ELIMINADO) {
+            throw new IllegalArgumentException("No se puede cambiar el estado de un empleado eliminado.");
+        }
+
+        switch (estado) {
+
+            case ACTIVO -> {
+                if (empleado.getEstado() == ESTADO_ACTIVO) {
+                    throw new IllegalArgumentException("El empleado ya se encuentra activo.");
+                }
+                empleadoRepositorio.activarLogicamente(id);
+            }
+
+            case INACTIVO -> {
+                if (empleado.getEstado() == ESTADO_INACTIVO) {
+                    throw new IllegalArgumentException("El empleado ya se encuentra inactivo.");
+                }
+                empleadoRepositorio.desactivarLogicamente(id);
+            }
+
+            default -> throw new IllegalArgumentException("Solo se permite cambiar a estado ACTIVO o INACTIVO.");
+        }
+    }
+
+    private void validarId(Integer id) {
+
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("El ID del empleado debe ser válido.");
+        }
+
+    }
+
+    private Cargo obtenerCargoActivo(Integer idCargo) {
+
+        return cargoRepositorio.findByIdAndEstado(idCargo, ESTADO_ACTIVO).orElseThrow(
+                () -> new EntityNotFoundException("El cargo seleccionado no existe o no está activo.")
+        );
+
+    }
+
+}
