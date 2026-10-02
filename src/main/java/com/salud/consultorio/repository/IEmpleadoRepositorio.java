@@ -78,7 +78,6 @@ public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
             JOIN pe.tipoDocumento td
             JOIN em.cargo ca
             WHERE em.id = :id
-              AND em.estado <> 0
             """)
     Optional<EmpleadoDetalleDTO> buscarDetallePorId(@Param("id") Integer id);
 

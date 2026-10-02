@@ -9,6 +9,7 @@ import com.salud.consultorio.service.ICargoServicio;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,6 +21,10 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("api/v1/cargos")
+@Tag(
+        name = "Cargos",
+        description = "Endpoints para la gestión de cargos"
+)
 public class CargoController {
 
     private final ICargoServicio cargoServicio;

@@ -65,7 +65,6 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
             throw new IllegalArgumentException("Los datos del empleado son obligatorios.");
         }
 
-        // Se valida el cargo antes de crear la persona para fallar temprano.
         Cargo cargo = obtenerCargoActivo(dto.idCargo());
 
         Empleado empleado = empleadoMapper.toEntity(dto);
@@ -98,7 +97,6 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
             throw new IllegalArgumentException("No se puede actualizar un empleado eliminado.");
         }
 
-        // Solo se consulta el cargo si realmente cambió.
         if (!empleado.getCargo().getId().equals(dto.idCargo())) {
             empleado.setCargo(obtenerCargoActivo(dto.idCargo()));
         }
