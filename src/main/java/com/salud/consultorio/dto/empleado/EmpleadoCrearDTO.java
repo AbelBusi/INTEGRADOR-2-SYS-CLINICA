@@ -1,4 +1,23 @@
 package com.salud.consultorio.dto.empleado;
 
-public record EmpleadoCrearDTO() {
+import com.salud.consultorio.dto.persona.PersonaCrearDTO;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+
+public record EmpleadoCrearDTO(
+
+        @NotNull(message = "Los datos de la persona son obligatorios")
+        @Valid
+        PersonaCrearDTO persona,
+
+        @NotNull(message = "El cargo es obligatorio")
+        @Positive(message = "El cargo debe ser válido")
+        Integer idCargo,
+
+        @Size(max = 255, message = "La foto no puede superar los 255 caracteres")
+        String foto
+
+) {
 }
