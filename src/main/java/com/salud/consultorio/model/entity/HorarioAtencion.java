@@ -6,7 +6,6 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalTime;
-import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,6 +15,7 @@ import java.util.List;
 @Entity
 @DynamicUpdate
 @DynamicInsert
+@ToString
 @Table(name = "horario_atencion")
 public class HorarioAtencion {
 

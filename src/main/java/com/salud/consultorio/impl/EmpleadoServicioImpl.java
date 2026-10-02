@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -55,6 +56,13 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
         }
 
         return empleadoRepositorio.listaPorEstadoActivoInactivo();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Empleado entidadPorIDTransaccion(Integer id) {
+        return empleadoRepositorio.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("El empleado que desea validar no existe o no se encuentra."));
     }
 
     @Transactional
