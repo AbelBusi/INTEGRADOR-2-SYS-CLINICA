@@ -112,7 +112,7 @@ public class EspecialidadController {
 
     }
 
-    @PostMapping("/{id}")
+    @PatchMapping("/{id}")
     public ResponseEntity<MensajeResponse> cambiarEstado(
             @PathVariable Integer id,
             @RequestParam(name = "estado", required = true) EntidadEstado estado
