@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface IEspecialidadRepositorio extends JpaRepository<Especialidad, Integer> {
@@ -57,5 +58,7 @@ public interface IEspecialidadRepositorio extends JpaRepository<Especialidad, In
     @Modifying
     @Query("UPDATE Especialidad e SET e.estado =0 WHERE e.id=:id")
     void eliminarLogicamente(@Param("id") Integer id);
+
+    Optional<Especialidad> findByIdAndEstado(Integer id, Integer estado);
 
 }

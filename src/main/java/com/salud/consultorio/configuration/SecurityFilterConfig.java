@@ -25,6 +25,7 @@ public class SecurityFilterConfig {
                         .requestMatchers("api/v1/pacientes/**").permitAll()
                         .requestMatchers("api/v1/especialidades/**").permitAll()
                         .requestMatchers("api/v1/empleados/**").permitAll()
+                        .requestMatchers("api/v1/doctores/**").permitAll()
                         .requestMatchers("api/v1/cargos/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
