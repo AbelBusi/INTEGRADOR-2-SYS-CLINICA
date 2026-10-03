@@ -1,9 +1,9 @@
 package com.salud.consultorio.auth.controller;
 
-import com.salud.consultorio.auth.dto.InicioSolicitud;
-import com.salud.consultorio.auth.dto.TokenResponse;
-import com.salud.consultorio.auth.dto.UsuarioCrearDTO;
+import com.salud.consultorio.auth.dto.*;
 import com.salud.consultorio.auth.service.IAuthServicio;
+import com.salud.consultorio.auth.service.IRecuperacionClaveServicio;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final IAuthServicio authServicio;
+    private final IRecuperacionClaveServicio recuperacionServicio;   // nuevo campo
+
 
     @PostMapping("/register")
     public ResponseEntity<TokenResponse> registrar(
@@ -44,6 +46,26 @@ public class AuthController {
 
         return authServicio.refrescarToken(authHeader);
 
+    }
+
+
+    @PostMapping("/recuperar-clave")
+    public ResponseEntity<MensajeResponse> recuperarClave(@Valid @RequestBody RecuperarClaveRequest dto) {
+        recuperacionServicio.solicitarCodigo(dto.usuario());
+        return ResponseEntity.ok(new MensajeResponse(
+                "Si el usuario existe, se envió un código a su correo registrado"));
+    }
+
+    @PostMapping("/verificar-codigo")
+    public ResponseEntity<MensajeResponse> verificarCodigo(@Valid @RequestBody VerificarCodigoRequest dto) {
+        recuperacionServicio.verificarCodigo(dto.usuario(), dto.codigo());
+        return ResponseEntity.ok(new MensajeResponse("Código válido"));
+    }
+
+    @PostMapping("/restablecer-clave")
+    public ResponseEntity<MensajeResponse> restablecerClave(@Valid @RequestBody RestablecerClaveRequest dto) {
+        recuperacionServicio.restablecerClave(dto.usuario(), dto.codigo(), dto.nuevaClave());
+        return ResponseEntity.ok(new MensajeResponse("Contraseña actualizada correctamente"));
     }
 
 }
