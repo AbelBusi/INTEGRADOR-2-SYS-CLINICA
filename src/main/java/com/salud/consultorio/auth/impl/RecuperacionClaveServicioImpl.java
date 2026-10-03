@@ -1,7 +1,10 @@
 package com.salud.consultorio.auth.impl;
 
+import com.salud.consultorio.auth.dto.CanalRecuperacion;
+import com.salud.consultorio.auth.exception.SmsEnvioException;
 import com.salud.consultorio.auth.service.IRecuperacionClaveServicio;
 import com.salud.consultorio.model.entity.CodigoRecuperacion;
+import com.salud.consultorio.model.entity.Persona;
 import com.salud.consultorio.model.entity.Token;
 import com.salud.consultorio.model.entity.Usuario;
 import com.salud.consultorio.repository.ICodigoRecuperacionRepositorio;
@@ -33,20 +36,44 @@ public class RecuperacionClaveServicioImpl implements IRecuperacionClaveServicio
     private final ITokenRepositorio tokenRepositorio;
     private final PasswordEncoder passwordEncoder;
     private final CorreoServicio correoServicio;
+    private final SmsServicio smsServicio;
 
     private final SecureRandom random = new SecureRandom();
 
     @Transactional
     @Override
-    public void solicitarCodigo(String nombreUsuario) {
+    public void solicitarCodigo(String nombreUsuario,
+                                String numeroDocumento,
+                                CanalRecuperacion canal,
+                                String destino) {
+
         Optional<Usuario> opt = usuarioRepositorio.findByUsuario(nombreUsuario);
-        if (opt.isEmpty()) return;                       // respuesta genérica, no revelar nada
+        if (opt.isEmpty()) return;
 
         Usuario usuario = opt.get();
         if (usuario.getEstado() != 1) return;
 
-        String correo = usuario.getPersona().getCorreo();
-        if (correo == null || correo.isBlank()) return;
+        Persona persona = usuario.getPersona();
+
+        if (!coincideDocumento(numeroDocumento, persona.getNumeroDocumento())) {
+            log.warn("Recuperación rechazada: documento no coincide (usuarioId={})", usuario.getId());
+            return;
+        }
+
+        String registrado = canal == CanalRecuperacion.CORREO
+                ? persona.getCorreo()
+                : persona.getTelefono();
+
+        if (registrado == null || registrado.isBlank()) return;
+
+        boolean coincide = canal == CanalRecuperacion.CORREO
+                ? normalizarCorreo(destino).equals(normalizarCorreo(registrado))
+                : normalizarTelefono(destino).equals(normalizarTelefono(registrado));
+
+        if (!coincide) {
+            log.warn("Recuperación rechazada: {} no coincide (usuarioId={})", canal, usuario.getId());
+            return;
+        }
 
         codigoRepositorio.invalidarActivos(usuario.getId());
 
@@ -59,9 +86,13 @@ public class RecuperacionClaveServicioImpl implements IRecuperacionClaveServicio
                 .build());
 
         try {
-            correoServicio.enviarCodigoRecuperacion(correo, codigo, EXPIRACION_MINUTOS);
-        } catch (MailException e) {
-            log.error("No se pudo enviar el correo de recuperación", e);
+            if (canal == CanalRecuperacion.CORREO) {
+                correoServicio.enviarCodigoRecuperacion(registrado.trim(), codigo, EXPIRACION_MINUTOS);
+            } else {
+                smsServicio.enviarCodigoRecuperacion(registrado, codigo, EXPIRACION_MINUTOS);
+            }
+        } catch (MailException | SmsEnvioException e) {
+            log.error("No se pudo enviar el código de recuperación por {}", canal, e);
         }
     }
 
@@ -116,5 +147,23 @@ public class RecuperacionClaveServicioImpl implements IRecuperacionClaveServicio
                 .findAllByUsuarioIdAndExpiredFalseAndRevokedFalse(usuario.getId());
         tokens.forEach(t -> { t.setExpired(true); t.setRevoked(true); });
         tokenRepositorio.saveAll(tokens);
+    }
+
+    private boolean coincideDocumento(String ingresado, String registrado) {
+        return ingresado != null && registrado != null
+                && ingresado.trim().equalsIgnoreCase(registrado.trim());
+    }
+
+    private String normalizarCorreo(String correo) {
+        return correo == null ? "" : correo.trim().toLowerCase();
+    }
+
+    private String normalizarTelefono(String telefono) {
+        if (telefono == null) return "";
+        String digitos = telefono.replaceAll("\\D", "");
+        if (digitos.length() == 11 && digitos.startsWith("51")) {
+            digitos = digitos.substring(2);
+        }
+        return digitos;
     }
 }

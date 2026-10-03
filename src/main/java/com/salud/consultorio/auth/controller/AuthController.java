@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final IAuthServicio authServicio;
-    private final IRecuperacionClaveServicio recuperacionServicio;   // nuevo campo
+    private final IRecuperacionClaveServicio recuperacionServicio;
 
 
     @PostMapping("/register")
@@ -51,9 +51,9 @@ public class AuthController {
 
     @PostMapping("/recuperar-clave")
     public ResponseEntity<MensajeResponse> recuperarClave(@Valid @RequestBody RecuperarClaveRequest dto) {
-        recuperacionServicio.solicitarCodigo(dto.usuario());
+        recuperacionServicio.solicitarCodigo(dto.usuario(), dto.numeroDocumento(), dto.canal(), dto.destino());
         return ResponseEntity.ok(new MensajeResponse(
-                "Si el usuario existe, se envió un código a su correo registrado"));
+                "Si los datos son correctos, se envió un código al medio indicado"));
     }
 
     @PostMapping("/verificar-codigo")
