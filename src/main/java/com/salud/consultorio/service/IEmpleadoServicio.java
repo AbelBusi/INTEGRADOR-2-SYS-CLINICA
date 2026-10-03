@@ -18,7 +18,7 @@ public interface IEmpleadoServicio {
 
     EmpleadoRespuestaDTO crear(EmpleadoCrearDTO dto, MultipartFile imagen);
 
-    EmpleadoRespuestaDTO actualizar(EmpleadoActualizarDTO dto, Integer id);
+    EmpleadoRespuestaDTO actualizar(EmpleadoActualizarDTO dto, Integer id, MultipartFile imagen);
 
     void eliminarPorId(Integer id);
 

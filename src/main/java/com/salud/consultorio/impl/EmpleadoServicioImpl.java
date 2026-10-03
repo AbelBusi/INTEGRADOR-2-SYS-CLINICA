@@ -103,7 +103,7 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
 
     @Transactional
     @Override
-    public EmpleadoRespuestaDTO actualizar(EmpleadoActualizarDTO dto, Integer id) {
+    public EmpleadoRespuestaDTO actualizar(EmpleadoActualizarDTO dto, Integer id, MultipartFile imagen) {
 
         validarId(id);
 
@@ -123,9 +123,37 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
             empleado.setCargo(obtenerCargoActivo(dto.idCargo()));
         }
 
-        personaServicio.actualizar(dto.persona(), empleado.getPersona().getId());
+        String fotoAnterior = empleado.getFoto();
 
-        empleadoMapper.updateFromDto(dto, empleado);
+        String imagenNueva = null;
+
+        try {
+
+            personaServicio.actualizar(dto.persona(), empleado.getPersona().getId());
+
+            empleadoMapper.updateFromDto(dto, empleado);
+
+            if (imagen != null && !imagen.isEmpty()){
+
+                imagenNueva = archivoServicio.guardar(imagen, RUTAS_IMAGEN);
+
+                empleado.setFoto(imagenNueva);
+
+                if (fotoAnterior != null && !fotoAnterior.isBlank()){
+                    archivoServicio.eliminar(fotoAnterior);
+                }
+
+            }
+
+        } catch (RuntimeException e){
+
+            if (imagenNueva != null){
+                archivoServicio.eliminar(imagenNueva);
+            }
+
+            throw e;
+
+        }
 
         return empleadoMapper.toDto(empleado);
     }

@@ -95,9 +95,10 @@ public class EmpleadoController {
     @PutMapping("/{id}")
     public ResponseEntity<MensajeResponse> actualizar(
             @PathVariable Integer id,
-            @Valid @RequestBody EmpleadoActualizarDTO dto) {
+            @Valid @RequestPart("empleado") EmpleadoActualizarDTO dto,
+            @RequestPart(value = "imagen", required = false) MultipartFile file) {
 
-        EmpleadoRespuestaDTO empleado = empleadoServicio.actualizar(dto, id);
+        EmpleadoRespuestaDTO empleado = empleadoServicio.actualizar(dto, id, file);
 
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Empleado actualizado con exito")
