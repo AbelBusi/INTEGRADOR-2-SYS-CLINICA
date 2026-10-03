@@ -1,8 +1,6 @@
 package com.salud.consultorio.impl;
 
-import com.salud.consultorio.dto.horarioAtencion.HorarioAtencionDTO;
-import com.salud.consultorio.dto.horarioAtencion.HorarioAtencionRespuesta;
-import com.salud.consultorio.dto.horarioAtencion.HorarioCrearDTO;
+import com.salud.consultorio.dto.horarioAtencion.*;
 import com.salud.consultorio.model.entity.Empleado;
 import com.salud.consultorio.model.entity.HorarioAtencion;
 import com.salud.consultorio.model.mapper.IHorarioAtencionMapper;
@@ -38,6 +36,20 @@ public class HorarioAtencionServicioImpl implements IHorarioAtencionServicio {
         horarioAtencionRepositorio.saveAll(lista);
 
         return horarioAtencionMapper.toDto(empleado.getId(),dto.horarios());
+
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public EmpleadoHorarioRespuesta obtenerPorID(Integer id) {
+
+        List<HorarioAtencion> horarios = horarioAtencionRepositorio.obtenerHorariosPorEmpleado(id);
+
+        List<HorarioAtencionRespuestaDTO> respuesta = horarios.stream()
+                        .map(horarioAtencionMapper::toRespuestaDTO)
+                        .toList();
+
+        return new EmpleadoHorarioRespuesta(id, respuesta);
 
     }
 

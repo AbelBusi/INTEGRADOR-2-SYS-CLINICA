@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalTime;
+import java.util.List;
 
 @Repository
 public interface IHorarioAtencionRepositorio extends JpaRepository<HorarioAtencion, Integer> {
@@ -25,5 +26,14 @@ public interface IHorarioAtencionRepositorio extends JpaRepository<HorarioAtenci
             LocalTime horaEntrada,
             LocalTime horaSalida
     );
+
+    @Query("""
+                SELECT h
+                FROM HorarioAtencion h
+                WHERE h.empleado.id = :idEmpleado
+                  AND h.estado <> 0
+                ORDER BY h.diaSemana, h.horaEntrada
+            """)
+    List<HorarioAtencion> obtenerHorariosPorEmpleado(Integer idEmpleado);
 
 }
