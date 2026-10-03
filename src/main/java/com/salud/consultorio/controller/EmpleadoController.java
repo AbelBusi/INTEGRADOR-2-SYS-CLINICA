@@ -12,8 +12,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -35,11 +37,12 @@ public class EmpleadoController {
             @ApiResponse(responseCode = "404", description = "El cargo no existe o no está activo"),
             @ApiResponse(responseCode = "409", description = "Datos duplicados")
     })
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MensajeResponse> crearEmpleado(
-            @Valid @RequestBody EmpleadoCrearDTO empleadoCrearDTO) {
+            @Valid @RequestPart("empleado") EmpleadoCrearDTO empleadoCrearDTO,
+            @RequestPart(value = "imagen", required = false)MultipartFile imagen) {
 
-        EmpleadoRespuestaDTO empleado = empleadoServicio.crear(empleadoCrearDTO);
+        EmpleadoRespuestaDTO empleado = empleadoServicio.crear(empleadoCrearDTO, imagen);
 
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Empleado agregado con exito")

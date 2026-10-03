@@ -5,15 +5,18 @@ import com.salud.consultorio.model.entity.Cargo;
 import com.salud.consultorio.model.entity.Empleado;
 import com.salud.consultorio.model.entity.Persona;
 import com.salud.consultorio.model.enums.EntidadEstado;
+import com.salud.consultorio.model.enums.RutasImagen;
 import com.salud.consultorio.model.mapper.IEmpleadoMapper;
 import com.salud.consultorio.repository.ICargoRepositorio;
 import com.salud.consultorio.repository.IEmpleadoRepositorio;
+import com.salud.consultorio.service.IArchivoServicio;
 import com.salud.consultorio.service.IEmpleadoServicio;
 import com.salud.consultorio.service.IPersonaServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,11 +28,14 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
     private static final int ESTADO_ELIMINADO = 0;
     private static final int ESTADO_ACTIVO = 1;
     private static final int ESTADO_INACTIVO = 2;
+    private static final RutasImagen RUTAS_IMAGEN = RutasImagen.EMPLEADOS;
+
 
     private final IEmpleadoRepositorio empleadoRepositorio;
     private final ICargoRepositorio cargoRepositorio;
     private final IPersonaServicio personaServicio;
     private final IEmpleadoMapper empleadoMapper;
+    private final IArchivoServicio archivoServicio;
 
     @Transactional(readOnly = true)
     @Override
@@ -67,7 +73,7 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
 
     @Transactional
     @Override
-    public EmpleadoRespuestaDTO crear(EmpleadoCrearDTO dto) {
+    public EmpleadoRespuestaDTO crear(EmpleadoCrearDTO dto, MultipartFile imagen) {
 
         if (dto == null || dto.persona() == null || dto.idCargo() == null) {
             throw new IllegalArgumentException("Los datos del empleado son obligatorios.");
@@ -81,6 +87,14 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
 
         empleado.setPersona(persona);
         empleado.setCargo(cargo);
+
+        if (imagen != null && !imagen.isEmpty()){
+            String imagenUrl = archivoServicio.guardar(
+                    imagen, RUTAS_IMAGEN
+            );
+
+            empleado.setFoto(imagenUrl);
+        }
 
         Empleado guardado = empleadoRepositorio.save(empleado);
 
