@@ -35,6 +35,7 @@ public class SecurityFilterConfig {
                 .authorizeHttpRequests(auth-> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/pacientes/**").authenticated()
+                        .requestMatchers("/api/v1/tipo-documentos/**").permitAll()
                         .requestMatchers("/api/v1/especialidades/**").authenticated()
                         .requestMatchers("/api/v1/empleados/**").authenticated()
                         .requestMatchers("/api/v1/horarios/**").authenticated()
