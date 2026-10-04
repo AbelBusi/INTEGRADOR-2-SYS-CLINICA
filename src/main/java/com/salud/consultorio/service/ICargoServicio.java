@@ -3,6 +3,8 @@ package com.salud.consultorio.service;
 import com.salud.consultorio.dto.cargo.CargoActualizarDTO;
 import com.salud.consultorio.dto.cargo.CargoCrearDTO;
 import com.salud.consultorio.dto.cargo.CargoRespuestaDTO;
+import com.salud.consultorio.dto.cargo.CargoResumenDTO;
+import com.salud.consultorio.dto.tipoDocumento.TipoDocumentoResumenDTO;
 import com.salud.consultorio.model.enums.EntidadEstado;
 
 import java.util.List;
@@ -20,5 +22,8 @@ public interface ICargoServicio {
     void eliminarPorId(Integer id);
 
     void cambiarEstado(Integer id, EntidadEstado estado);
+
+    List<CargoResumenDTO> listaResumen();
+
 
 }

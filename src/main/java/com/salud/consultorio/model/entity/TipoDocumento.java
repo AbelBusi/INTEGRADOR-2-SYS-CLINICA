@@ -25,6 +25,9 @@ public class TipoDocumento {
     @Column(name = "descripcion", length = 60,nullable = false)
     private String descripcion;
 
+    @Column(name = "longitud",nullable = false)
+    private Integer longitud;
+
     @Column(name = "estado",nullable = false)
     private Integer estado;
 

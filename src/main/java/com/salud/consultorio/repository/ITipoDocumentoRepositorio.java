@@ -14,7 +14,9 @@ public interface ITipoDocumentoRepositorio extends JpaRepository<TipoDocumento, 
     @Query("""
             SELECT new com.salud.consultorio.dto.tipoDocumento.TipoDocumentoResumenDTO(
                 t.idTipoDocumento,
-                t.codigo    
+                t.codigo,
+                t.longitud
+                              
                 )
             FROM TipoDocumento t
             WHERE t.estado=1

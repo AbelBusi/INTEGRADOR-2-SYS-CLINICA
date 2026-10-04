@@ -3,6 +3,8 @@ package com.salud.consultorio.controller;
 import com.salud.consultorio.dto.cargo.CargoActualizarDTO;
 import com.salud.consultorio.dto.cargo.CargoCrearDTO;
 import com.salud.consultorio.dto.cargo.CargoRespuestaDTO;
+import com.salud.consultorio.dto.cargo.CargoResumenDTO;
+import com.salud.consultorio.dto.tipoDocumento.TipoDocumentoResumenDTO;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.payload.MensajeResponse;
 import com.salud.consultorio.service.ICargoServicio;
@@ -108,6 +110,17 @@ public class CargoController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Informacion del cargo solicitado")
                 .object(entidad).build(),HttpStatus.OK);
+
+    }
+
+    @GetMapping("resumen")
+    public ResponseEntity<MensajeResponse> listaResumen(){
+
+        List<CargoResumenDTO> lista = cargoServicio.listaResumen();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Lista de cargos")
+                .object(lista).build(), HttpStatus.OK);
 
     }
 

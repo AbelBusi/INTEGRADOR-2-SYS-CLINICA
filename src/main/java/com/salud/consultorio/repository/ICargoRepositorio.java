@@ -1,6 +1,8 @@
 package com.salud.consultorio.repository;
 
 import com.salud.consultorio.dto.cargo.CargoRespuestaDTO;
+import com.salud.consultorio.dto.cargo.CargoResumenDTO;
+import com.salud.consultorio.dto.tipoDocumento.TipoDocumentoResumenDTO;
 import com.salud.consultorio.model.entity.Cargo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -55,5 +57,15 @@ public interface ICargoRepositorio extends JpaRepository<Cargo, Integer> {
     boolean existsByNombreAndIdNot(String nombre, Integer id);
 
     Optional<Cargo> findByIdAndEstado(Integer id, Integer estado);
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.cargo.CargoResumenDTO(
+                c.id,
+                c.nombre
+                )
+            FROM Cargo c
+            WHERE c.estado=1
+            """)
+    List<CargoResumenDTO> listaResumenDatos();
 
 }
