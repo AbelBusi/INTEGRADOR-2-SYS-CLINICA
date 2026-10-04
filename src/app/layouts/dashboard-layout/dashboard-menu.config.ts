@@ -85,6 +85,7 @@ export const MENU_BASE: NavItem[] = [
     ],
   },
   {
+    grupo:'PERSONAL Y PACIENTES',
     label: 'Pacientes',
     roles: ['ADMINISTRADOR', 'RECEPCIONISTA'],
     icon: 'groups',
