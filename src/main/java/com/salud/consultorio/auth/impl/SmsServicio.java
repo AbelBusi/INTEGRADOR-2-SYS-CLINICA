@@ -12,10 +12,6 @@ import org.springframework.web.client.RestClientException;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Envío de SMS usando la API HTTP de TextBee (tu celular como gateway).
- * Requiere Spring Boot 3.2+ (RestClient).
- */
 @Slf4j
 @Service
 public class SmsServicio {
@@ -45,8 +41,7 @@ public class SmsServicio {
     }
 
     public void enviarCodigoRecuperacion(String telefono, String codigo, int minutos) {
-        // Sin tildes para que el SMS use codificación GSM-7 (160 caracteres) y no UCS-2 (70)
-        String mensaje = "Consultorio: su codigo de recuperacion es " + codigo
+        String mensaje = "EQ-Soporte - Hospital Jose Olaya: su codigo de recuperacion es " + codigo
                 + ". Vence en " + minutos + " minutos. No lo comparta.";
 
         Map<String, Object> body = Map.of(
@@ -66,7 +61,6 @@ public class SmsServicio {
         }
     }
 
-    /** "987 654 321" -> "+51987654321" ; "51987654321" -> "+51987654321" */
     private String aE164(String telefono) {
         String digitos = telefono.replaceAll("\\D", "");
         if (digitos.length() == 9) {
