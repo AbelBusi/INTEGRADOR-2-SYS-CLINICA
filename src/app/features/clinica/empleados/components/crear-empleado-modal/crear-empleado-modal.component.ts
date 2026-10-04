@@ -9,6 +9,7 @@ import {
   TipoDocumentoResumen,
   formularioADto,
   formularioVacio,
+  fechaMaximaNacimiento,
 } from '../../interface/empleado.interface';
 import { EmpleadoService } from '../../services/empleado.service';
 import { ToastService } from '../../../../../core/services/toast.service';
@@ -28,8 +29,7 @@ export class CrearEmpleadoModalComponent implements OnInit {
   cargos: CargoResumen[] = [];
   tiposDocumento: TipoDocumentoResumen[] = [];
   generos = GENEROS;
-  hoy = new Date().toISOString().split('T')[0];
-
+  fechaMaxima = fechaMaximaNacimiento();
   imagen: File | null = null;
   previewUrl: string | null = null;
   cargandoCatalogos = false;
@@ -99,6 +99,12 @@ export class CrearEmpleadoModalComponent implements OnInit {
       this.cdr.detectChanges();
     };
     reader.readAsDataURL(file);
+  }
+
+  soloNumeros(event: KeyboardEvent): void {
+    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !/\d/.test(event.key)) {
+      event.preventDefault();
+    }
   }
 
   quitarImagen(input: HTMLInputElement): void {

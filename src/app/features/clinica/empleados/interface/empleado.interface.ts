@@ -50,15 +50,15 @@ export interface EmpleadoRespuesta {
 }
 
 export interface PersonaDTO {
-  idTipoDocumento: number;
+  tipoDocumento: number;
   numeroDocumento: string;
   nombre: string;
   apellidos: string;
   fechaNacimiento: string;
   genero: string;
-  telefono: string;
-  direccion: string;
-  correo: string;
+  telefono: string | null;
+  direccion: string | null;
+  correo: string | null;
   nacionalidad: string;
 }
 
@@ -97,10 +97,7 @@ export interface TipoDocumentoResumen {
   longitud: number;
 }
 
-export const GENEROS = [
-  { value: 'M', label: 'Masculino' },
-  { value: 'F', label: 'Femenino' },
-];
+export const GENEROS = ['Masculino', 'Femenino'];
 
 export function formularioVacio(): EmpleadoForm {
   return {
@@ -118,18 +115,26 @@ export function formularioVacio(): EmpleadoForm {
   };
 }
 
+export function fechaMaximaNacimiento(): string {
+  const ayer = new Date();
+  ayer.setDate(ayer.getDate() - 1);
+  const mes = String(ayer.getMonth() + 1).padStart(2, '0');
+  const dia = String(ayer.getDate()).padStart(2, '0');
+  return `${ayer.getFullYear()}-${mes}-${dia}`;
+}
+
 export function formularioADto(form: EmpleadoForm): EmpleadoCrearDTO {
   return {
     persona: {
-      idTipoDocumento: form.idTipoDocumento as number,
+      tipoDocumento: form.idTipoDocumento as number,
       numeroDocumento: form.numeroDocumento.trim(),
       nombre: form.nombre.trim(),
       apellidos: form.apellidos.trim(),
       fechaNacimiento: form.fechaNacimiento,
       genero: form.genero,
-      telefono: form.telefono.trim(),
-      direccion: form.direccion.trim(),
-      correo: form.correo.trim(),
+      telefono: form.telefono.trim() || null,
+      direccion: form.direccion.trim() || null,
+      correo: form.correo.trim() || null,
       nacionalidad: form.nacionalidad.trim(),
     },
     idCargo: form.idCargo as number,

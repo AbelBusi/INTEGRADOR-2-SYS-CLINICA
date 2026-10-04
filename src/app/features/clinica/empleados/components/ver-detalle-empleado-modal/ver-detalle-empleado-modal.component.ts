@@ -8,7 +8,7 @@ import {
   ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Empleado, EmpleadoDetalle, GENEROS } from '../../interface/empleado.interface';
+import { Empleado, EmpleadoDetalle } from '../../interface/empleado.interface';
 import { EmpleadoService } from '../../services/empleado.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 
@@ -39,11 +39,6 @@ export class VerDetalleEmpleadoModalComponent implements OnChanges {
 
   get fotoUrl(): string | null {
     return this.empleadoService.obtenerUrlFoto(this.detalle?.foto);
-  }
-
-  get generoLabel(): string {
-    const genero = this.detalle?.genero;
-    return GENEROS.find((g) => g.value === genero)?.label ?? genero ?? '';
   }
 
   private cargarDetalle(id: number): void {

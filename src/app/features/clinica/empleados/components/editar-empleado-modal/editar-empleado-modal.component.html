@@ -87,17 +87,28 @@
                 <input
                   type="text"
                   name="numeroDocumento"
+                  #documentoInput="ngModel"
                   [(ngModel)]="empleadoForm.numeroDocumento"
-                  [attr.maxlength]="longitudDocumento"
+                  [attr.maxlength]="longitudDocumento ?? 15"
+                  (keypress)="soloNumeros($event)"
+                  pattern="^[0-9]+$"
                   required
                   inputmode="numeric"
                   class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                  [class.border-[#D9182A]]="documentoInput.invalid && (documentoInput.dirty || documentoInput.touched)"
                 />
-                @if (longitudDocumento) {
-                  <div class="text-right text-[10px] text-neutral-400 mt-1">
-                    {{ empleadoForm.numeroDocumento.length }}/{{ longitudDocumento }}
-                  </div>
-                }
+                <div class="flex justify-between mt-1">
+      <span class="text-[10px] text-[#D9182A] font-medium">
+        @if (documentoInput.invalid && (documentoInput.dirty || documentoInput.touched)) {
+          Solo números, obligatorio.
+        }
+      </span>
+                  @if (longitudDocumento) {
+                    <span class="text-[10px] text-neutral-400">
+          {{ empleadoForm.numeroDocumento.length }}/{{ longitudDocumento }}
+        </span>
+                  }
+                </div>
               </div>
 
               <div>
@@ -106,11 +117,11 @@
                   type="text"
                   name="nombre"
                   [(ngModel)]="empleadoForm.nombre"
-                  maxlength="50"
+                  maxlength="60"
                   required
                   class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
                 />
-                <div class="text-right text-[10px] text-neutral-400 mt-1">{{ empleadoForm.nombre.length }}/50</div>
+                <div class="text-right text-[10px] text-neutral-400 mt-1">{{ empleadoForm.nombre.length }}/60</div>
               </div>
 
               <div>
@@ -119,11 +130,11 @@
                   type="text"
                   name="apellidos"
                   [(ngModel)]="empleadoForm.apellidos"
-                  maxlength="80"
+                  maxlength="100"
                   required
                   class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
                 />
-                <div class="text-right text-[10px] text-neutral-400 mt-1">{{ empleadoForm.apellidos.length }}/80</div>
+                <div class="text-right text-[10px] text-neutral-400 mt-1">{{ empleadoForm.apellidos.length }}/100</div>
               </div>
 
               <div>
@@ -132,7 +143,7 @@
                   type="date"
                   name="fechaNacimiento"
                   [(ngModel)]="empleadoForm.fechaNacimiento"
-                  [max]="hoy"
+                  [max]="fechaMaxima"
                   required
                   class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
                 />
@@ -146,35 +157,50 @@
                   required
                   class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors">
                   <option value="" disabled>Seleccione...</option>
-                  @for (g of generos; track g.value) {
-                    <option [value]="g.value">{{ g.label }}</option>
+                  @for (g of generos; track g) {
+                    <option [value]="g">{{ g }}</option>
                   }
                 </select>
               </div>
 
               <div>
-                <label class="text-[10px] uppercase font-bold text-[#D9182A] tracking-wider block mb-1">Teléfono</label>
+                <label class="text-[10px] uppercase font-bold text-[#D9182A] tracking-wider block mb-1">
+                  Teléfono <span class="normal-case font-medium text-neutral-400">(opcional)</span>
+                </label>
                 <input
                   type="tel"
                   name="telefono"
+                  #telefonoInput="ngModel"
                   [(ngModel)]="empleadoForm.telefono"
-                  maxlength="9"
-                  required
+                  (keypress)="soloNumeros($event)"
+                  maxlength="15"
+                  pattern="^[0-9]{8,15}$"
                   inputmode="numeric"
                   class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                  [class.border-[#D9182A]]="telefonoInput.invalid && (telefonoInput.dirty || telefonoInput.touched)"
                 />
+                @if (telefonoInput.invalid && (telefonoInput.dirty || telefonoInput.touched)) {
+                  <div class="text-[10px] text-[#D9182A] font-medium mt-1">Debe tener entre 8 y 15 dígitos.</div>
+                }
               </div>
 
               <div>
-                <label class="text-[10px] uppercase font-bold text-[#D9182A] tracking-wider block mb-1">Correo</label>
+                <label class="text-[10px] uppercase font-bold text-[#D9182A] tracking-wider block mb-1">
+                  Correo <span class="normal-case font-medium text-neutral-400">(opcional)</span>
+                </label>
                 <input
                   type="email"
                   name="correo"
+                  #correoInput="ngModel"
                   [(ngModel)]="empleadoForm.correo"
-                  required
+                  maxlength="100"
                   email
                   class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                  [class.border-[#D9182A]]="correoInput.invalid && (correoInput.dirty || correoInput.touched)"
                 />
+                @if (correoInput.invalid && (correoInput.dirty || correoInput.touched)) {
+                  <div class="text-[10px] text-[#D9182A] font-medium mt-1">El correo no tiene un formato válido.</div>
+                }
               </div>
 
               <div>
@@ -183,7 +209,7 @@
                   type="text"
                   name="nacionalidad"
                   [(ngModel)]="empleadoForm.nacionalidad"
-                  maxlength="40"
+                  maxlength="50"
                   required
                   class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
                 />
@@ -209,11 +235,11 @@
                   type="text"
                   name="direccion"
                   [(ngModel)]="empleadoForm.direccion"
-                  maxlength="100"
+                  maxlength="150"
                   required
                   class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
                 />
-                <div class="text-right text-[10px] text-neutral-400 mt-1">{{ empleadoForm.direccion.length }}/100</div>
+                <div class="text-right text-[10px] text-neutral-400 mt-1">{{ empleadoForm.direccion.length }}/150</div>
               </div>
 
             </div>
