@@ -25,6 +25,7 @@ export const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = 
   '/dashboard/doctores': { title: 'Doctores', subtitle: 'Equipo médico del consultorio' },
   '/dashboard/doctores/nuevo': { title: 'Nuevo doctor', subtitle: 'Alta de especialista' },
   '/dashboard/especialidades': { title: 'Especialidades', subtitle: 'Áreas médicas disponibles' },
+  '/dashboard/empleados': { title: 'Empleados', subtitle: 'Empleados disponibles' },
   '/dashboard/cargos': { title: 'Cargos', subtitle: 'Áreas de cargos' },
   '/dashboard/recepcionistas': { title: 'Recepcionistas', subtitle: 'Personal de recepción' },
   '/dashboard/recepcionistas/nuevo': { title: 'Nuevo recepcionista', subtitle: 'Alta de recepcionista' },
@@ -85,7 +86,7 @@ export const MENU_BASE: NavItem[] = [
     ],
   },
   {
-    grupo:'PERSONAL Y PACIENTES',
+    grupo: 'PERSONAL Y PACIENTES',
     label: 'Pacientes',
     roles: ['ADMINISTRADOR', 'RECEPCIONISTA'],
     icon: 'groups',
@@ -96,6 +97,15 @@ export const MENU_BASE: NavItem[] = [
         route: '/dashboard/pacientes/nuevo',
         roles: ['ADMINISTRADOR', 'RECEPCIONISTA'],
       },
+    ],
+  },
+  {
+    grupo: 'PERSONAL Y PACIENTES',
+    label: 'Empleados',
+    roles: ['ADMINISTRADOR', 'RECEPCIONISTA'],
+    icon: 'groups',
+    sub: [
+      { label: 'Ver Empleados', route: '/dashboard/empleados', roles: ['ADMINISTRADOR'] },
     ],
   },
   {
@@ -114,7 +124,6 @@ export const MENU_BASE: NavItem[] = [
     icon: 'local_hospital',
     sub: [
       { label: 'Ver especialidades', route: '/dashboard/especialidades', roles: ['ADMINISTRADOR'] },
-      { label: 'Ver Cargos', route: '/dashboard/cargos', roles: ['ADMINISTRADOR'] },
     ],
   },
   {
@@ -122,9 +131,7 @@ export const MENU_BASE: NavItem[] = [
     label: 'Cargos',
     roles: ['ADMINISTRADOR'],
     icon: 'local_hospital',
-    sub: [
-      { label: 'Ver Cargos', route: '/dashboard/cargos', roles: ['ADMINISTRADOR'] },
-    ],
+    sub: [{ label: 'Ver Cargos', route: '/dashboard/cargos', roles: ['ADMINISTRADOR'] }],
   },
   {
     label: 'Recepcionistas',
