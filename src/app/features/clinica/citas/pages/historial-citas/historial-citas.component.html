@@ -1,0 +1,88 @@
+<div class="animate-fade-in space-y-6">
+  <div class="page-header mb-0">
+    <h2>Historial de Citas</h2>
+    <p>Citas registradas por ti</p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    @for (item of stats(); track item.title) {
+      <div class="bg-white rounded border border-slate-200 p-4 flex items-center gap-4 shadow-sm select-none">
+        <div class="w-10 h-10 rounded flex items-center justify-center shrink-0 text-white" [ngClass]="item.bg">
+          <span class="material-icons text-xl block">{{ item.icon }}</span>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ item.title }}</p>
+          <p class="text-2xl font-mono font-bold text-slate-900 tracking-tight leading-none mt-0.5">{{ item.value }}</p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="flex items-center justify-between gap-4 flex-wrap">
+    <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex items-center gap-2 bg-white border border-slate-200 rounded px-3 py-2 w-64 shadow-sm focus-within:ring-2 focus-within:ring-teal-500/20 transition-all">
+        <span class="material-icons text-slate-400 text-lg select-none">search</span>
+        <input
+          type="text"
+          class="bg-transparent text-sm text-slate-700 placeholder-slate-400 outline-none w-full"
+          placeholder="Buscar por paciente o doctor..."
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+        />
+      </div>
+      <input type="date" class="input-field w-auto py-2 rounded" [ngModel]="filtroFecha()" (ngModelChange)="filtroFecha.set($event)" />
+      <select class="input-field w-auto py-2 rounded" [ngModel]="filtroEstado()" (ngModelChange)="filtroEstado.set($event)">
+        <option value="">Todos los estados</option>
+        <option value="1">Activas</option>
+        <option value="2">Atendidas</option>
+        <option value="0">Canceladas</option>
+      </select>
+    </div>
+    <span class="text-sm text-slate-400 select-none">
+      <span class="font-medium text-slate-600">{{ filtered().length }}</span> citas
+    </span>
+  </div>
+
+  <app-custom-table
+    [data]="filtered()"
+    [columns]="columnas"
+    [loading]="cargando()"
+    [sortField]="sortField()"
+    (sort)="handleSort($event)">
+
+    <ng-template #customColumn let-row let-field="field">
+
+      @if (field === 'nombrePaciente') {
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-teal-100 border border-teal-200 flex items-center justify-center shrink-0 select-none">
+            <span class="text-teal-700 text-xs font-bold">{{ (row.nombrePaciente || '?')[0] }}</span>
+          </div>
+          <p class="font-bold text-slate-900">{{ row.nombrePaciente }} {{ row.apellidosPaciente }}</p>
+        </div>
+      }
+
+      @if (field === 'nombreDoctor') {
+        <span class="text-slate-600 text-sm">{{ row.nombreDoctor }}</span>
+      }
+
+      @if (field === 'especialidad') {
+        <span class="text-slate-600 text-sm">{{ row.especialidad }}</span>
+      }
+
+      @if (field === 'diaConsulta') {
+        <span class="font-mono text-sm text-slate-700">{{ row.diaConsulta }}</span>
+      }
+
+      @if (field === 'horaInicio') {
+        <span class="font-mono text-sm text-slate-700">{{ hora(row.horaInicio) }} - {{ hora(row.horaSalida) }}</span>
+      }
+
+      @if (field === 'estado') {
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold select-none" [ngClass]="estadoClase(row.estado)">
+          {{ estadoLabel(row.estado) }}
+        </span>
+      }
+
+    </ng-template>
+  </app-custom-table>
+</div>

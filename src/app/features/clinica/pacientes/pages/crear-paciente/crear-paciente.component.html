@@ -1,0 +1,169 @@
+<div class="grid grid-cols-1 gap-6 relative">
+
+  @if (isSaving) {
+    <div class="fixed inset-0 bg-neutral-900/50 z-[100] flex flex-col items-center justify-center gap-3 animate-fade-in">
+      <div class="bg-white p-6 rounded border border-neutral-200 flex flex-col items-center gap-4 max-w-xs w-full">
+        <div class="h-8 w-8 border-4 border-neutral-200 border-t-[#D9182A] rounded-full animate-spin"></div>
+        <div class="text-center">
+          <p class="text-xs font-bold text-neutral-800 uppercase tracking-wider">Guardando Registro</p>
+          <p class="text-[11px] text-neutral-500 mt-1">Redireccionando al listado...</p>
+        </div>
+      </div>
+    </div>
+  }
+
+  <div class="lg:col-span-2 space-y-6">
+    <form (ngSubmit)="pacienteForm.form.valid && handleSubmit()" #pacienteForm="ngForm" class="space-y-4" novalidate>
+
+      <div class="bg-white border border-neutral-200 rounded p-6">
+        <h3 class="text-xs font-bold text-neutral-700 flex items-center gap-2 mb-4 border-b border-neutral-100 pb-3 uppercase tracking-wider">
+          <span class="material-icons text-base text-[#D9182A] select-none">badge</span>
+          Validación RENIEC
+        </h3>
+        <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
+          <div class="flex-1 space-y-1.5">
+            <label class="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">Número de DNI *</label>
+            <div class="relative">
+              <span class="material-icons absolute left-3 top-2 text-[15px] text-neutral-400 select-none">search</span>
+              <input type="text" name="dni" [(ngModel)]="form.persona.dni" #dni="ngModel" [disabled]="isSaving"
+                     required minlength="8" maxLength="8" pattern="\d{8}" placeholder="00000000"
+                     [class.border-[#D9182A]]="dni.invalid && (dni.dirty || dni.touched || pacienteForm.submitted)"
+                     class="w-full text-xs pl-9 pr-3 py-2 border border-neutral-300 rounded bg-white font-mono text-neutral-800 font-bold tracking-wider hover:border-[#58595B] focus:outline-none focus:border-[#58595B] transition-colors disabled:bg-neutral-50" />
+            </div>
+          </div>
+          <button type="button" (click)="handleConsultarDNI()" [disabled]="loading || isSaving"
+                  class="px-5 py-2 bg-[#58595B] text-white rounded text-xs font-bold uppercase tracking-wider hover:bg-[#404142] transition-colors flex items-center justify-center gap-2 h-[34px] disabled:opacity-40 disabled:cursor-not-allowed">
+            <span *ngIf="loading" class="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            <span *ngIf="!loading" class="material-icons text-sm select-none">sync</span>
+            Consultar
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white border border-neutral-200 rounded p-6 space-y-4">
+        <h3 class="text-xs font-bold text-neutral-700 flex items-center gap-2 border-b border-neutral-100 pb-3 uppercase tracking-wider">
+          <span class="material-icons text-base text-[#58595B] select-none">person</span>
+          Información del Paciente
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center">
+              <label class="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">Nombres *</label>
+              <span class="text-[10px] font-mono text-neutral-400 select-none">{{ form.persona.nombre.length }}/70</span>
+            </div>
+            <input type="text" name="nombre" [(ngModel)]="form.persona.nombre" #nombre="ngModel" required maxlength="70" [disabled]="isSaving"
+                   [class.border-[#D9182A]]="nombre.invalid && (nombre.dirty || nombre.touched || pacienteForm.submitted)"
+                   class="w-full text-xs px-3 py-2 border border-neutral-300 rounded bg-white hover:border-[#58595B] focus:outline-none focus:border-[#58595B] text-neutral-800 font-medium transition-colors disabled:bg-neutral-50" />
+          </div>
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center">
+              <label class="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">Apellidos *</label>
+              <span class="text-[10px] font-mono text-neutral-400 select-none">{{ form.persona.apellidos.length }}/100</span>
+            </div>
+            <input type="text" name="apellidos" [(ngModel)]="form.persona.apellidos" #apellidos="ngModel" required maxlength="100" [disabled]="isSaving"
+                   [class.border-[#D9182A]]="apellidos.invalid && (apellidos.dirty || apellidos.touched || pacienteForm.submitted)"
+                   class="w-full text-xs px-3 py-2 border border-neutral-300 rounded bg-white hover:border-[#58595B] focus:outline-none focus:border-[#58595B] text-neutral-800 font-medium transition-colors disabled:bg-neutral-50" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">Fecha de Nacimiento *</label>
+            <input type="date" name="fechaNacimiento" [(ngModel)]="form.persona.fechaNacimiento" #fechaNac="ngModel" required [disabled]="isSaving"
+                   [max]="fechaMaxima()"
+                   [class.border-[#D9182A]]="fechaNac.invalid && (fechaNac.dirty || fechaNac.touched || pacienteForm.submitted)"
+                   class="w-full text-xs px-3 py-2 border border-neutral-300 rounded bg-white accent-[#D9182A] hover:border-[#58595B] focus:outline-none focus:border-[#58595B] text-neutral-800 font-medium transition-colors disabled:bg-neutral-50" />
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">Género *</label>
+            <select name="genero" [(ngModel)]="form.persona.genero" #genero="ngModel" required [disabled]="isSaving"
+                    [class.border-[#D9182A]]="genero.invalid && (genero.dirty || genero.touched || pacienteForm.submitted)"
+                    class="w-full text-xs px-3 py-2 border border-neutral-300 rounded bg-white accent-[#D9182A] hover:border-[#58595B] focus:outline-none focus:border-[#58595B] text-neutral-800 font-medium cursor-pointer transition-colors disabled:bg-neutral-50">
+              <option value="" disabled selected>Seleccione género</option>
+              @for (g of generos; track g) {
+                <option [value]="g">{{ g }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center">
+              <label class="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">Correo Electrónico</label>
+              <span class="text-[10px] font-mono text-neutral-400 select-none">{{ form.persona.correo.length }}/100</span>
+            </div>
+            <input type="email" name="correo" [(ngModel)]="form.persona.correo" #correo="ngModel" email placeholder="correo@ejemplo.com" maxlength="100" [disabled]="isSaving"
+                   [class.border-[#D9182A]]="correo.invalid && (correo.dirty || correo.touched || pacienteForm.submitted)"
+                   class="w-full text-xs px-3 py-2 border border-neutral-300 rounded bg-white hover:border-[#58595B] focus:outline-none focus:border-[#58595B] text-neutral-800 font-medium transition-colors disabled:bg-neutral-50" />
+          </div>
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center">
+              <label class="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">Teléfono</label>
+              <span class="text-[10px] font-mono text-neutral-400 select-none">{{ form.persona.telefono.length }}/9</span>
+            </div>
+            <input type="text" name="telefono" [(ngModel)]="form.persona.telefono" #telefono="ngModel" placeholder="999999999" maxlength="9" pattern="\d{9}" [disabled]="isSaving"
+                   [class.border-[#D9182A]]="telefono.invalid && (telefono.dirty || telefono.touched || pacienteForm.submitted)"
+                   class="w-full text-xs px-3 py-2 border border-neutral-300 rounded bg-white hover:border-[#58595B] focus:outline-none focus:border-[#58595B] text-neutral-800 font-medium transition-colors disabled:bg-neutral-50" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-1.5">
+                <span class="material-icons text-[14px] text-neutral-400 select-none">lock</span>
+                <label class="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">Nacionalidad *</label>
+              </div>
+              <span class="text-[10px] font-mono text-neutral-400 select-none">{{ form.persona.nacionalidad.length }}/50</span>
+            </div>
+            <input type="text" name="nacionalidad" [(ngModel)]="form.persona.nacionalidad" required maxlength="50" readonly
+                   class="w-full text-xs px-3 py-2 border border-neutral-200 rounded bg-neutral-100 text-neutral-500 font-medium cursor-not-allowed select-none focus:outline-none transition-colors" />
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white border border-neutral-200 rounded p-6 space-y-4">
+        <h3 class="text-xs font-bold text-neutral-700 flex items-center gap-2 border-b border-neutral-100 pb-3 uppercase tracking-wider">
+          <span class="material-icons text-base text-[#D9182A] select-none">health_and_safety</span>
+          Seguro Médico
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-1.5">
+            <label class="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">Entidad Aseguradora *</label>
+            <select name="entidadAseguradora" [(ngModel)]="form.entidadAseguradora" #entidadAs="ngModel" required [disabled]="isSaving"
+                    [class.border-[#D9182A]]="entidadAs.invalid && (entidadAs.dirty || entidadAs.touched || pacienteForm.submitted)"
+                    class="w-full text-xs px-3 py-2 border border-neutral-300 rounded bg-white accent-[#D9182A] hover:border-[#58595B] focus:outline-none focus:border-[#58595B] text-neutral-800 font-medium cursor-pointer transition-colors disabled:bg-neutral-50">
+              <option value="" disabled selected>Seleccione aseguradora</option>
+              @for (seguro of seguros; track seguro) {
+                <option [value]="seguro">{{ seguro }}</option>
+              }
+            </select>
+          </div>
+          <div class="space-y-1.5">
+            <div class="flex justify-between items-center">
+              <label class="text-[11px] font-bold text-neutral-500 uppercase tracking-wider">Código de Asegurador *</label>
+              <span class="text-[10px] font-mono text-neutral-400 select-none">{{ form.codigoAseguradora.length }}/20</span>
+            </div>
+            <input type="text" name="codigoAseguradora" [(ngModel)]="form.codigoAseguradora" #codigoAs="ngModel" placeholder="ABC-12345" required maxlength="20" [disabled]="isSaving"
+                   [class.border-[#D9182A]]="codigoAs.invalid && (codigoAs.dirty || codigoAs.touched || pacienteForm.submitted)"
+                   class="w-full text-xs px-3 py-2 border border-neutral-300 rounded bg-white hover:border-[#58595B] focus:outline-none focus:border-[#58595B] font-mono text-neutral-800 font-bold tracking-tight transition-colors disabled:bg-neutral-50" />
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-2">
+        <button type="button" (click)="handleLimpiarFormulario()" [disabled]="loading || isSaving"
+                class="px-4 py-2 text-xs font-semibold text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded border border-neutral-300 transition-colors disabled:opacity-40">
+          Limpiar Formulario
+        </button>
+        <button type="submit" [disabled]="!pacienteForm.form.valid || loading || isSaving"
+                class="flex items-center justify-center gap-2 px-5 py-2 bg-[#D9182A] text-white text-xs font-bold rounded hover:bg-[#B81424] transition-colors uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed">
+          <span class="material-icons text-sm select-none">{{ loading ? 'sync' : 'person_add' }}</span>
+          {{ loading ? 'Registrando...' : 'Registrar Paciente' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

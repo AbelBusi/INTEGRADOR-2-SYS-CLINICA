@@ -1,0 +1,73 @@
+<div class="animate-fade-in space-y-6">
+  <div class="page-header mb-0">
+    <h2>Mis Citas</h2>
+    <p>Consulta el estado de tus citas médicas</p>
+  </div>
+
+  <div class="flex items-center gap-2 border-b border-slate-200">
+    <button type="button" (click)="tab.set('proximas')"
+            class="px-4 py-2 text-sm font-semibold border-b-2 transition-colors"
+            [ngClass]="tab() === 'proximas' ? 'border-[#0d6b68] text-[#0d6b68]' : 'border-transparent text-slate-400 hover:text-slate-600'">
+      Próximas
+    </button>
+    <button type="button" (click)="tab.set('atendidas')"
+            class="px-4 py-2 text-sm font-semibold border-b-2 transition-colors"
+            [ngClass]="tab() === 'atendidas' ? 'border-[#0d6b68] text-[#0d6b68]' : 'border-transparent text-slate-400 hover:text-slate-600'">
+      Atendidas
+    </button>
+    <button type="button" (click)="tab.set('canceladas')"
+            class="px-4 py-2 text-sm font-semibold border-b-2 transition-colors"
+            [ngClass]="tab() === 'canceladas' ? 'border-[#0d6b68] text-[#0d6b68]' : 'border-transparent text-slate-400 hover:text-slate-600'">
+      Canceladas
+    </button>
+  </div>
+
+  <div class="flex items-center gap-2 bg-white border border-slate-200 rounded px-3 py-2 w-72 shadow-sm">
+    <span class="material-icons text-slate-400 text-lg select-none">search</span>
+    <input type="text" class="bg-transparent text-sm text-slate-700 placeholder-slate-400 outline-none w-full"
+           placeholder="Buscar por doctor o especialidad..." [ngModel]="search()" (ngModelChange)="search.set($event)" />
+  </div>
+
+  <app-custom-table
+    [data]="filtered()"
+    [columns]="columnas"
+    [loading]="cargando()"
+    [sortField]="sortField()"
+    (sort)="handleSort($event)">
+
+    <ng-template #customColumn let-row let-field="field">
+
+      @if (field === 'doctor') {
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-teal-100 border border-teal-200 flex items-center justify-center shrink-0 select-none">
+            <span class="material-icons text-teal-700 text-base">medical_services</span>
+          </div>
+          <p class="font-bold text-slate-900">{{ row.doctor }}</p>
+        </div>
+      }
+
+      @if (field === 'especialidad') {
+        <span class="text-slate-600 text-sm">{{ row.especialidad }}</span>
+      }
+
+      @if (field === 'fecha') {
+        <span class="font-mono text-sm text-slate-700">{{ row.fecha }}</span>
+      }
+
+      @if (field === 'horaInicio') {
+        <span class="font-mono text-sm text-slate-700">{{ hora(row.horaInicio) }} - {{ hora(row.horaSalida) }}</span>
+      }
+
+      @if (field === 'recepcionista') {
+        <span class="text-slate-500 text-sm">{{ row.recepcionista }}</span>
+      }
+
+      @if (field === 'estado') {
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold select-none" [ngClass]="estadoClase(row.estado)">
+          {{ estadoLabel(row.estado) }}
+        </span>
+      }
+
+    </ng-template>
+  </app-custom-table>
+</div>

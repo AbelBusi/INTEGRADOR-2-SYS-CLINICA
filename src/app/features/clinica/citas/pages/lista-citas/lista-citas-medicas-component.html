@@ -1,0 +1,79 @@
+<div class="space-y-6">
+
+  <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+    @for(item of stats; track item.title) {
+      <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex items-center gap-4 hover:shadow-md transition-all w-full md:w-72">
+        <div class="p-3 rounded-lg" [ngClass]="item.bg">
+          <span class="material-icons block text-2xl" [ngClass]="item.color">
+            {{ item.icon }}
+          </span>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-500">{{ item.title }}</p>
+          <p class="text-2xl font-bold text-gray-900">{{ item.value }}</p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="flex items-center justify-between gap-4 flex-wrap">
+    <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 w-full md:w-80 shadow-sm focus-within:ring-2 focus-within:ring-[#0d6b68]/20 transition-all">
+      <span class="material-icons text-gray-400 text-lg shrink-0">search</span>
+      <input
+        type="text"
+        class="bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none w-full"
+        placeholder="Buscar por paciente o doctor..."
+        [(ngModel)]="search"
+      />
+    </div>
+
+    <div class="hidden sm:flex items-center gap-2 text-sm text-gray-400">
+      <span class="font-medium text-gray-600">{{ filteredCitas.length }}</span>
+      citas encontradas
+    </div>
+  </div>
+
+  <app-custom-table
+    [data]="filteredCitas"
+    [columns]="columnas"
+    [loading]="cargando"
+    [sortField]="sortField"
+    (sort)="handleSort($event)"
+    (rowClick)="seleccionarCita($event.id)"
+  >
+    <ng-template #customColumn let-row let-field="field">
+      @if (field === 'nombrePaciente') {
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-[#0d6b68]/10 border border-[#0d6b68]/20 flex items-center justify-center shrink-0">
+            <span class="text-[#0d6b68] text-xs font-bold">
+              {{ row.nombrePaciente[0] }}
+            </span>
+          </div>
+          <div>
+            <p class="font-bold text-gray-900 transition-colors leading-none">
+              {{ row.nombrePaciente }} {{ row.apellidosPaciente }}
+            </p>
+          </div>
+        </div>
+      }
+    </ng-template>
+  </app-custom-table>
+
+</div>
+
+@if (citaSeleccionada()) {
+  <app-detalle-cita-modal
+    [cita]="citaSeleccionada()!"
+    (close)="citaSeleccionada.set(null)"
+    (edit)="handleEdit($event)"
+  />
+}
+
+@if (citaAEditar()) {
+  <app-editar-cita-modal
+    [cita]="citaAEditar()!"
+    (close)="citaAEditar.set(null)"
+    (guardadoExitoso)="cargarCitas(); citaAEditar.set(null)"
+  />
+}
+

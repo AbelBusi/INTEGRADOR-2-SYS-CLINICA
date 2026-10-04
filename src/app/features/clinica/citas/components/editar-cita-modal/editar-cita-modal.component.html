@@ -1,0 +1,289 @@
+<div
+  class="fixed inset-0 z-40 flex items-center justify-center bg-black/50 backdrop-blur-none"
+  (click)="close.emit()"
+>
+  <div
+    class="relative bg-white rounded-md border border-gray-300 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.05)] w-full max-w-2xl mx-4 overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+    (click)="$event.stopPropagation()"
+  >
+
+    <div class="bg-[#0d6b68] px-8 py-6 border-b border-gray-200/10">
+      <button
+        type="button"
+        (click)="close.emit()"
+        class="absolute top-5 right-5 p-1 rounded-md text-gray-200/70 hover:text-white hover:bg-white/10 transition-colors"
+      >
+        <span class="material-icons block text-2xl">close</span>
+      </button>
+
+      <div class="flex items-center gap-5">
+        <div class="w-14 h-14 rounded-md bg-white/10 border border-white/15 flex items-center justify-center shrink-0">
+          <span class="text-white text-lg font-bold tracking-wider">{{ iniciales() }}</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2 mb-0.5">
+            <span class="material-icons text-white/60 text-sm">edit</span>
+            <span class="text-white/70 text-[10px] font-bold uppercase tracking-widest">Modificando Cita</span>
+          </div>
+          <h2 class="text-white text-lg font-bold tracking-tight">
+            {{ cita().nombrePaciente }} {{ cita().apellidosPaciente }}
+          </h2>
+          <div class="flex items-center gap-2 mt-1">
+            <span class="text-gray-200/80 text-xs font-medium">ID de Registro: #{{ cita().id }}</span>
+            <span class="text-gray-300 text-xs select-none">•</span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-400/20 text-amber-200 border border-amber-300/20">
+              En edición
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-8 py-6 space-y-5 max-h-[68vh] overflow-y-auto bg-gray-50/30">
+
+      <div class="bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden">
+        <div class="flex items-center gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50/50">
+          <span class="material-icons text-sm text-[#0d6b68]">assignment_ind</span>
+          <span class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Asignación Base</span>
+        </div>
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Recepcionista <span class="text-[#0d6b68]">*</span>
+            </label>
+            <div class="relative">
+              <select
+                [ngModel]="form().recepcionistaId"
+                (ngModelChange)="updateField('recepcionistaId', $event)"
+                class="w-full appearance-none text-xs px-3 py-2.5 pr-8 rounded bg-white text-gray-800 font-medium border border-gray-200 hover:border-[#0d6b68] focus:border-[#0d6b68] outline-none transition-colors"
+                [class.border-red-400]="!form().recepcionistaId"
+              >
+                <option [value]="null" disabled hidden>SELECCIONE RECEPCIONISTA</option>
+                @for (rep of recepcionistas; track rep.id) {
+                  <option [value]="rep.id">{{ rep.nombreRecepcionista }}</option>
+                }
+              </select>
+              <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-icons text-[16px] text-gray-400">expand_more</span>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Paciente <span class="text-[#0d6b68]">*</span>
+            </label>
+            <div class="relative">
+              <select
+                [ngModel]="form().pacienteId"
+                (ngModelChange)="updateField('pacienteId', $event)"
+                [disabled]="true"
+                class="w-full appearance-none text-xs px-3 py-2.5 pr-8 rounded bg-gray-100 text-gray-700 font-medium border border-gray-200 cursor-not-allowed outline-none transition-colors"
+              >
+                <option [value]="null" disabled hidden>SELECCIONE PACIENTE</option>
+                @for (pac of pacientes; track pac.idPaciente) {
+                  <option [value]="pac.idPaciente">
+                    {{ pac.nombrePaciente }}
+                  </option>
+                }
+              </select>
+              <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-icons text-[16px] text-gray-400">lock</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden">
+        <div class="flex items-center gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50/50">
+          <span class="material-icons text-sm text-[#0d6b68]">local_hospital</span>
+          <span class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Especialidad y Personal Médico</span>
+        </div>
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Especialidad <span class="text-[#0d6b68]">*</span>
+            </label>
+            <div class="relative">
+              <select
+                [ngModel]="form().especialidadId"
+                (ngModelChange)="onEspecialidadChange($event)"
+                class="w-full appearance-none text-xs px-3 py-2.5 pr-8 rounded bg-white text-gray-800 font-medium border border-gray-200 hover:border-[#0d6b68] focus:border-[#0d6b68] outline-none transition-colors"
+              >
+                <option [value]="null" disabled hidden>SELECCIONE ESPECIALIDAD</option>
+                @for (esp of especialidades; track esp.idEspecialidad) {
+                  <option [value]="esp.idEspecialidad">{{ esp.nombreEspecialidad }}</option>
+                }
+              </select>
+              <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-icons text-[16px] text-gray-400">expand_more</span>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Doctor Asignado <span class="text-[#0d6b68]">*</span>
+            </label>
+            <div class="relative">
+              <select
+                [ngModel]="form().doctorId"
+                (ngModelChange)="updateField('doctorId', $event)"
+                [disabled]="doctores.length === 0"
+                class="w-full appearance-none text-xs px-3 py-2.5 pr-8 rounded bg-white text-gray-800 font-medium border border-gray-200 hover:border-[#0d6b68] focus:border-[#0d6b68] outline-none transition-colors disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+              >
+                <option [value]="null" disabled hidden>
+                  {{ doctores.length === 0 ? 'SELECCIONE ESPECIALIDAD PRIMERO' : 'SELECCIONE MÉDICO' }}
+                </option>
+                @for (doc of doctores; track doc.id) {
+                  <option [value]="doc.id">{{ doc.nombres }}</option>
+                }
+              </select>
+              <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-icons text-[16px] text-gray-400">expand_more</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="bg-white border border-gray-200 rounded-md shadow-sm overflow-hidden">
+        <div class="flex items-center gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50/50">
+          <span class="material-icons text-sm text-[#0d6b68]">schedule</span>
+          <span class="text-[10px] font-bold text-gray-600 uppercase tracking-widest">Programación y Costo</span>
+        </div>
+        <div class="p-5 space-y-4">
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="space-y-1.5 border-l-2 border-[#0d6b68] pl-3">
+              <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                Fecha <span class="text-[#0d6b68]">*</span>
+              </label>
+              <input
+                type="date"
+                [min]="today"
+                [ngModel]="form().fecha"
+                (ngModelChange)="updateField('fecha', $event)"
+                class="w-full text-xs px-3 py-2.5 rounded bg-white text-gray-800 font-bold border border-gray-200 hover:border-[#0d6b68] focus:border-[#0d6b68] outline-none transition-colors"
+              />
+            </div>
+            <div class="space-y-1.5 border-l-2 border-gray-300 pl-3">
+              <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                Hora Entrada <span class="text-[#0d6b68]">*</span>
+              </label>
+              <input
+                type="time"
+                [ngModel]="form().horaInicio"
+                (ngModelChange)="updateField('horaInicio', $event)"
+                class="w-full text-xs px-3 py-2.5 rounded bg-white text-gray-800 font-medium border border-gray-200 hover:border-[#0d6b68] focus:border-[#0d6b68] outline-none transition-colors"
+              />
+            </div>
+            <div class="space-y-1.5 border-l-2 border-gray-300 pl-3">
+              <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                Hora Salida <span class="text-[#0d6b68]">*</span>
+              </label>
+              <input
+                type="time"
+                [ngModel]="form().horaSalida"
+                (ngModelChange)="updateField('horaSalida', $event)"
+                class="w-full text-xs px-3 py-2.5 rounded bg-white text-gray-800 font-medium border border-gray-200 hover:border-[#0d6b68] focus:border-[#0d6b68] outline-none transition-colors"
+              />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="space-y-1.5 md:col-span-2">
+              <div class="flex justify-between">
+                <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                  Motivo de Consulta <span class="text-[#0d6b68]">*</span>
+                </label>
+                <span class="text-[10px] font-mono text-gray-400">{{ motivoLength }}/500</span>
+              </div>
+              <textarea
+                [ngModel]="form().motivo"
+                (ngModelChange)="updateField('motivo', $event)"
+                rows="2"
+                maxlength="500"
+                placeholder="Describa los síntomas o motivo de la consulta..."
+                class="w-full text-xs px-3 py-2.5 rounded bg-white text-gray-800 font-medium border border-gray-200 hover:border-[#0d6b68] focus:border-[#0d6b68] outline-none transition-colors resize-none leading-relaxed"
+              ></textarea>
+            </div>
+            <div class="space-y-1.5">
+              <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                Costo (PEN) <span class="text-[#0d6b68]">*</span>
+              </label>
+              <div class="relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold select-none">S/.</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.00"
+                  placeholder="0.00"
+                  [ngModel]="form().costo"
+                  (ngModelChange)="updateField('costo', $event)"
+                  class="w-full text-xs pl-9 pr-3 py-2.5 rounded bg-white text-gray-800 font-bold border border-gray-200 hover:border-[#0d6b68] focus:border-[#0d6b68] outline-none transition-colors"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-gray-100">
+            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Estado de la Cita</label>
+            <div class="flex gap-3">
+              <button
+                type="button"
+                (click)="updateField('estado', 1)"
+                class="flex items-center gap-2 px-4 py-2 border-2 rounded-lg text-xs font-bold transition-all"
+                [class.border-[#0d6b68]]="form().estado === 1"
+                [class.bg-teal-50]="form().estado === 1"
+                [class.text-[#0d6b68]]="form().estado === 1"
+                [class.border-gray-200]="form().estado !== 1"
+                [class.text-gray-500]="form().estado !== 1"
+              >
+                <span class="material-icons text-sm">check_circle</span>
+                Activa
+              </button>
+              <button
+                type="button"
+                (click)="updateField('estado', 0)"
+                class="flex items-center gap-2 px-4 py-2 border-2 rounded-lg text-xs font-bold transition-all"
+                [class.border-red-400]="form().estado === 0"
+                [class.bg-red-50]="form().estado === 0"
+                [class.text-red-500]="form().estado === 0"
+                [class.border-gray-200]="form().estado !== 0"
+                [class.text-gray-500]="form().estado !== 0"
+              >
+                <span class="material-icons text-sm">cancel</span>
+                Inactiva
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="px-8 py-4 border-t border-gray-200 flex justify-end gap-2 bg-gray-50">
+      <button
+        type="button"
+        (click)="close.emit()"
+        [disabled]="guardando()"
+        class="px-5 py-2.5 text-xs font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-200/60 rounded-md transition-colors uppercase tracking-wider disabled:opacity-40"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        (click)="guardar()"
+        [disabled]="guardando()"
+        class="flex items-center gap-2 px-6 py-2.5 text-xs bg-[#0d6b68] text-white rounded-md hover:bg-[#0a5452] transition-colors font-bold uppercase tracking-wider shadow-sm border border-[#0a5452] disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        @if (guardando()) {
+          <span class="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          <span>Guardando...</span>
+        } @else {
+          <span class="material-icons text-sm">save</span>
+          <span>Guardar Cambios</span>
+        }
+      </button>
+    </div>
+
+  </div>
+</div>

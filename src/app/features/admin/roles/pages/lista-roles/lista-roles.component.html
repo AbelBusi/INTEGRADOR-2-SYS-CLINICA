@@ -1,0 +1,95 @@
+<div class="animate-fade-in space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="page-header mb-0">
+      <h2>Roles del sistema</h2>
+      <p>Perfiles de acceso para usuarios</p>
+    </div>
+    <button type="button" class="btn-primary shrink-0" (click)="isCrearOpen.set(true)">
+      <span class="material-icons text-lg">add</span>
+      Nuevo rol
+    </button>
+  </div>
+
+  <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-2 w-72 shadow-sm">
+    <span class="material-icons text-slate-400 text-lg">search</span>
+    <input
+      type="text"
+      class="bg-transparent text-sm outline-none w-full"
+      placeholder="Buscar rol..."
+      [ngModel]="search()"
+      (ngModelChange)="search.set($event)"
+    />
+  </div>
+
+  @if (cargando()) {
+    <div class="flex justify-center py-16">
+      <div class="h-10 w-10 rounded-full border-2 border-teal-600 border-t-transparent animate-spin"></div>
+    </div>
+  } @else {
+    <div class="table-shell">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-slate-500 border-b border-slate-100">
+            <th class="py-3 px-4">Nombre</th>
+            <th class="py-3 px-4">Descripción</th>
+            <th class="py-3 px-4">Estado</th>
+            <th class="py-3 px-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of filtered(); track r.id) {
+            <tr class="border-b border-slate-50 hover:bg-slate-50/80">
+              <td class="py-3 px-4 font-semibold text-slate-800">{{ r.nombre }}</td>
+              <td class="py-3 px-4 text-slate-600">{{ r.descripcion }}</td>
+              <td class="py-3 px-4">
+                <span
+                  class="badge"
+                  [class.badge-active]="r.estado === 1"
+                  [class.badge-inactive]="r.estado !== 1"
+                >
+                  {{ r.estado === 1 ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="py-3 px-4 text-right space-x-2">
+                <button
+                  type="button"
+                  class="text-teal-700 hover:text-teal-900 text-sm font-medium"
+                  (click)="abrirEditar(r)"
+                >
+                  Editar
+                </button>
+                @if (r.estado === 1) {
+                  <button
+                    type="button"
+                    class="text-red-600 hover:text-red-800 text-sm font-medium"
+                    (click)="eliminar(r.id)"
+                  >
+                    Desactivar
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" class="py-8 text-center text-slate-400">No hay roles registrados</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
+
+<app-crear-rol-modal
+  [isOpen]="isCrearOpen()"
+  (onClose)="isCrearOpen.set(false)"
+  (onRolCreado)="cargar(); isCrearOpen.set(false)"
+/>
+
+@if (rolEditar(); as rol) {
+  <app-editar-rol-modal
+    [rol]="rol"
+    (onClose)="cerrarEditar()"
+    (onRolActualizado)="cargar(); cerrarEditar()"
+  />
+}

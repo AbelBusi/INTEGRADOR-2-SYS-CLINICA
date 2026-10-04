@@ -1,0 +1,126 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-none" (click)="close.emit()">
+  <div class="relative bg-white rounded-md border border-gray-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.05)] w-full max-w-3xl mx-4 overflow-hidden"
+       (click)="$event.stopPropagation()">
+
+    <div class="bg-[#0d6b68] px-6 py-4 flex items-center justify-between border-b border-gray-200/10">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded bg-white/10 border border-white/10 flex items-center justify-center text-white select-none">
+          <span class="material-icons text-xl">event</span>
+        </div>
+        <div>
+          <h3 class="text-white font-bold text-base tracking-tight">Seleccionar Fecha y Hora</h3>
+          <p class="text-gray-200/80 text-xs mt-0.5">{{ doctorNombre() }}{{ especialidad() ? ' · ' + especialidad() : '' }}</p>
+        </div>
+      </div>
+      <button type="button" (click)="close.emit()" class="text-gray-200/70 hover:text-white hover:bg-white/10 p-1.5 rounded transition-colors">
+        <span class="material-icons block text-xl">close</span>
+      </button>
+    </div>
+
+    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[70vh] overflow-y-auto">
+
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <button type="button" (click)="navegarMes(-1)" class="p-1.5 rounded border border-slate-200 text-slate-500 hover:bg-slate-50">
+            <span class="material-icons text-lg block">chevron_left</span>
+          </button>
+          <span class="text-sm font-bold text-slate-700 capitalize">{{ mesLabel() }}</span>
+          <button type="button" (click)="navegarMes(1)" class="p-1.5 rounded border border-slate-200 text-slate-500 hover:bg-slate-50">
+            <span class="material-icons text-lg block">chevron_right</span>
+          </button>
+        </div>
+        <div class="grid grid-cols-7 gap-1 mb-1">
+          @for (d of encabezadosDia; track d) {
+            <div class="text-center text-[10px] font-bold text-slate-400 uppercase py-1">{{ d }}</div>
+          }
+        </div>
+        @for (fila of semanas(); track $index) {
+          <div class="grid grid-cols-7 gap-1 mb-1">
+            @for (celda of fila; track $index) {
+              @if (celda) {
+                <button type="button" (click)="seleccionarDia(celda.fecha, celda.pasado)" [disabled]="celda.pasado"
+                        class="aspect-square rounded text-xs font-medium flex items-center justify-center transition-colors"
+                        [ngClass]="{
+                          'bg-[#0d6b68] text-white font-bold': fechaSel() === celda.fecha,
+                          'text-slate-300 cursor-not-allowed': celda.pasado,
+                          'text-slate-700 hover:bg-teal-50': !celda.pasado && fechaSel() !== celda.fecha
+                        }">
+                  {{ celda.num }}
+                </button>
+              } @else {
+                <div></div>
+              }
+            }
+          </div>
+        }
+      </div>
+
+      <div class="space-y-4">
+        @if (!fechaSel()) {
+          <p class="text-xs text-slate-400">Seleccione un día en el calendario.</p>
+        } @else if (cargando()) {
+          <div class="py-8 flex justify-center">
+            <div class="w-6 h-6 border-2 border-[#0d6b68] border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        } @else {
+
+          @if (citasDia().length) {
+            <div>
+              <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Citas del día (ocupado)</p>
+              <div class="flex flex-wrap gap-2">
+                @for (c of citasDia(); track $index) {
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-100 text-rose-700 border border-rose-200">
+                    {{ hora(c.horaInicio) }} - {{ hora(c.horaFin) }}
+                  </span>
+                }
+              </div>
+            </div>
+          }
+
+          @if (desdeOpciones().length) {
+            <div class="grid grid-cols-2 gap-3">
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Desde</label>
+                <select class="w-full text-xs px-3 py-2 border border-slate-200 rounded bg-white focus:outline-none focus:border-[#0d6b68] text-slate-800 font-medium"
+                        [ngModel]="desde()" (ngModelChange)="desde.set($event); hasta.set('')">
+                  <option value="" disabled>--:--</option>
+                  @for (h of desdeOpciones(); track h) {
+                    <option [value]="h">{{ h }}</option>
+                  }
+                </select>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Hasta</label>
+                <select class="w-full text-xs px-3 py-2 border border-slate-200 rounded bg-white focus:outline-none focus:border-[#0d6b68] text-slate-800 font-medium disabled:bg-slate-50"
+                        [ngModel]="hasta()" (ngModelChange)="hasta.set($event)" [disabled]="!desde()">
+                  <option value="" disabled>--:--</option>
+                  @for (h of hastaOpciones(); track h) {
+                    <option [value]="h">{{ h }}</option>
+                  }
+                </select>
+              </div>
+            </div>
+            <p class="text-[11px] text-emerald-600 flex items-center gap-1">
+              <span class="material-icons text-[14px]">check_circle</span>
+              Solo se muestran horarios dentro de la jornada del doctor y libres de citas.
+            </p>
+          } @else {
+            <p class="text-xs text-slate-400">El doctor no tiene disponibilidad configurada para este día.</p>
+          }
+        }
+      </div>
+    </div>
+
+    <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-2 bg-gray-50">
+      <button type="button" (click)="close.emit()"
+              class="px-4 py-2 text-xs font-semibold text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded transition-colors">
+        Cancelar
+      </button>
+      <button type="button" (click)="confirmar()" [disabled]="!fechaSel() || !desde() || !hasta()"
+              class="flex items-center gap-2 px-5 py-2 text-xs bg-[#0d6b68] text-white rounded hover:bg-[#0a5452] transition-colors font-bold uppercase tracking-wider shadow-sm disabled:opacity-40 disabled:cursor-not-allowed">
+        <span class="material-icons text-sm">check</span>
+        Confirmar
+      </button>
+    </div>
+  </div>
+</div>

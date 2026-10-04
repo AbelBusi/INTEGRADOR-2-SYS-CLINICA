@@ -1,0 +1,117 @@
+<div class="animate-fade-in space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="page-header mb-0">
+      <h2>Gestión de Horarios</h2>
+      <p>Horarios de trabajo de doctores y recepcionistas</p>
+    </div>
+    <button type="button" (click)="crearOpen.set(true)" class="btn-primary shrink-0">
+      <span class="material-icons text-lg">add</span>
+      Nuevo horario
+    </button>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    @for (item of stats(); track item.title) {
+      <div class="bg-white rounded border border-slate-200 p-4 flex items-center gap-4 shadow-sm select-none">
+        <div class="w-10 h-10 rounded flex items-center justify-center shrink-0 text-white" [ngClass]="item.bg">
+          <span class="material-icons text-xl block">{{ item.icon }}</span>
+        </div>
+        <div>
+          <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ item.title }}</p>
+          <p class="text-2xl font-mono font-bold text-slate-900 tracking-tight leading-none mt-0.5">{{ item.value }}</p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="flex items-center justify-between gap-4 flex-wrap">
+    <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex items-center gap-2 bg-white border border-slate-200 rounded px-3 py-2 w-64 shadow-sm focus-within:ring-2 focus-within:ring-teal-500/20 transition-all">
+        <span class="material-icons text-slate-400 text-lg select-none">search</span>
+        <input
+          type="text"
+          class="bg-transparent text-sm text-slate-700 placeholder-slate-400 outline-none w-full"
+          placeholder="Buscar por persona..."
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+        />
+      </div>
+      <select class="input-field w-auto py-2 rounded" [ngModel]="filtroTipo()" (ngModelChange)="filtroTipo.set($event)">
+        <option value="">Todos los tipos</option>
+        <option value="DOCTOR">Doctores</option>
+        <option value="RECEPCIONISTA">Recepcionistas</option>
+      </select>
+      <select class="input-field w-auto py-2 rounded" [ngModel]="filtroDia()" (ngModelChange)="filtroDia.set($event)">
+        <option value="">Todos los días</option>
+        @for (d of dias; track d.valor) {
+          <option [value]="d.valor">{{ d.nombre }}</option>
+        }
+      </select>
+    </div>
+    <span class="text-sm text-slate-400 select-none">
+      <span class="font-medium text-slate-600">{{ filtered().length }}</span> horarios
+    </span>
+  </div>
+
+  <app-custom-table
+    [data]="filtered()"
+    [columns]="columnas"
+    [loading]="cargando()"
+    [sortField]="sortField()"
+    (sort)="handleSort($event)">
+
+    <ng-template #customColumn let-row let-field="field">
+
+      @if (field === 'nombreCompleto') {
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-teal-100 border border-teal-200 flex items-center justify-center shrink-0 select-none">
+            <span class="material-icons text-teal-700 text-base">badge</span>
+          </div>
+          <p class="font-bold text-slate-900">{{ row.nombreCompleto }}</p>
+        </div>
+      }
+
+      @if (field === 'tipo') {
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold select-none" [ngClass]="tipoClase(row.tipo)">
+          {{ row.tipo }}
+        </span>
+      }
+
+      @if (field === 'diaSemana') {
+        <span class="text-slate-600 text-sm font-medium">{{ nombreDia(row.diaSemana) }}</span>
+      }
+
+      @if (field === 'horaInicio') {
+        <span class="font-mono text-sm text-slate-700 font-bold">{{ hora(row.horaInicio) }} - {{ hora(row.horaFin) }}</span>
+      }
+
+      @if (field === 'acciones') {
+        <div class="flex items-center gap-1">
+          <button type="button" (click)="$event.stopPropagation(); editar(row)"
+                  class="p-1.5 text-gray-400 hover:text-[#0d6b68] hover:bg-teal-50 rounded-md transition-colors inline-flex items-center justify-center">
+            <span class="material-icons text-xl">edit</span>
+          </button>
+          <button type="button" (click)="$event.stopPropagation(); desactivar(row)"
+                  class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors inline-flex items-center justify-center">
+            <span class="material-icons text-xl">delete</span>
+          </button>
+        </div>
+      }
+
+    </ng-template>
+  </app-custom-table>
+</div>
+
+<app-crear-horario-modal
+  [isOpen]="crearOpen()"
+  (onClose)="crearOpen.set(false)"
+  (onCreado)="onHorarioCreado()">
+</app-crear-horario-modal>
+
+@if (horarioEditar()) {
+  <app-editar-horario-modal
+    [horario]="horarioEditar()!"
+    (close)="horarioEditar.set(null)"
+    (save)="onHorarioActualizado()">
+  </app-editar-horario-modal>
+}

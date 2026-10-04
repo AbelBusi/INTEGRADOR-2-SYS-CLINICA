@@ -1,0 +1,283 @@
+<div class="relative">
+  @if (isSaving) {
+    <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] flex items-center justify-center animate-fade-in">
+      <div class="bg-white rounded border border-gray-200 shadow-xl flex flex-col items-center gap-4 px-12 py-8 max-w-sm w-full">
+        <div class="h-10 w-10 border-4 border-gray-100 border-t-[#0d6b68] rounded-full animate-spin"></div>
+        <div class="text-center">
+          <p class="text-xs font-bold text-gray-800 uppercase tracking-widest">Procesando Operación</p>
+          <p class="text-[11px] text-gray-500 mt-1">Registrando cita en el sistema...</p>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showModalPago()) {
+    <app-pago-modal
+      [costo]="form.get('costo')?.value"
+      (onPagoExitoso)="ejecutarGuardadoPostPago()"
+      (cancelar)="showModalPago.set(false)">
+    </app-pago-modal>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate class="space-y-6">
+
+    <div class="bg-[#fdfdfd] border border-gray-200 rounded shadow-sm overflow-hidden">
+      <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+        <span class="material-icons text-base text-[#0d6b68] select-none">local_hospital</span>
+        <h3 class="text-xs font-bold text-gray-700 uppercase tracking-widest">Especialidad y Personal Médico</h3>
+      </div>
+      <div class="p-6 space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Especialidad Médica <span class="text-[#0d6b68] text-xs">*</span>
+            </label>
+            <div class="relative">
+              <select formControlName="especialidadId" (change)="onEspecialidadChange($event)"
+                      class="w-full appearance-none text-xs px-3 py-2.5 pr-8 rounded bg-white text-gray-800 font-medium transition-colors outline-none border hover:border-[#0d6b68] focus:border-[#0d6b68]"
+                      [class.border-red-400]="isInvalid('especialidadId')"
+                      [class.border-gray-200]="!isInvalid('especialidadId')">
+                <option value="" disabled hidden>SELECCIONE ESPECIALIDAD</option>
+                @for (esp of especialidades; track esp.idEspecialidad) {
+                  <option [value]="esp.idEspecialidad">{{ esp.nombreEspecialidad }}</option>
+                }
+              </select>
+              <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-icons text-[16px] text-gray-400">expand_more</span>
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Doctor Asignado <span class="text-[#0d6b68] text-xs">*</span>
+            </label>
+            <div class="relative">
+              <select formControlName="doctorId" (change)="onDoctorChange()"
+                      class="w-full appearance-none text-xs px-3 py-2.5 pr-8 rounded bg-white text-gray-800 font-medium transition-colors outline-none border hover:border-[#0d6b68] focus:border-[#0d6b68] disabled:bg-gray-50 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed"
+                      [class.border-red-400]="isInvalid('doctorId')"
+                      [class.border-gray-200]="!isInvalid('doctorId')">
+                <option value="" disabled hidden>
+                  {{ form.get('especialidadId')?.value ? 'SELECCIONE MÉDICO' : 'REQUIERE ESPECIALIDAD' }}
+                </option>
+                @for (doc of doctores; track doc.id) {
+                  <option [value]="doc.id">{{ doc.nombres }}</option>
+                }
+              </select>
+              <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-icons text-[16px] text-gray-400">expand_more</span>
+            </div>
+          </div>
+        </div>
+
+        @if (doctorIdActual) {
+          <div class="flex items-center gap-4 p-4 rounded-lg bg-teal-50 border border-teal-100">
+            <div class="w-12 h-12 rounded-full bg-teal-600 flex items-center justify-center shrink-0 text-white select-none">
+              <span class="material-icons">medical_services</span>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold text-teal-700 uppercase tracking-widest">Doctor seleccionado</p>
+              <p class="text-sm font-bold text-gray-900">{{ doctorSeleccionadoNombre }}</p>
+              <p class="text-xs text-gray-500">{{ especialidadSeleccionadaNombre }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="bg-[#fdfdfd] border border-gray-200 rounded shadow-sm overflow-hidden">
+      <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+        <span class="material-icons text-base text-[#0d6b68] select-none">event</span>
+        <h3 class="text-xs font-bold text-gray-700 uppercase tracking-widest">Programación</h3>
+      </div>
+      <div class="p-6 space-y-6">
+
+        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+          <button type="button" (click)="abrirCalendario()"
+                  class="flex items-center gap-2 px-5 py-2.5 bg-[#0d6b68] text-white text-xs font-bold rounded hover:bg-[#0a5452] shadow-sm transition-colors uppercase tracking-wider disabled:opacity-40"
+                  [disabled]="!doctorIdActual">
+            <span class="material-icons text-sm">calendar_month</span>
+            Seleccionar fecha y hora
+          </button>
+
+          @if (fechaSeleccionada) {
+            <div class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-emerald-50 border border-emerald-100">
+              <span class="material-icons text-emerald-600 text-lg">event_available</span>
+              <div>
+                <p class="text-xs font-bold text-gray-800 font-mono">{{ fechaSeleccionada }}</p>
+                <p class="text-[11px] text-gray-500 font-mono">{{ horaInicioSeleccionada }} - {{ horaSalidaSeleccionada }}</p>
+              </div>
+            </div>
+          } @else {
+            <p class="text-[11px] text-gray-400">Seleccione el doctor y luego elija la fecha y el horario disponible.</p>
+          }
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Recepcionista Encargado <span class="text-[#0d6b68] text-xs">*</span>
+            </label>
+
+            @if (esRecepcionista) {
+              <div class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-teal-50 border border-teal-100">
+                <span class="material-icons text-teal-600 text-lg">badge</span>
+                <div>
+                  <p class="text-[10px] font-bold text-teal-700 uppercase tracking-widest">Agendando como</p>
+                  <p class="text-xs font-bold text-gray-800">
+                    {{ recepcionistaActual ? recepcionistaActual.nombre + ' ' + recepcionistaActual.apellidos : 'Cargando...' }}
+                  </p>
+                </div>
+              </div>
+            } @else {
+              <div class="relative">
+                <select formControlName="recepcionistaId"
+                        class="w-full appearance-none text-xs px-3 py-2.5 pr-8 rounded bg-white text-gray-800 font-medium transition-colors outline-none border hover:border-[#0d6b68] focus:border-[#0d6b68]"
+                        [class.border-red-400]="isInvalid('recepcionistaId')"
+                        [class.border-gray-200]="!isInvalid('recepcionistaId')">
+                  <option value="" disabled hidden>SELECCIONE RECEPCIONISTA</option>
+                  @for (rep of recepcionistas; track rep.id) {
+                    <option [value]="rep.id">{{ rep.nombre }}</option>
+                  }
+                </select>
+                <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-icons text-[16px] text-gray-400">expand_more</span>
+              </div>
+              @if (!recepcionistas.length) {
+                <p class="text-[10px] text-gray-400">Seleccione fecha y horario para ver los recepcionistas disponibles.</p>
+              }
+            }
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Paciente <span class="text-[#0d6b68] text-xs">*</span>
+            </label>
+            <div class="relative">
+              <select formControlName="pacienteId"
+                      class="w-full appearance-none text-xs px-3 py-2.5 pr-8 rounded bg-white text-gray-800 font-medium transition-colors outline-none border hover:border-[#0d6b68] focus:border-[#0d6b68]"
+                      [class.border-red-400]="isInvalid('pacienteId')"
+                      [class.border-gray-200]="!isInvalid('pacienteId')">
+                <option value="" disabled hidden>SELECCIONE PACIENTE</option>
+                @for (pac of pacientes; track pac.idPaciente) {
+                  <option [value]="pac.idPaciente">{{ pac.nombrePaciente }}</option>
+                }
+              </select>
+              <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 material-icons text-[16px] text-gray-400">expand_more</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="space-y-2 md:col-span-2">
+            <div class="flex justify-between items-center">
+              <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                Motivo de Consulta <span class="text-[#0d6b68] text-xs">*</span>
+              </label>
+              <span class="text-[10px] font-mono text-gray-400 select-none">
+                {{ form.get('motivo')?.value?.length || 0 }}/500
+              </span>
+            </div>
+            <textarea formControlName="motivo" rows="2" maxlength="500"
+                      placeholder="Describa los síntomas o motivo de la consulta..."
+                      class="w-full text-xs px-3 py-2.5 rounded bg-white text-gray-800 font-medium transition-colors outline-none border hover:border-[#0d6b68] focus:border-[#0d6b68] resize-none leading-relaxed"
+                      [class.border-red-400]="isInvalid('motivo')"
+                      [class.border-gray-200]="!isInvalid('motivo')"></textarea>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+              Costo Total (PEN) <span class="text-[#0d6b68] text-xs">*</span>
+            </label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-bold select-none">S/.</span>
+              <input type="number" formControlName="costo" step="0.01" min="0.01" placeholder="0.00"
+                     class="w-full text-xs pl-9 pr-3 py-2.5 rounded bg-white text-gray-800 font-bold transition-colors outline-none border hover:border-[#0d6b68] focus:border-[#0d6b68]"
+                     [class.border-red-400]="isInvalid('costo')"
+                     [class.border-gray-200]="!isInvalid('costo')" />
+            </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-gray-100">
+          <label class="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">
+            Método de Facturación (Mostrador)
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button type="button" (click)="setMetodoPago('efectivo')"
+                    class="group relative flex items-center gap-4 p-4 border-2 rounded-lg transition-all duration-200 text-left outline-none overflow-hidden"
+                    [class.border-[#0d6b68]]="metodoSeleccionado() === 'efectivo'"
+                    [class.bg-teal-50]="metodoSeleccionado() === 'efectivo'"
+                    [class.shadow-sm]="metodoSeleccionado() === 'efectivo'"
+                    [class.border-gray-200]="metodoSeleccionado() !== 'efectivo'"
+                    [class.hover:border-gray-300]="metodoSeleccionado() !== 'efectivo'">
+              <div class="flex-shrink-0 w-11 h-11 rounded-lg flex items-center justify-center transition-colors"
+                   [class.bg-[#0d6b68]]="metodoSeleccionado() === 'efectivo'"
+                   [class.bg-gray-100]="metodoSeleccionado() !== 'efectivo'">
+                <span class="material-icons text-xl"
+                      [class.text-white]="metodoSeleccionado() === 'efectivo'"
+                      [class.text-gray-400]="metodoSeleccionado() !== 'efectivo'">payments</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      [class.text-[#0d6b68]]="metodoSeleccionado() === 'efectivo'"
+                      [class.text-gray-700]="metodoSeleccionado() !== 'efectivo'">Efectivo</span>
+                <span class="text-[10px] text-gray-400 mt-0.5">Pago en caja al momento</span>
+              </div>
+              @if (metodoSeleccionado() === 'efectivo') {
+                <span class="material-icons text-[#0d6b68] text-base absolute right-3 top-3">check_circle</span>
+              }
+            </button>
+
+            <button type="button" (click)="setMetodoPago('paypal')"
+                    class="group relative flex items-center gap-4 p-4 border-2 rounded-lg transition-all duration-200 text-left outline-none overflow-hidden"
+                    [class.border-[#003087]]="metodoSeleccionado() === 'paypal'"
+                    [class.bg-[#f5f8ff]]="metodoSeleccionado() === 'paypal'"
+                    [class.shadow-sm]="metodoSeleccionado() === 'paypal'"
+                    [class.border-gray-200]="metodoSeleccionado() !== 'paypal'"
+                    [class.hover:border-gray-300]="metodoSeleccionado() !== 'paypal'">
+              <div class="flex-shrink-0 w-11 h-11 rounded-lg flex items-center justify-center transition-colors"
+                   [class.bg-[#003087]]="metodoSeleccionado() === 'paypal'"
+                   [class.bg-gray-100]="metodoSeleccionado() !== 'paypal'">
+                <span class="material-icons text-xl"
+                      [class.text-white]="metodoSeleccionado() === 'paypal'"
+                      [class.text-gray-400]="metodoSeleccionado() !== 'paypal'">account_balance_wallet</span>
+              </div>
+              <div class="flex flex-col">
+                <span class="text-[11px] font-bold uppercase tracking-wider transition-colors"
+                      [class.text-[#003087]]="metodoSeleccionado() === 'paypal'"
+                      [class.text-gray-700]="metodoSeleccionado() !== 'paypal'">PayPal</span>
+                <span class="text-[10px] text-gray-400 mt-0.5">Pago seguro en línea</span>
+              </div>
+              @if (metodoSeleccionado() === 'paypal') {
+                <span class="material-icons text-[#003087] text-base absolute right-3 top-3">check_circle</span>
+              }
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="flex items-center justify-end pt-2">
+      <button type="submit"
+              [disabled]="isSaving"
+              class="flex items-center gap-2 px-8 py-3 text-white text-[11px] font-bold rounded transition-colors uppercase tracking-widest disabled:opacity-40 disabled:cursor-not-allowed"
+              [class.bg-[#0d6b68]]="metodoSeleccionado() === 'efectivo'"
+              [class.hover:bg-[#0a5452]]="metodoSeleccionado() === 'efectivo'"
+              [class.bg-[#003087]]="metodoSeleccionado() === 'paypal'"
+              [class.hover:bg-[#002070]]="metodoSeleccionado() === 'paypal'">
+        <span class="material-icons text-sm">
+          {{ metodoSeleccionado() === 'paypal' ? 'lock' : 'event_available' }}
+        </span>
+        {{ metodoSeleccionado() === 'efectivo' ? 'Registrar Cita Médica' : 'Pagar con PayPal y Confirmar' }}
+      </button>
+    </div>
+
+  </form>
+
+  @if (showCalendario() && doctorIdActual) {
+    <app-cita-calendario-modal
+      [doctorId]="doctorIdActual"
+      [doctorNombre]="doctorSeleccionadoNombre"
+      [especialidad]="especialidadSeleccionadaNombre"
+      (seleccionar)="onFechaHoraSeleccionada($event)"
+      (close)="showCalendario.set(false)">
+    </app-cita-calendario-modal>
+  }
+</div>

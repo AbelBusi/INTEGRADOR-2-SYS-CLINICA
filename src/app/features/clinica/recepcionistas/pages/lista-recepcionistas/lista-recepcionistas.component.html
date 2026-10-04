@@ -1,0 +1,110 @@
+<div class="animate-fade-in space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="page-header mb-0">
+      <h2>Recepcionistas</h2>
+      <p>Personal de recepción del consultorio</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+    @for (item of stats(); track item.title) {
+      <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex items-center gap-4 hover:shadow-md transition-all w-full md:w-72">
+        <div class="p-3 rounded-lg" [ngClass]="item.bg">
+          <span class="material-icons block text-2xl" [ngClass]="item.color">{{ item.icon }}</span>
+        </div>
+        <div>
+          <p class="text-sm font-medium text-gray-500">{{ item.title }}</p>
+          <p class="text-2xl font-bold text-gray-900">{{ item.value }}</p>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="flex items-center justify-between gap-4 flex-wrap">
+    <div class="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 w-full md:w-80 shadow-sm focus-within:ring-2 focus-within:ring-teal-500/20 transition-all">
+      <span class="material-icons text-gray-400 text-lg shrink-0">search</span>
+      <input
+        type="text"
+        class="bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none w-full"
+        placeholder="Buscar por nombre o código..."
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+      />
+    </div>
+    <div class="hidden sm:flex items-center gap-2 text-sm text-gray-400">
+      <span class="font-medium text-gray-600">{{ filtered().length }}</span>
+      recepcionistas encontrados
+    </div>
+  </div>
+
+  <app-custom-table
+    [data]="filtered()"
+    [columns]="columnas"
+    [loading]="cargando()"
+    [sortField]="sortField()"
+    (sort)="handleSort($event)">
+
+    <ng-template #customColumn let-row let-field="field">
+
+      @if (field === 'codigoEmpleado') {
+        <span class="font-mono text-sm text-gray-700 font-bold">{{ row.codigoEmpleado }}</span>
+      }
+
+      @if (field === 'apellidos') {
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-teal-100 border border-teal-200 flex items-center justify-center shrink-0">
+            <span class="text-teal-700 text-xs font-bold">
+              {{ (row.nombre || '?')[0] }}{{ (row.apellidos || '?')[0] }}
+            </span>
+          </div>
+          <div>
+            <p class="font-bold text-gray-900 leading-none">{{ row.apellidos }}, {{ row.nombre }}</p>
+            <p class="text-[11px] text-gray-400 mt-1">ID #{{ row.id }}</p>
+          </div>
+        </div>
+      }
+
+      @if (field === 'genero') {
+        <span class="text-gray-600 text-sm">{{ row.genero }}</span>
+      }
+
+      @if (field === 'estado') {
+        <span
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border"
+          [ngClass]="row.estado === 1 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-500 border-gray-200'"
+        >
+          <span class="w-1.5 h-1.5 rounded-full" [ngClass]="row.estado === 1 ? 'bg-green-500' : 'bg-gray-400'"></span>
+          {{ row.estado === 1 ? 'Activo' : 'Inactivo' }}
+        </span>
+      }
+
+      @if (field === 'acciones') {
+        <div class="flex items-center gap-1">
+          <button
+            type="button"
+            (click)="$event.stopPropagation(); editar(row)"
+            class="p-1.5 text-gray-400 hover:text-[#0d6b68] hover:bg-teal-50 rounded-md transition-colors inline-flex items-center justify-center"
+          >
+            <span class="material-icons text-xl">edit</span>
+          </button>
+          <button
+            type="button"
+            (click)="$event.stopPropagation(); desactivar(row)"
+            class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors inline-flex items-center justify-center"
+          >
+            <span class="material-icons text-xl">delete</span>
+          </button>
+        </div>
+      }
+
+    </ng-template>
+  </app-custom-table>
+</div>
+
+@if (recepcionistaEditar()) {
+  <app-editar-recepcionista-modal
+    [recepcionista]="recepcionistaEditar()!"
+    (close)="recepcionistaEditar.set(null)"
+    (save)="onRecepcionistaActualizado()">
+  </app-editar-recepcionista-modal>
+}

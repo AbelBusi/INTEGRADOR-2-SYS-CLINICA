@@ -1,0 +1,64 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-none" (click)="close.emit()">
+  <div class="relative bg-white rounded-md border border-gray-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.05)] w-full max-w-2xl mx-4 overflow-hidden"
+       (click)="$event.stopPropagation()">
+
+    <div class="bg-[#0d6b68] px-6 py-4 flex items-center justify-between border-b border-gray-200/10">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded bg-white/10 border border-white/10 flex items-center justify-center text-white select-none">
+          <span class="material-icons text-xl">medical_services</span>
+        </div>
+        <div>
+          <h3 class="text-white font-bold text-base tracking-tight">Atención Médica</h3>
+          <p class="text-gray-200/80 text-xs mt-0.5">{{ cita().nombrePaciente }} · {{ cita().fecha }} · {{ hora(cita().horaInicio) }} - {{ hora(cita().horaSalida) }}</p>
+        </div>
+      </div>
+      <button type="button" (click)="close.emit()" class="text-gray-200/70 hover:text-white hover:bg-white/10 p-1.5 rounded transition-colors">
+        <span class="material-icons block text-xl">close</span>
+      </button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="p-6 space-y-4 max-h-[70vh] overflow-y-auto" novalidate>
+
+      <div class="p-3 rounded-lg bg-slate-50 border border-slate-100">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Motivo de la consulta</p>
+        <p class="text-sm text-slate-700 mt-0.5">{{ cita().motivo }}</p>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Diagnóstico *</label>
+        <textarea name="diagnostico" [(ngModel)]="form.diagnostico" required maxlength="500" rows="2"
+                  class="w-full text-xs px-3 py-2 border border-gray-200 rounded bg-white hover:border-[#0d6b68] focus:outline-none focus:border-[#0d6b68] text-gray-800 font-medium transition-colors resize-none"></textarea>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Observaciones</label>
+        <textarea name="observaciones" [(ngModel)]="form.observaciones" maxlength="1000" rows="2"
+                  class="w-full text-xs px-3 py-2 border border-gray-200 rounded bg-white hover:border-[#0d6b68] focus:outline-none focus:border-[#0d6b68] text-gray-800 font-medium transition-colors resize-none"></textarea>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Tratamiento / Indicaciones</label>
+        <textarea name="tratamiento" [(ngModel)]="form.tratamiento" maxlength="1000" rows="2"
+                  class="w-full text-xs px-3 py-2 border border-gray-200 rounded bg-white hover:border-[#0d6b68] focus:outline-none focus:border-[#0d6b68] text-gray-800 font-medium transition-colors resize-none"></textarea>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Recomendaciones</label>
+        <textarea name="recomendaciones" [(ngModel)]="form.recomendaciones" maxlength="1000" rows="2"
+                  class="w-full text-xs px-3 py-2 border border-gray-200 rounded bg-white hover:border-[#0d6b68] focus:outline-none focus:border-[#0d6b68] text-gray-800 font-medium transition-colors resize-none"></textarea>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" (click)="close.emit()" [disabled]="guardando()"
+                class="px-4 py-2 text-xs font-semibold text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors disabled:opacity-40">
+          Cancelar
+        </button>
+        <button type="submit" [disabled]="guardando()"
+                class="flex items-center gap-2 px-5 py-2 text-xs bg-[#0d6b68] text-white rounded hover:bg-[#0a5452] transition-colors font-bold uppercase tracking-wider shadow-sm disabled:opacity-40 disabled:cursor-not-allowed">
+          <span class="material-icons text-sm">{{ guardando() ? 'sync' : 'task_alt' }}</span>
+          {{ guardando() ? 'Guardando...' : 'Cerrar Atención' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

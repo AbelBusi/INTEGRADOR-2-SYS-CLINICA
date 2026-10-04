@@ -1,0 +1,120 @@
+<form (submit)="onSubmit($event)" class="space-y-4" novalidate>
+
+  <div>
+    <label for="rec-usuario" class="mb-1 block text-sm font-semibold text-neutral-700">
+      Usuario
+    </label>
+    <div class="relative">
+      <span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-neutral-400">
+        person
+      </span>
+      <input
+        id="rec-usuario"
+        type="text"
+        autocomplete="username"
+        placeholder="Ingrese su usuario"
+        [value]="usuario()"
+        (input)="usuario.set($any($event.target).value)"
+        class="h-11 w-full border border-neutral-400 bg-white pl-10 pr-3 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-[#58595B]"
+      />
+    </div>
+    @if (intentado() && !usuario().trim()) {
+      <p class="mt-1 text-xs text-red-700">Ingrese su usuario.</p>
+    }
+  </div>
+
+  <div>
+    <label for="rec-documento" class="mb-1 block text-sm font-semibold text-neutral-700">
+      Número de documento
+    </label>
+    <div class="relative">
+      <span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-neutral-400">
+        badge
+      </span>
+      <input
+        id="rec-documento"
+        type="text"
+        maxlength="15"
+        placeholder="Ingrese su número de documento"
+        [value]="numeroDocumento()"
+        (input)="numeroDocumento.set($any($event.target).value)"
+        class="h-11 w-full border border-neutral-400 bg-white pl-10 pr-3 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-[#58595B]"
+      />
+    </div>
+    @if (intentado() && !numeroDocumento().trim()) {
+      <p class="mt-1 text-xs text-red-700">Ingrese su número de documento.</p>
+    }
+  </div>
+
+  <div>
+    <span class="mb-1 block text-sm font-semibold text-neutral-700">
+      ¿Dónde desea recibir el código?
+    </span>
+    <div class="grid grid-cols-2 gap-2">
+      @for (c of canales; track c.valor) {
+        <button
+          type="button"
+          (click)="seleccionarCanal(c.valor)"
+          [attr.aria-pressed]="canal() === c.valor"
+          class="flex h-11 items-center justify-center gap-2 border text-sm font-semibold transition-colors"
+          [class]="canal() === c.valor
+            ? 'border-[#58595B] bg-[#58595B] text-white'
+            : 'border-neutral-400 bg-white text-neutral-700 hover:border-[#58595B]'"
+        >
+          <span class="material-symbols-outlined text-[18px]">{{ c.icono }}</span>
+          <span>{{ c.etiqueta }}</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <div>
+    <label for="rec-destino" class="mb-1 block text-sm font-semibold text-neutral-700">
+      {{ esCorreo() ? 'Correo electrónico registrado' : 'Celular registrado' }}
+    </label>
+    <div class="relative">
+      <span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-neutral-400">
+        {{ esCorreo() ? 'mail' : 'smartphone' }}
+      </span>
+      <input
+        id="rec-destino"
+        [type]="esCorreo() ? 'email' : 'tel'"
+        [attr.autocomplete]="esCorreo() ? 'email' : 'tel'"
+        maxlength="100"
+        [placeholder]="esCorreo() ? 'correo@ejemplo.com' : '987654321'"
+        [value]="destino()"
+        (input)="destino.set($any($event.target).value)"
+        class="h-11 w-full border border-neutral-400 bg-white pl-10 pr-3 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-[#58595B]"
+      />
+    </div>
+    @if (intentado() && !destinoValido()) {
+      <p class="mt-1 text-xs text-red-700">
+        {{ esCorreo() ? 'Ingrese un correo electrónico válido.' : 'Ingrese un celular válido de 9 dígitos.' }}
+      </p>
+    }
+  </div>
+
+  <button
+    type="submit"
+    [disabled]="cargando()"
+    class="flex h-11 w-full items-center justify-center gap-2 bg-[#58595B] text-sm font-bold text-white transition-colors hover:bg-[#404142] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500"
+  >
+    @if (cargando()) {
+      <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+      <span>Enviando...</span>
+    } @else {
+      <span>Enviar código</span>
+      <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+    }
+  </button>
+
+  <button
+    type="button"
+    (click)="cancelar.emit()"
+    class="flex w-full items-center justify-center gap-1 text-sm font-semibold text-[#58595B] hover:underline"
+  >
+    <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+    Volver al inicio de sesión
+  </button>
+
+</form>

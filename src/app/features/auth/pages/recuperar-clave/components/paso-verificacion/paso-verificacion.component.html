@@ -1,0 +1,51 @@
+<form (submit)="onSubmit($event)" class="space-y-4" novalidate>
+
+  <div>
+    <label for="rec-codigo" class="mb-1 block text-sm font-semibold text-neutral-700">
+      Código de verificación
+    </label>
+    <input
+      id="rec-codigo"
+      type="text"
+      inputmode="numeric"
+      autocomplete="one-time-code"
+      [attr.maxlength]="longitud"
+      placeholder="000000"
+      [value]="codigo()"
+      (input)="alEscribir($event)"
+      class="h-12 w-full border border-neutral-400 bg-white px-3 text-center text-xl font-bold tracking-[0.5em] text-neutral-900 outline-none placeholder:text-neutral-300 focus:border-[#58595B]"
+    />
+    <p class="mt-1 text-xs text-neutral-500">
+      El código tiene {{ longitud }} dígitos y vence en 10 minutos.
+    </p>
+  </div>
+
+  <button
+    type="submit"
+    [disabled]="cargando() || !codigoCompleto()"
+    class="flex h-11 w-full items-center justify-center gap-2 bg-[#58595B] text-sm font-bold text-white transition-colors hover:bg-[#404142] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500"
+  >
+    @if (cargando()) {
+      <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+      <span>Verificando...</span>
+    } @else {
+      <span>Verificar código</span>
+      <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+    }
+  </button>
+
+  <div class="border-t border-neutral-200 pt-3 text-center">
+    <p class="text-xs text-neutral-500">
+      ¿No recibió el código? Verifique que sus datos sean correctos e inténtelo nuevamente.
+    </p>
+    <button
+      type="button"
+      (click)="volver.emit()"
+      class="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#58595B] hover:underline"
+    >
+      <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+      Volver a ingresar mis datos
+    </button>
+  </div>
+
+</form>

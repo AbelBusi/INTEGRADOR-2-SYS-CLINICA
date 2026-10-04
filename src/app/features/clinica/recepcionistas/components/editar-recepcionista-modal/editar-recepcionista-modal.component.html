@@ -1,0 +1,148 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-none"
+  (click)="close.emit()"
+>
+  <div
+    class="relative bg-white rounded-md border border-gray-300 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.05)] w-full max-w-2xl mx-4 overflow-hidden"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="bg-[#0d6b68] px-6 py-4 flex items-center justify-between border-b border-gray-200/10">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded bg-white/10 border border-white/10 flex items-center justify-center text-white font-bold text-base select-none">
+          {{ iniciales() }}
+        </div>
+        <div>
+          <h3 class="text-white font-bold text-base tracking-tight">Modificar Recepcionista</h3>
+          <p class="text-gray-200/80 text-xs mt-0.5">Actualice los campos requeridos por el sistema</p>
+        </div>
+      </div>
+      <button
+        type="button"
+        (click)="close.emit()"
+        class="text-gray-200/70 hover:text-white hover:bg-white/10 p-1.5 rounded transition-colors"
+      >
+        <span class="material-icons block text-xl">close</span>
+      </button>
+    </div>
+
+    <form #editForm="ngForm" (ngSubmit)="editForm.valid && handleSubmit()" class="space-y-0" novalidate>
+
+      <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+
+        <div>
+          <h4 class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">1. Datos de Identidad</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+
+            <div>
+              <label class="text-xs font-semibold text-gray-600 mb-1 block">Nombres *</label>
+              <input type="text" name="nombre" [(ngModel)]="form().persona.nombre" #nombre="ngModel" required maxlength="70"
+                     [class.border-red-500]="nombre.invalid && (nombre.dirty || nombre.touched || editForm.submitted)"
+                     class="w-full text-xs px-3 py-2 border border-gray-200 rounded focus:outline-none focus:border-[#0d6b68] text-gray-800 font-medium transition-colors" />
+            </div>
+
+            <div>
+              <label class="text-xs font-semibold text-gray-600 mb-1 block">Apellidos *</label>
+              <input type="text" name="apellidos" [(ngModel)]="form().persona.apellidos" #apellidos="ngModel" required maxlength="100"
+                     [class.border-red-500]="apellidos.invalid && (apellidos.dirty || apellidos.touched || editForm.submitted)"
+                     class="w-full text-xs px-3 py-2 border border-gray-200 rounded focus:outline-none focus:border-[#0d6b68] text-gray-800 font-medium transition-colors" />
+            </div>
+
+            <div>
+              <label class="text-xs font-semibold text-gray-600 mb-1 flex items-center gap-1.5">
+                <span class="material-icons text-[14px] text-gray-400 select-none">lock</span>
+                DNI (8 dígitos) *
+              </label>
+              <input type="text" name="dni" [(ngModel)]="form().persona.dni" #dni="ngModel"
+                     required minlength="8" maxlength="8" pattern="\d{8}" readonly
+                     class="w-full text-xs px-3 py-2 border border-gray-200 rounded bg-gray-50 text-gray-500 font-bold tracking-wider font-mono cursor-not-allowed select-none focus:outline-none transition-colors" />
+            </div>
+
+            <div>
+              <label class="text-xs font-semibold text-gray-600 mb-1 block">Género *</label>
+              <select name="genero" [(ngModel)]="form().persona.genero" #genero="ngModel" required
+                      [class.border-red-500]="genero.invalid && (genero.dirty || genero.touched || editForm.submitted)"
+                      class="w-full text-xs px-3 py-2 border border-gray-200 rounded focus:outline-none focus:border-[#0d6b68] text-gray-800 font-medium bg-white transition-colors cursor-pointer">
+                <option value="" disabled>Seleccione género</option>
+                @for (g of generos; track g) {
+                  <option [value]="g">{{ g }}</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label class="text-xs font-semibold text-gray-600 mb-1 block">Fecha de Nacimiento *</label>
+              <input type="date" name="fechaNacimiento" [(ngModel)]="form().persona.fechaNacimiento" #fechaNac="ngModel" required [max]="fechaMaxima()"
+                     [class.border-red-500]="fechaNac.invalid && (fechaNac.dirty || fechaNac.touched || editForm.submitted)"
+                     class="w-full text-xs px-3 py-2 border border-gray-200 rounded focus:outline-none focus:border-[#0d6b68] text-gray-800 font-medium transition-colors" />
+            </div>
+
+            <div>
+              <label class="text-xs font-semibold text-gray-600 mb-1 block">Nacionalidad *</label>
+              <input type="text" name="nacionalidad" [(ngModel)]="form().persona.nacionalidad" #nacionalidad="ngModel" required maxlength="50"
+                     [class.border-red-500]="nacionalidad.invalid && (nacionalidad.dirty || nacionalidad.touched || editForm.submitted)"
+                     class="w-full text-xs px-3 py-2 border border-gray-200 rounded focus:outline-none focus:border-[#0d6b68] text-gray-800 font-medium transition-colors" />
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-gray-200" />
+
+        <div>
+          <h4 class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">2. Información de Contacto</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+
+            <div>
+              <label class="text-xs font-semibold text-gray-600 mb-1 block">Teléfono (9 dígitos)</label>
+              <input type="text" name="telefono" [(ngModel)]="form().persona.telefono" #telefono="ngModel" maxlength="9" pattern="\d{9}" placeholder="900000000"
+                     [class.border-red-500]="telefono.invalid && (telefono.dirty || telefono.touched || editForm.submitted)"
+                     class="w-full text-xs px-3 py-2 border border-gray-200 rounded focus:outline-none focus:border-[#0d6b68] text-gray-800 font-medium transition-colors" />
+            </div>
+
+            <div>
+              <label class="text-xs font-semibold text-gray-600 mb-1 block">Correo Electrónico</label>
+              <input type="email" name="correo" [(ngModel)]="form().persona.correo" #correo="ngModel" maxlength="100" email placeholder="ejemplo@correo.com"
+                     [class.border-red-500]="correo.invalid && (correo.dirty || correo.touched || editForm.submitted)"
+                     class="w-full text-xs px-3 py-2 border border-gray-200 rounded focus:outline-none focus:border-[#0d6b68] text-gray-800 font-medium transition-colors" />
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-gray-200" />
+
+        <div>
+          <h4 class="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-4">3. Datos Laborales</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
+
+            <div>
+              <label class="text-xs font-semibold text-gray-600 mb-1 block">Código de Empleado *</label>
+              <input type="text" name="codigoEmpleado" [(ngModel)]="form().codigoEmpleado" #codigo="ngModel" required maxlength="25" placeholder="REC-0000"
+                     [class.border-red-500]="codigo.invalid && (codigo.dirty || codigo.touched || editForm.submitted)"
+                     class="w-full text-xs px-3 py-2 border border-gray-200 rounded focus:outline-none focus:border-[#0d6b68] font-mono text-gray-800 font-bold tracking-tight transition-colors" />
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-2 bg-gray-50">
+        <button
+          type="button"
+          (click)="close.emit()"
+          [disabled]="guardando()"
+          class="px-4 py-2 text-xs font-semibold text-gray-600 hover:text-gray-800 hover:bg-gray-200 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          [disabled]="guardando() || editForm.invalid"
+          class="flex items-center gap-2.5 px-5 py-2 text-xs bg-[#0d6b68] text-white rounded hover:bg-[#0a5452] transition-colors font-bold uppercase tracking-wider shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <span class="material-icons text-sm">{{ guardando() ? 'sync' : 'save' }}</span>
+          {{ guardando() ? 'Guardando...' : 'Confirmar Cambios' }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

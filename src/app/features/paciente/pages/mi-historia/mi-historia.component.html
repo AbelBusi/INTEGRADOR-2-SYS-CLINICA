@@ -1,0 +1,62 @@
+<div class="animate-fade-in space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="page-header mb-0">
+      <h2>Mi Historia Clínica</h2>
+      <p>Tu historial de atenciones médicas</p>
+    </div>
+    <button type="button" (click)="descargarPdf()" [disabled]="generando()"
+            class="btn-primary shrink-0 disabled:opacity-40 disabled:cursor-not-allowed">
+      <span class="material-icons text-lg">{{ generando() ? 'sync' : 'picture_as_pdf' }}</span>
+      {{ generando() ? 'Generando...' : 'Descargar PDF' }}
+    </button>
+  </div>
+
+  @if (paciente(); as p) {
+    <div class="bg-white rounded border border-slate-200 p-5 shadow-sm">
+      <div class="flex items-center gap-2 border-b border-slate-100 pb-3 mb-3">
+        <span class="material-icons text-[#0d6b68] text-base">badge</span>
+        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Datos del Paciente</h3>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">DNI</p><p class="font-mono text-slate-700">{{ p.persona.dni }}</p></div>
+        <div><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Nombres</p><p class="text-slate-700">{{ p.persona.nombre }} {{ p.persona.apellidos }}</p></div>
+        <div><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Género</p><p class="text-slate-700">{{ p.persona.genero }}</p></div>
+        <div><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Aseguradora</p><p class="text-slate-700">{{ p.entidadAseguradora }}</p></div>
+      </div>
+    </div>
+  }
+
+  @if (cargando()) {
+    <div class="flex justify-center py-16">
+      <div class="h-10 w-10 rounded-full border-2 border-teal-600 border-t-transparent animate-spin"></div>
+    </div>
+  } @else if (atenciones().length) {
+    <div class="space-y-4">
+      @for (a of atenciones(); track a.id) {
+        <div class="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+          <div class="flex items-center justify-between mb-3 pb-2 border-b border-slate-100">
+            <div class="flex items-center gap-2">
+              <span class="material-icons text-[#0d6b68] text-base">medical_information</span>
+              <span class="text-sm font-bold text-slate-800">{{ a.especialidad }}</span>
+              <span class="text-xs text-slate-400">·</span>
+              <span class="text-xs text-slate-500">{{ a.doctor }}</span>
+            </div>
+            <span class="font-mono text-xs text-slate-500">{{ a.fechaAtencion }}</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs">
+            <p><span class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Motivo:</span> <span class="text-slate-700">{{ a.motivo }}</span></p>
+            <p><span class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Diagnóstico:</span> <span class="text-slate-800 font-medium">{{ a.diagnostico }}</span></p>
+            @if (a.observaciones) { <p><span class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Observaciones:</span> <span class="text-slate-700">{{ a.observaciones }}</span></p> }
+            @if (a.tratamiento) { <p><span class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Tratamiento:</span> <span class="text-slate-700">{{ a.tratamiento }}</span></p> }
+            @if (a.recomendaciones) { <p class="md:col-span-2"><span class="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Recomendaciones:</span> <span class="text-slate-700">{{ a.recomendaciones }}</span></p> }
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="bg-white border border-slate-200 rounded-lg p-10 text-center">
+      <span class="material-icons text-slate-300 text-4xl">history_edu</span>
+      <p class="text-sm text-slate-400 mt-2">Aún no tienes atenciones médicas registradas.</p>
+    </div>
+  }
+</div>
