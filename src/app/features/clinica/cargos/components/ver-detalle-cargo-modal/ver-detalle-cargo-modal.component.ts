@@ -1,15 +1,15 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Especialidad } from '../../interface/especialidad.interface';
+import { cargo } from '../../interface/cargo.interface';
 
 @Component({
   selector: 'app-ver-detalle-cargo-modal',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './ver-detalle-especialidad-modal.component.html',
+  templateUrl: './ver-detalle-cargo-modal.component.html',
 })
-export class VerDetalleEspecialidadModalComponent {
-  @Input() especialidad: Especialidad | null = null;
+export class VerDetalleCargoModalComponent {
+  @Input() cargo: cargo | null = null;
   @Output() close = new EventEmitter<void>();
 
   onClose() {
