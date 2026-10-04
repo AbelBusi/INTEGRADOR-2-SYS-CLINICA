@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Especialidad } from '../../interface/especialidad.interface';
 
 @Component({
-  selector: 'app-ver-detalle-cargo-modal',
+  selector: 'app-ver-detalle-especialidad-modal',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './ver-detalle-especialidad-modal.component.html',

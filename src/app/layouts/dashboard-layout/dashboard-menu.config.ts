@@ -25,6 +25,7 @@ export const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = 
   '/dashboard/doctores': { title: 'Doctores', subtitle: 'Equipo médico del consultorio' },
   '/dashboard/doctores/nuevo': { title: 'Nuevo doctor', subtitle: 'Alta de especialista' },
   '/dashboard/especialidades': { title: 'Especialidades', subtitle: 'Áreas médicas disponibles' },
+  '/dashboard/cargos': { title: 'Cargos', subtitle: 'Áreas de cargos' },
   '/dashboard/recepcionistas': { title: 'Recepcionistas', subtitle: 'Personal de recepción' },
   '/dashboard/recepcionistas/nuevo': { title: 'Nuevo recepcionista', subtitle: 'Alta de recepcionista' },
   '/dashboard/usuarios': { title: 'Usuarios', subtitle: 'Cuentas del sistema' },
@@ -52,8 +53,16 @@ export const MENU_BASE: NavItem[] = [
     roles: ['ADMINISTRADORXD', 'RECEPCIONISTA'],
     sub: [
       { label: 'Ver citas', route: '/dashboard/citas', roles: ['ADMINISTRADOR'] },
-      { label: 'Agendar cita', route: '/dashboard/citas/nuevo', roles: ['ADMINISTRADOR', 'RECEPCIONISTA'] },
-      { label: 'Historial de citas', route: '/dashboard/historial-citas', roles: ['RECEPCIONISTA'] },
+      {
+        label: 'Agendar cita',
+        route: '/dashboard/citas/nuevo',
+        roles: ['ADMINISTRADOR', 'RECEPCIONISTA'],
+      },
+      {
+        label: 'Historial de citas',
+        route: '/dashboard/historial-citas',
+        roles: ['RECEPCIONISTA'],
+      },
       { label: 'Citas por doctor', route: '/dashboard/citas/por-doctor', roles: ['ADMINISTRADOR'] },
     ],
   },
@@ -81,7 +90,11 @@ export const MENU_BASE: NavItem[] = [
     icon: 'groups',
     sub: [
       { label: 'Ver pacientes', route: '/dashboard/pacientes', roles: ['ADMINISTRADOR'] },
-      { label: 'Nuevo paciente', route: '/dashboard/pacientes/nuevo', roles: ['ADMINISTRADOR', 'RECEPCIONISTA'] },
+      {
+        label: 'Nuevo paciente',
+        route: '/dashboard/pacientes/nuevo',
+        roles: ['ADMINISTRADOR', 'RECEPCIONISTA'],
+      },
     ],
   },
   {
@@ -100,6 +113,16 @@ export const MENU_BASE: NavItem[] = [
     icon: 'local_hospital',
     sub: [
       { label: 'Ver especialidades', route: '/dashboard/especialidades', roles: ['ADMINISTRADOR'] },
+      { label: 'Ver Cargos', route: '/dashboard/cargos', roles: ['ADMINISTRADOR'] },
+    ],
+  },
+  {
+    grupo: 'ADMINISTRACION',
+    label: 'Cargos',
+    roles: ['ADMINISTRADOR'],
+    icon: 'local_hospital',
+    sub: [
+      { label: 'Ver Cargos', route: '/dashboard/cargos', roles: ['ADMINISTRADOR'] },
     ],
   },
   {
@@ -108,7 +131,11 @@ export const MENU_BASE: NavItem[] = [
     icon: 'support_agent',
     sub: [
       { label: 'Ver recepcionistas', route: '/dashboard/recepcionistas', roles: ['ADMINISTRADOR'] },
-      { label: 'Nuevo recepcionista', route: '/dashboard/recepcionistas/nuevo', roles: ['ADMINISTRADOR'] },
+      {
+        label: 'Nuevo recepcionista',
+        route: '/dashboard/recepcionistas/nuevo',
+        roles: ['ADMINISTRADOR'],
+      },
     ],
   },
   {

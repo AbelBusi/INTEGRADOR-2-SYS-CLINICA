@@ -14,7 +14,7 @@ import { EspecialidadService } from '../../services/especialidad.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
-  selector: 'app-editar-cargo-modal',
+  selector: 'app-editar-especialidad-modal',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './editar-especialidad-modal.component.html',

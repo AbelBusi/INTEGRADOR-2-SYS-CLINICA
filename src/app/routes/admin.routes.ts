@@ -41,6 +41,13 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
+        path: 'cargos',
+        loadComponent: () =>
+          import('../features/clinica/cargos/pages/lista-cargos/lista-cargo.component').then(
+            (m) => m.ListaCargoComponent,
+          ),
+      },
+      {
         path: 'recepcionistas',
         children: [
           {

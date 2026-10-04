@@ -6,7 +6,7 @@ import { EspecialidadCrearDTO } from '../../interface/especialidad.interface';
 import { ToastService } from '../../../../../core/services/toast.service';
 
 @Component({
-  selector: 'app-crear-cargo-modal',
+  selector: 'app-crear-especialidad-modal',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './crear-especialidad-modal.component.html',

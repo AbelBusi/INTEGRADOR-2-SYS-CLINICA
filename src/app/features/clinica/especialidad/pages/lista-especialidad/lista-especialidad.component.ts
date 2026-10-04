@@ -14,7 +14,7 @@ import { TableColumn } from '../../../../../shared/components/custom-table/table
 type FiltroEstado = 'todos' | 'activo' | 'inactivo';
 
 @Component({
-  selector: 'app-lista-especialidad',
+  selector: 'app-lista-cargos',
   standalone: true,
   imports: [
     CommonModule,
