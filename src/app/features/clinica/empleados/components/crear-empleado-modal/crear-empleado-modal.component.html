@@ -1,0 +1,262 @@
+<div *ngIf="isOpen" class="relative z-50">
+
+  <div class="fixed inset-0 bg-neutral-900/50"></div>
+
+  <div class="fixed inset-0 overflow-y-auto">
+    <div class="flex min-h-full items-center justify-center p-4">
+
+      <div class="w-full max-w-2xl overflow-hidden rounded border border-neutral-300 bg-white">
+
+        <div class="flex justify-between items-center px-6 py-4 bg-[#58595B]">
+          <h3 class="text-base font-bold text-white flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded bg-[#D9182A] flex items-center justify-center">
+              <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            Nuevo Empleado
+          </h3>
+          <button (click)="handleClose()" [disabled]="guardando" class="p-1 rounded hover:bg-neutral-700 text-neutral-300 hover:text-white transition-colors disabled:opacity-50">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex h-1">
+          <div class="w-1/2 bg-[#58595B]"></div>
+          <div class="w-1/2 bg-[#D9182A]"></div>
+        </div>
+
+        @if (cargandoCatalogos) {
+          <div class="flex justify-center items-center py-16">
+            <div class="w-8 h-8 border-4 border-gray-200 border-t-[#0d6b68] rounded-full animate-spin"></div>
+          </div>
+        } @else {
+
+          <form #f="ngForm" (ngSubmit)="onSubmit()" class="space-y-4 p-6 max-h-[75vh] overflow-y-auto">
+
+            <div class="flex items-center gap-4">
+              @if (previewUrl) {
+                <img [src]="previewUrl" alt="Vista previa" class="w-20 h-20 rounded-full object-cover border border-neutral-300 shrink-0" />
+              } @else {
+                <div class="w-20 h-20 rounded-full bg-neutral-100 border border-neutral-300 flex items-center justify-center shrink-0">
+                  <span class="material-icons text-[#58595B] text-[34px]">person</span>
+                </div>
+              }
+
+              <div class="space-y-2">
+                <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Foto (opcional)</label>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    (click)="fotoInput.click()"
+                    class="px-3 py-1.5 text-xs font-semibold text-neutral-600 bg-white hover:bg-neutral-100 rounded border border-neutral-300 transition-colors">
+                    Seleccionar imagen
+                  </button>
+                  @if (imagen) {
+                    <button
+                      type="button"
+                      (click)="quitarImagen(fotoInput)"
+                      class="px-3 py-1.5 text-xs font-semibold text-[#D9182A] bg-white hover:bg-[#D9182A]/10 rounded border border-[#D9182A]/30 transition-colors">
+                      Quitar
+                    </button>
+                  }
+                </div>
+                <input #fotoInput type="file" accept="image/*" (change)="onFileSelected($event)" class="hidden" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Tipo de documento</label>
+                <select
+                  name="idTipoDocumento"
+                  [(ngModel)]="empleadoForm.idTipoDocumento"
+                  (ngModelChange)="onTipoDocumentoChange()"
+                  required
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors">
+                  <option [ngValue]="null" disabled>Seleccione...</option>
+                  @for (tipo of tiposDocumento; track tipo.idTipoDocumento) {
+                    <option [ngValue]="tipo.idTipoDocumento">{{ tipo.codigo }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="space-y-1.5">
+                <div class="flex justify-between items-center">
+                  <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">N° de documento</label>
+                  @if (longitudDocumento) {
+                    <span class="text-[11px] font-medium text-neutral-400" [class.text-[#D9182A]]="empleadoForm.numeroDocumento.length >= longitudDocumento">
+                      {{ empleadoForm.numeroDocumento.length }}/{{ longitudDocumento }}
+                    </span>
+                  }
+                </div>
+                <input
+                  type="text"
+                  name="numeroDocumento"
+                  [(ngModel)]="empleadoForm.numeroDocumento"
+                  [attr.maxlength]="longitudDocumento"
+                  [readonly]="!empleadoForm.idTipoDocumento"
+                  required
+                  inputmode="numeric"
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors read-only:bg-neutral-100"
+                  [placeholder]="empleadoForm.idTipoDocumento ? 'Número de documento' : 'Seleccione un tipo primero'"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <div class="flex justify-between items-center">
+                  <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Nombre</label>
+                  <span class="text-[11px] font-medium text-neutral-400">{{ empleadoForm.nombre.length }}/50</span>
+                </div>
+                <input
+                  type="text"
+                  name="nombre"
+                  [(ngModel)]="empleadoForm.nombre"
+                  maxlength="50"
+                  required
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                  placeholder="Ej. Juan"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <div class="flex justify-between items-center">
+                  <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Apellidos</label>
+                  <span class="text-[11px] font-medium text-neutral-400">{{ empleadoForm.apellidos.length }}/80</span>
+                </div>
+                <input
+                  type="text"
+                  name="apellidos"
+                  [(ngModel)]="empleadoForm.apellidos"
+                  maxlength="80"
+                  required
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                  placeholder="Ej. Pérez Gómez"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Fecha de nacimiento</label>
+                <input
+                  type="date"
+                  name="fechaNacimiento"
+                  [(ngModel)]="empleadoForm.fechaNacimiento"
+                  [max]="hoy"
+                  required
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Género</label>
+                <select
+                  name="genero"
+                  [(ngModel)]="empleadoForm.genero"
+                  required
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors">
+                  <option value="" disabled>Seleccione...</option>
+                  @for (g of generos; track g.value) {
+                    <option [value]="g.value">{{ g.label }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Teléfono</label>
+                <input
+                  type="tel"
+                  name="telefono"
+                  [(ngModel)]="empleadoForm.telefono"
+                  maxlength="9"
+                  required
+                  inputmode="numeric"
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                  placeholder="Ej. 987654321"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Correo</label>
+                <input
+                  type="email"
+                  name="correo"
+                  [(ngModel)]="empleadoForm.correo"
+                  required
+                  email
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                  placeholder="correo@ejemplo.com"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Nacionalidad</label>
+                <input
+                  type="text"
+                  name="nacionalidad"
+                  [(ngModel)]="empleadoForm.nacionalidad"
+                  maxlength="40"
+                  required
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                  placeholder="Ej. Peruana"
+                />
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Cargo</label>
+                <select
+                  name="idCargo"
+                  [(ngModel)]="empleadoForm.idCargo"
+                  required
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors">
+                  <option [ngValue]="null" disabled>Seleccione...</option>
+                  @for (cargo of cargos; track cargo.idCargo) {
+                    <option [ngValue]="cargo.idCargo">{{ cargo.nombre }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="space-y-1.5 sm:col-span-2">
+                <div class="flex justify-between items-center">
+                  <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Dirección</label>
+                  <span class="text-[11px] font-medium text-neutral-400">{{ empleadoForm.direccion.length }}/100</span>
+                </div>
+                <input
+                  type="text"
+                  name="direccion"
+                  [(ngModel)]="empleadoForm.direccion"
+                  maxlength="100"
+                  required
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                  placeholder="Av. / Calle / N°"
+                />
+              </div>
+
+            </div>
+
+            <div class="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+              <button
+                type="button"
+                (click)="handleClose()"
+                [disabled]="guardando"
+                class="flex-1 px-4 py-2 text-sm font-medium text-neutral-600 bg-white hover:bg-neutral-100 hover:text-neutral-900 rounded border border-neutral-300 transition-colors disabled:opacity-50">
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                [disabled]="!f.form.valid || guardando"
+                class="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#D9182A] hover:bg-[#B81424] rounded transition-colors disabled:opacity-50">
+                <span *ngIf="guardando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                Guardar Empleado
+              </button>
+            </div>
+          </form>
+
+        }
+
+      </div>
+    </div>
+  </div>
+</div>
