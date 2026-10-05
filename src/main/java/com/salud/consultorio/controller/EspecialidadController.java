@@ -1,5 +1,6 @@
 package com.salud.consultorio.controller;
 
+import com.salud.consultorio.dto.cargo.CargoMedicoResumenDTO;
 import com.salud.consultorio.dto.especialidad.*;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.payload.MensajeResponse;
@@ -123,6 +124,17 @@ public class EspecialidadController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("ESTADO DE LA ESPECIALIDAD CAMBIADA CORRECTAMENTE")
                 .build(), HttpStatus.OK);
+
+    }
+
+    @GetMapping("resumen")
+    public ResponseEntity<MensajeResponse> listaEspecialidadesResumen(){
+
+        List<EspecialidadResumenDTO> lista = especialidadServicio.listaResumen();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Lista de especialidades")
+                .object(lista).build(), HttpStatus.OK);
 
     }
 

@@ -11,6 +11,8 @@ public interface IEspecialidadServicio{
 
     List<EspecialidadRespuestaDTO> lista(EntidadEstado estado);
 
+    List<EspecialidadResumenDTO> listaResumen();
+
     EspecialidadRespuestaDTO entidadPorID(Integer id);
 
     EspecialidadRespuestaDTO crear(EspecialidadCrearDTO dto);
