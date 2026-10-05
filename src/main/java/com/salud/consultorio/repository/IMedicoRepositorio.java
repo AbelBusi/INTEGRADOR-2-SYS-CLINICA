@@ -1,8 +1,8 @@
 package com.salud.consultorio.repository;
 
-import com.salud.consultorio.dto.doctor.DoctorDetalleDTO;
-import com.salud.consultorio.dto.doctor.DoctorLeerDTO;
-import com.salud.consultorio.model.entity.Doctor;
+import com.salud.consultorio.dto.medico.MedicoDetalleDTO;
+import com.salud.consultorio.dto.medico.MedicoLeerDTO;
+import com.salud.consultorio.model.entity.Medico;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface IDoctorRepositorio extends JpaRepository<Doctor, Integer> {
+public interface IMedicoRepositorio extends JpaRepository<Medico, Integer> {
 
     @Query("""
-            SELECT new com.salud.consultorio.dto.doctor.DoctorLeerDTO(
+            SELECT new com.salud.consultorio.dto.medico.MedicoLeerDTO(
                 d.id,
                 CONCAT(pe.nombre, ' ', pe.apellidos),
                 ca.nombre,
@@ -26,17 +26,17 @@ public interface IDoctorRepositorio extends JpaRepository<Doctor, Integer> {
                 em.foto,
                 d.estado
             )
-            FROM Doctor d
+            FROM Medico d
             JOIN d.empleado em
             JOIN em.persona pe
             JOIN em.cargo ca
             JOIN d.especialidad es
             WHERE d.estado = :estado
             """)
-    List<DoctorLeerDTO> listaPorEstado(@Param("estado") Integer estado);
+    List<MedicoLeerDTO> listaPorEstado(@Param("estado") Integer estado);
 
     @Query("""
-            SELECT new com.salud.consultorio.dto.doctor.DoctorLeerDTO(
+            SELECT new com.salud.consultorio.dto.medico.MedicoLeerDTO(
                 d.id,
                 CONCAT(pe.nombre, ' ', pe.apellidos),
                 ca.nombre,
@@ -46,17 +46,17 @@ public interface IDoctorRepositorio extends JpaRepository<Doctor, Integer> {
                 em.foto,
                 d.estado
             )
-            FROM Doctor d
+            FROM Medico d
             JOIN d.empleado em
             JOIN em.persona pe
             JOIN em.cargo ca
             JOIN d.especialidad es
             WHERE d.estado IN (1, 2)
             """)
-    List<DoctorLeerDTO> listaPorEstadoActivoInactivo();
+    List<MedicoLeerDTO> listaPorEstadoActivoInactivo();
 
     @Query("""
-            SELECT new com.salud.consultorio.dto.doctor.DoctorDetalleDTO(
+            SELECT new com.salud.consultorio.dto.medico.MedicoDetalleDTO(
                 d.id,
                 td.idTipoDocumento,
                 td.codigo,
@@ -84,7 +84,7 @@ public interface IDoctorRepositorio extends JpaRepository<Doctor, Integer> {
                 d.consejoRegional,
                 d.estado
             )
-            FROM Doctor d
+            FROM Medico d
             JOIN d.empleado em
             JOIN em.persona pe
             JOIN pe.tipoDocumento td
@@ -93,18 +93,18 @@ public interface IDoctorRepositorio extends JpaRepository<Doctor, Integer> {
             WHERE d.id = :id
               AND d.estado <> 0
             """)
-    Optional<DoctorDetalleDTO> buscarDetallePorId(@Param("id") Integer id);
+    Optional<MedicoDetalleDTO> buscarDetallePorId(@Param("id") Integer id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Doctor d SET d.estado = 2 WHERE d.id = :id")
+    @Query("UPDATE Medico d SET d.estado = 2 WHERE d.id = :id")
     void desactivarLogicamente(@Param("id") Integer id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Doctor d SET d.estado = 1 WHERE d.id = :id")
+    @Query("UPDATE Medico d SET d.estado = 1 WHERE d.id = :id")
     void activarLogicamente(@Param("id") Integer id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Doctor d SET d.estado = 0 WHERE d.id = :id")
+    @Query("UPDATE Medico d SET d.estado = 0 WHERE d.id = :id")
     void eliminarLogicamente(@Param("id") Integer id);
 
     boolean existsByEmpleadoId(Integer idEmpleado);

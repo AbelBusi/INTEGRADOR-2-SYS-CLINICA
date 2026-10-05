@@ -39,7 +39,7 @@ public class SecurityFilterConfig {
                         .requestMatchers("/api/v1/especialidades/**").authenticated()
                         .requestMatchers("/api/v1/empleados/**").authenticated()
                         .requestMatchers("/api/v1/horarios/**").authenticated()
-                        .requestMatchers("/api/v1/doctores/**").authenticated()
+                        .requestMatchers("/api/v1/medicos/**").permitAll()
                         .requestMatchers("/api/v1/cargos/**").authenticated()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()

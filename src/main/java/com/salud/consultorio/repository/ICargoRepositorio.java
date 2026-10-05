@@ -1,5 +1,6 @@
 package com.salud.consultorio.repository;
 
+import com.salud.consultorio.dto.cargo.CargoMedicoResumenDTO;
 import com.salud.consultorio.dto.cargo.CargoRespuestaDTO;
 import com.salud.consultorio.dto.cargo.CargoResumenDTO;
 import com.salud.consultorio.dto.tipoDocumento.TipoDocumentoResumenDTO;
@@ -23,6 +24,7 @@ public interface ICargoRepositorio extends JpaRepository<Cargo, Integer> {
                 c.id,
                 c.nombre,
                 c.descripcion,
+                c.esPersonalMedico,
                 c.estado    
                 )
             FROM Cargo c
@@ -35,6 +37,7 @@ public interface ICargoRepositorio extends JpaRepository<Cargo, Integer> {
                 c.id,
                 c.nombre,
                 c.descripcion,
+                c.esPersonalMedico,
                 c.estado    
                 )
             FROM Cargo c
@@ -67,5 +70,15 @@ public interface ICargoRepositorio extends JpaRepository<Cargo, Integer> {
             WHERE c.estado=1
             """)
     List<CargoResumenDTO> listaResumenDatos();
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.cargo.CargoResumenDTO(
+                c.id,
+                c.nombre
+                )
+            FROM Cargo c
+            WHERE c.estado=1 and c.esPersonalMedico=true
+            """)
+    List<CargoMedicoResumenDTO> listaResumenCargoMedico();
 
 }

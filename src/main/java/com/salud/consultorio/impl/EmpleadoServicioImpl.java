@@ -66,6 +66,12 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
 
     @Transactional(readOnly = true)
     @Override
+    public List<EmpleadoMedicoResumenDTO> listaEmpleadoMedico() {
+        return empleadoRepositorio.listarEmpleadoCargoMedico();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public Empleado entidadPorIDTransaccion(Integer id) {
         return empleadoRepositorio.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("El empleado que desea validar no existe o no se encuentra."));

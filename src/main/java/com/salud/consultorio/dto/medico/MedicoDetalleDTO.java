@@ -1,11 +1,11 @@
-package com.salud.consultorio.dto.doctor;
+package com.salud.consultorio.dto.medico;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDate;
 
 @Schema(description = "Detalle completo de un doctor, con datos de su empleado, persona y cargo")
-public record DoctorDetalleDTO(
+public record MedicoDetalleDTO(
 
         @Schema(description = "ID del doctor", example = "1")
         Integer id,

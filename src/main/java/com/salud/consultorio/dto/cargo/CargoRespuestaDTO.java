@@ -23,6 +23,8 @@ public record CargoRespuestaDTO(
         )
         String descripcion,
 
+        boolean esPersonalMedico,
+
         @Schema(
                 description = "Estado actual del cargo. 1 = activo, 0 = inactivo",
                 example = "1"

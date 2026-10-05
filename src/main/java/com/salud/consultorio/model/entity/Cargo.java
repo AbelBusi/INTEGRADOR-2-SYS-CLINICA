@@ -23,6 +23,9 @@ public class Cargo {
     @Column(name = "descripcion", nullable = false, length = 200)
     private String descripcion;
 
+    @Column(name = "es_personal_medico", nullable = false)
+    private boolean esPersonalMedico;
+
     @Column(name = "estado", nullable = false)
     @Builder.Default
     private Integer estado = 1;

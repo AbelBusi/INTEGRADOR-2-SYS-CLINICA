@@ -1,4 +1,4 @@
-package com.salud.consultorio.dto.doctor;
+package com.salud.consultorio.dto.medico;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 @Schema(description = "Datos para registrar un doctor a partir de un empleado existente")
-public record DoctorCrearDTO(
+public record MedicoCrearDTO(
 
         @Schema(description = "ID del empleado que será doctor (debe estar activo)", example = "1")
         @NotNull(message = "El empleado es obligatorio")

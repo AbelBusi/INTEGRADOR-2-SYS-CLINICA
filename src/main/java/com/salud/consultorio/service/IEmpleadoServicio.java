@@ -14,6 +14,8 @@ public interface IEmpleadoServicio {
 
     List<EmpleadoLeerDTO> lista(EntidadEstado estado);
 
+    List<EmpleadoMedicoResumenDTO> listaEmpleadoMedico();
+
     Empleado entidadPorIDTransaccion(Integer id);
 
     EmpleadoRespuestaDTO crear(EmpleadoCrearDTO dto, MultipartFile imagen);

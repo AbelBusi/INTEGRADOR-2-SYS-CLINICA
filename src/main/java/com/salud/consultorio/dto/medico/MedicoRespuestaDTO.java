@@ -1,9 +1,9 @@
-package com.salud.consultorio.dto.doctor;
+package com.salud.consultorio.dto.medico;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Respuesta al crear o actualizar un doctor")
-public record DoctorRespuestaDTO(
+public record MedicoRespuestaDTO(
 
         @Schema(description = "ID del doctor", example = "1")
         Integer id,

@@ -1,5 +1,6 @@
 package com.salud.consultorio.controller;
 
+import com.salud.consultorio.dto.cargo.CargoMedicoResumenDTO;
 import com.salud.consultorio.dto.empleado.*;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.payload.MensajeResponse;
@@ -140,6 +141,17 @@ public class EmpleadoController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Empleado eliminado con exito")
                 .build(), HttpStatus.OK);
+
+    }
+
+    @GetMapping("medicos")
+    public ResponseEntity<MensajeResponse> listaEmpleadosMedicos(){
+
+        List<EmpleadoMedicoResumenDTO> lista = empleadoServicio.listaEmpleadoMedico();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Lista de empleos con cargo relacionado personal medico")
+                .object(lista).build(), HttpStatus.OK);
 
     }
 

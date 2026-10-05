@@ -27,7 +27,11 @@ public record CargoCrearDTO(
                 description = "Descripción del cargo",
                 example = "Profesional encargado de la atención médica de los pacientes"
         )
-        String descripcion
+        String descripcion,
+
+        boolean esPersonalMedico
+
+
 
 ) {
 }

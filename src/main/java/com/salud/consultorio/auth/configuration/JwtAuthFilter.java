@@ -2,6 +2,8 @@ package com.salud.consultorio.auth.configuration;
 
 import com.salud.consultorio.auth.service.IJwtServicio;
 import com.salud.consultorio.repository.ITokenRepositorio;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,41 +49,57 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         final String jwtToken = authHeader.substring(7);
-        final String usuario = jwtServicio.extraerUsuario(jwtToken);
 
-        if (usuario != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        try {
 
-            var tokenOptional = tokenRepositorio.findByToken(jwtToken);
+            final String usuario = jwtServicio.extraerUsuario(jwtToken);
 
-            if (tokenOptional.isEmpty() || tokenOptional.get().isExpired() || tokenOptional.get().isRevoked()) {
-                sendUnauthorizedResponse(response, "El token suministrado no es válido o ha sido revocado.");
-                return;
+            if (usuario != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                var tokenOptional = tokenRepositorio.findByToken(jwtToken);
+
+                if (tokenOptional.isEmpty() || tokenOptional.get().isExpired() || tokenOptional.get().isRevoked()) {
+                    sendUnauthorizedResponse(response, "El token suministrado no es válido o ha sido revocado.");
+                    return;
+                }
+
+                List<String> rolesPermisos = jwtServicio.extraerPermisos(jwtToken);
+
+                List<SimpleGrantedAuthority> authorities = rolesPermisos.stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .toList();
+
+                UserDetails userDetails = new User(usuario, "", authorities);
+
+                if (jwtServicio.tokenValido(jwtToken, userDetails)) {
+                    final var authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    sendUnauthorizedResponse(response, "Firma del token inválida.");
+                    return;
+                }
             }
 
-            List<String> rolesPermisos = jwtServicio.extraerPermisos(jwtToken);
+            filterChain.doFilter(request, response);
 
-            List<SimpleGrantedAuthority> authorities = rolesPermisos.stream()
-                    .map(SimpleGrantedAuthority::new)
-                    .toList();
 
-            UserDetails userDetails = new User(usuario, "", authorities);
+        }catch (ExpiredJwtException e){
+            SecurityContextHolder.clearContext();
+            sendUnauthorizedResponse(response, "El token ha expirado");
+        }catch (JwtException e) {
 
-            if (jwtServicio.tokenValido(jwtToken, userDetails)) {
-                final var authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
+            SecurityContextHolder.clearContext();
+            sendUnauthorizedResponse(response,"El token suministrado no es valido");
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-            } else {
-                sendUnauthorizedResponse(response, "Firma del token inválida.");
-                return;
-            }
         }
 
-        filterChain.doFilter(request, response);
+
     }
 
     private void sendUnauthorizedResponse(HttpServletResponse response, String mensaje) throws IOException {

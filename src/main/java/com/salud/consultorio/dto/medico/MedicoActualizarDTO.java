@@ -1,4 +1,4 @@
-package com.salud.consultorio.dto.doctor;
+package com.salud.consultorio.dto.medico;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 @Schema(description = "Datos editables de un doctor. No incluye datos de persona ni de empleado")
-public record DoctorActualizarDTO(
+public record MedicoActualizarDTO(
 
         @Schema(description = "ID de la especialidad (debe estar activa)", example = "2")
         @NotNull(message = "La especialidad es obligatoria")

@@ -13,12 +13,12 @@ import org.hibernate.annotations.DynamicUpdate;
 @DynamicUpdate
 @DynamicInsert
 @Entity
-@Table(name = "doctor")
-public class Doctor {
+@Table(name = "medico")
+public class Medico {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_doctor")
+    @Column(name = "id_medico")
     private Integer id;
 
     @OneToOne(fetch = FetchType.LAZY)

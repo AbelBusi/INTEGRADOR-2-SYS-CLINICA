@@ -2,6 +2,7 @@ package com.salud.consultorio.repository;
 
 import com.salud.consultorio.dto.empleado.EmpleadoDetalleDTO;
 import com.salud.consultorio.dto.empleado.EmpleadoLeerDTO;
+import com.salud.consultorio.dto.empleado.EmpleadoMedicoResumenDTO;
 import com.salud.consultorio.model.entity.Empleado;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -32,6 +33,18 @@ public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
             WHERE em.estado = :estado
             """)
     List<EmpleadoLeerDTO> listaPorEstado(@Param("estado") Integer estado);
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.empleado.EmpleadoMedicoResumenDTO(
+                em.id,
+                CONCAT(pe.nombre, ' ', pe.apellidos)
+            )
+            FROM Empleado em
+            JOIN em.persona pe
+            JOIN em.cargo ca
+            WHERE em.estado = 1 and ca.esPersonalMedico = true
+            """)
+    List<EmpleadoMedicoResumenDTO> listarEmpleadoCargoMedico();
 
     @Query("""
             SELECT new com.salud.consultorio.dto.empleado.EmpleadoLeerDTO(
