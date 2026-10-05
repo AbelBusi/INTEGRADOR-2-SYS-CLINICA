@@ -14,6 +14,7 @@ public interface IEmpleadoMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "persona", ignore = true)
     @Mapping(target = "cargo", ignore = true)
+    @Mapping(target = "foto", ignore = true)
     @Mapping(target = "fechaIngreso", ignore = true)
     @Mapping(target = "fechaRetiro", ignore = true)
     @Mapping(target = "estado", ignore = true)

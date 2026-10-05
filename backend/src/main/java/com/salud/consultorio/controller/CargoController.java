@@ -1,8 +1,7 @@
 package com.salud.consultorio.controller;
 
-import com.salud.consultorio.dto.cargo.CargoActualizarDTO;
-import com.salud.consultorio.dto.cargo.CargoCrearDTO;
-import com.salud.consultorio.dto.cargo.CargoRespuestaDTO;
+import com.salud.consultorio.dto.cargo.*;
+import com.salud.consultorio.dto.tipoDocumento.TipoDocumentoResumenDTO;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.payload.MensajeResponse;
 import com.salud.consultorio.service.ICargoServicio;
@@ -62,6 +61,23 @@ public class CargoController {
 
     }
 
+    @Operation(summary = "Eliminar cargo", description = "Eliminación lógica (estado = 0)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Cargo eliminado correctamente"),
+            @ApiResponse(responseCode = "400", description = "El cargo ya se encuentra eliminado"),
+            @ApiResponse(responseCode = "404", description = "Cargo no encontrado")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<MensajeResponse> eliminar(@PathVariable Integer id) {
+
+        cargoServicio.eliminarPorId(id);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Cargo eliminado con exito")
+                .build(), HttpStatus.OK);
+
+    }
+
     @Operation(summary = "Actualizar cargo")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Cargo actualizado correctamente"),
@@ -108,6 +124,28 @@ public class CargoController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Informacion del cargo solicitado")
                 .object(entidad).build(),HttpStatus.OK);
+
+    }
+
+    @GetMapping("resumen")
+    public ResponseEntity<MensajeResponse> listaResumen(){
+
+        List<CargoResumenDTO> lista = cargoServicio.listaResumen();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Lista de cargos")
+                .object(lista).build(), HttpStatus.OK);
+
+    }
+
+    @GetMapping("medicos")
+    public ResponseEntity<MensajeResponse> listaCargosMedicosResumen(){
+
+        List<CargoMedicoResumenDTO> lista = cargoServicio.listaCargoMedicoResumen();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Lista de cargos")
+                .object(lista).build(), HttpStatus.OK);
 
     }
 

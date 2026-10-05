@@ -12,6 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@Builder(toBuilder = true)
 @Setter
 @Entity
 @Table(name = "usuario")
@@ -48,7 +49,8 @@ public class Usuario {
     private boolean requiereCambioClave;
 
     @Column(name = "estado",nullable = false)
-    private Integer estado;
+    @Builder.Default
+    private Integer estado = 1;
 
     @OneToMany(mappedBy = "usuario",fetch = FetchType.LAZY)
     private List<Token> token;

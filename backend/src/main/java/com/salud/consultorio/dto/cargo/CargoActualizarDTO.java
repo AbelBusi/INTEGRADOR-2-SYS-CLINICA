@@ -27,7 +27,9 @@ public record CargoActualizarDTO(
                 description = "Descripción del cargo",
                 example = "Profesional médico especializado encargado de la atención de pacientes"
         )
-        String descripcion
+        String descripcion,
+
+        boolean esPersonalMedico
 
 ) {
 }

@@ -1,6 +1,7 @@
 package com.salud.consultorio.repository;
 
 import com.salud.consultorio.dto.especialidad.EspecialidadRespuestaDTO;
+import com.salud.consultorio.dto.especialidad.EspecialidadResumenDTO;
 import com.salud.consultorio.model.entity.Especialidad;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -31,6 +32,16 @@ public interface IEspecialidadRepositorio extends JpaRepository<Especialidad, In
             WHERE e.estado= :estado
             """)
     List<EspecialidadRespuestaDTO> listaPorEstado(@Param("estado") Integer estado);
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.especialidad.EspecialidadResumenDTO(
+                e.id,
+                e.nombre
+                )
+            FROM Especialidad e
+            WHERE e.estado=1
+            """)
+    List<EspecialidadResumenDTO> listaPorNombreResumen();
 
     @Query("""
             SELECT new com.salud.consultorio.dto.especialidad.EspecialidadRespuestaDTO(

@@ -1,9 +1,8 @@
 package com.salud.consultorio.impl;
 
-import com.salud.consultorio.dto.cargo.CargoActualizarDTO;
-import com.salud.consultorio.dto.cargo.CargoCrearDTO;
-import com.salud.consultorio.dto.cargo.CargoRespuestaDTO;
+import com.salud.consultorio.dto.cargo.*;
 import com.salud.consultorio.dto.paciente.PacienteActualizarDTO;
+import com.salud.consultorio.dto.tipoDocumento.TipoDocumentoResumenDTO;
 import com.salud.consultorio.model.entity.Cargo;
 import com.salud.consultorio.model.entity.Paciente;
 import com.salud.consultorio.model.enums.EntidadEstado;
@@ -116,6 +115,18 @@ public class CargoServicioImpl implements ICargoServicio  {
 
         }
 
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<CargoResumenDTO> listaResumen() {
+        return cargoRepositorio.listaResumenDatos();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<CargoMedicoResumenDTO> listaCargoMedicoResumen() {
+        return cargoRepositorio.listaResumenCargoMedico();
     }
 
     @Transactional(readOnly = true)

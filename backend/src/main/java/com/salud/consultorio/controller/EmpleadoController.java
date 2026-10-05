@@ -1,5 +1,6 @@
 package com.salud.consultorio.controller;
 
+import com.salud.consultorio.dto.cargo.CargoMedicoResumenDTO;
 import com.salud.consultorio.dto.empleado.*;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.payload.MensajeResponse;
@@ -12,8 +13,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -35,11 +38,12 @@ public class EmpleadoController {
             @ApiResponse(responseCode = "404", description = "El cargo no existe o no está activo"),
             @ApiResponse(responseCode = "409", description = "Datos duplicados")
     })
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MensajeResponse> crearEmpleado(
-            @Valid @RequestBody EmpleadoCrearDTO empleadoCrearDTO) {
+            @Valid @RequestPart("empleado") EmpleadoCrearDTO empleadoCrearDTO,
+            @RequestPart(value = "imagen", required = false)MultipartFile imagen) {
 
-        EmpleadoRespuestaDTO empleado = empleadoServicio.crear(empleadoCrearDTO);
+        EmpleadoRespuestaDTO empleado = empleadoServicio.crear(empleadoCrearDTO, imagen);
 
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Empleado agregado con exito")
@@ -92,9 +96,10 @@ public class EmpleadoController {
     @PutMapping("/{id}")
     public ResponseEntity<MensajeResponse> actualizar(
             @PathVariable Integer id,
-            @Valid @RequestBody EmpleadoActualizarDTO dto) {
+            @Valid @RequestPart("empleado") EmpleadoActualizarDTO dto,
+            @RequestPart(value = "imagen", required = false) MultipartFile file) {
 
-        EmpleadoRespuestaDTO empleado = empleadoServicio.actualizar(dto, id);
+        EmpleadoRespuestaDTO empleado = empleadoServicio.actualizar(dto, id, file);
 
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Empleado actualizado con exito")
@@ -136,6 +141,17 @@ public class EmpleadoController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Empleado eliminado con exito")
                 .build(), HttpStatus.OK);
+
+    }
+
+    @GetMapping("medicos")
+    public ResponseEntity<MensajeResponse> listaEmpleadosMedicos(){
+
+        List<EmpleadoMedicoResumenDTO> lista = empleadoServicio.listaEmpleadoMedico();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Lista de empleos con cargo relacionado personal medico")
+                .object(lista).build(), HttpStatus.OK);
 
     }
 

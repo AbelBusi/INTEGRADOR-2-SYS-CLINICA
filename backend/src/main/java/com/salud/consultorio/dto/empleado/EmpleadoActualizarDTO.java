@@ -14,10 +14,7 @@ public record EmpleadoActualizarDTO(
 
         @NotNull(message = "El cargo es obligatorio")
         @Positive(message = "El cargo debe ser válido")
-        Integer idCargo,
-
-        @Size(max = 255, message = "La foto no puede superar los 255 caracteres")
-        String foto
+        Integer idCargo
 
 ) {
 }

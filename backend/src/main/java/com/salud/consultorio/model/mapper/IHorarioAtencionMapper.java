@@ -2,6 +2,7 @@ package com.salud.consultorio.model.mapper;
 
 import com.salud.consultorio.dto.horarioAtencion.HorarioAtencionDTO;
 import com.salud.consultorio.dto.horarioAtencion.HorarioAtencionRespuesta;
+import com.salud.consultorio.dto.horarioAtencion.HorarioAtencionRespuestaDTO;
 import com.salud.consultorio.model.entity.Empleado;
 import com.salud.consultorio.model.entity.HorarioAtencion;
 import org.mapstruct.Mapper;
@@ -18,5 +19,8 @@ public interface IHorarioAtencionMapper {
     HorarioAtencion toEntity (Empleado empleado, HorarioAtencionDTO dto);
 
     HorarioAtencionRespuesta toDto(Integer id, List<HorarioAtencionDTO> dto);
+
+    @Mapping(target = "idHorario", source = "id")
+    HorarioAtencionRespuestaDTO toRespuestaDTO(HorarioAtencion horario);
 
 }

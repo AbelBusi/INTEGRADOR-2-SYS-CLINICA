@@ -26,5 +26,4 @@ public interface IPersonaMapper {
     @Mapping(target = "tipoDocumento", source = "tipoDocumento.idTipoDocumento")
     PersonaActualizarDTO toDto(Persona persona);
 
-
 }

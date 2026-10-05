@@ -1,9 +1,6 @@
 package com.salud.consultorio.impl;
 
-import com.salud.consultorio.dto.cargo.CargoActualizarDTO;
-import com.salud.consultorio.dto.cargo.CargoRespuestaDTO;
 import com.salud.consultorio.dto.especialidad.*;
-import com.salud.consultorio.model.entity.Cargo;
 import com.salud.consultorio.model.entity.Especialidad;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.mapper.IEspecialidadMapper;
@@ -16,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +25,12 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
     @Override
     public List<EspecialidadRespuestaDTO> lista(EntidadEstado estado) {
         return listaPorEstado(estado);
+    }
+
+    @Transactional
+    @Override
+    public List<EspecialidadResumenDTO> listaResumen() {
+        return especialidadRepositorio.listaPorNombreResumen();
     }
 
     @Transactional(readOnly = true)

@@ -1,8 +1,9 @@
 package com.salud.consultorio.controller;
 
-import com.salud.consultorio.dto.especialidad.EspecialidadCrearDTO;
 import com.salud.consultorio.dto.especialidad.EspecialidadRespuestaDTO;
+import com.salud.consultorio.dto.horarioAtencion.EmpleadoHorarioRespuesta;
 import com.salud.consultorio.dto.horarioAtencion.HorarioAtencionRespuesta;
+import com.salud.consultorio.dto.horarioAtencion.HorarioAtencionRespuestaDTO;
 import com.salud.consultorio.dto.horarioAtencion.HorarioCrearDTO;
 import com.salud.consultorio.model.payload.MensajeResponse;
 import com.salud.consultorio.service.IHorarioAtencionServicio;
@@ -13,10 +14,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/v1/horarios")
@@ -38,6 +36,22 @@ public class HorarioAtencionController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Horarios agregados con exito")
                 .object(entidad).build(), HttpStatus.CREATED);
+
+    }
+
+    @Operation(summary = "Obtener horario por ID del empleado")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Horario encontrada"),
+            @ApiResponse(responseCode = "404", description = "Horario no encontrada")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<MensajeResponse> leerPorId(@PathVariable Integer id){
+
+        EmpleadoHorarioRespuesta entidad = horarioAtencionServicio.obtenerPorID(id);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Informacion del horario del empleado solicitado")
+                .object(entidad).build(),HttpStatus.OK);
 
     }
 
