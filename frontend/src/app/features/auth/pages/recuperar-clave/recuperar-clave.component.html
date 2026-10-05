@@ -1,0 +1,75 @@
+<h1 class="text-center text-2xl font-bold text-neutral-900">
+  Recuperar contraseña
+</h1>
+<p class="mt-1 text-center text-sm text-neutral-600">{{ subtitulo() }}</p>
+
+@if (paso() !== 'exito') {
+  <div class="mt-5 flex gap-1" aria-label="Progreso de recuperación">
+    @for (p of pasos; track p.id; let i = $index) {
+      <div class="flex-1">
+        <div
+          class="h-1"
+          [class]="i < indicePaso() ? 'bg-[#58595B]' : i === indicePaso() ? 'bg-[#D9182A]' : 'bg-neutral-200'"
+        ></div>
+        <p
+          class="mt-1 text-[11px] font-semibold uppercase tracking-wide"
+          [class]="i <= indicePaso() ? 'text-neutral-800' : 'text-neutral-400'"
+        >
+          {{ p.etiqueta }}
+        </p>
+      </div>
+    }
+  </div>
+}
+
+<div class="mt-6">
+  @switch (paso()) {
+    @case ('solicitud') {
+      <app-paso-solicitud
+        [cargando]="cargando()"
+        [inicial]="solicitudPrevia()"
+        (enviar)="onSolicitar($event)"
+        (cancelar)="volver.emit()"
+      />
+    }
+
+    @case ('verificacion') {
+      <app-paso-verificacion
+        [cargando]="cargando()"
+        (verificar)="onVerificar($event)"
+        (volver)="volverASolicitud()"
+      />
+    }
+
+    @case ('nueva-clave') {
+      <app-paso-nueva-clave [cargando]="cargando()" (restablecer)="onRestablecer($event)" />
+
+      <button
+        type="button"
+        (click)="volverASolicitud()"
+        class="mt-4 w-full text-center text-sm font-semibold text-[#58595B] hover:underline"
+      >
+        Solicitar un nuevo código
+      </button>
+    }
+
+    @case ('exito') {
+      <div class="text-center">
+        <span class="material-symbols-outlined text-[56px] text-[#58595B]">check_circle</span>
+        <p class="mt-2 text-sm leading-6 text-neutral-700">
+          Su contraseña fue actualizada correctamente. Ya puede iniciar sesión con su nueva
+          contraseña.
+        </p>
+
+        <button
+          type="button"
+          (click)="volver.emit()"
+          class="mt-6 flex h-11 w-full items-center justify-center gap-2 bg-[#58595B] text-sm font-bold text-white transition-colors hover:bg-[#404142]"
+        >
+          <span>Ir a iniciar sesión</span>
+          <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+        </button>
+      </div>
+    }
+  }
+</div>

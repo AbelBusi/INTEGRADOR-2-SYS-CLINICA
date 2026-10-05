@@ -1,0 +1,369 @@
+<div class="sass-dashboard-home animate-fade-in flex flex-col gap-6">
+
+  <div>
+    <h2 class="text-2xl font-bold text-neutral-900 tracking-tight">
+      Panel de Control
+    </h2>
+
+    <p class="text-sm text-neutral-500 mt-1">
+      Resumen general del consultorio médico
+    </p>
+  </div>
+
+  @if (cargando()) {
+
+    <div class="flex justify-center py-20">
+      <div
+        class="h-10 w-10 rounded-full border-2 border-[#58595B] border-t-transparent animate-spin">
+      </div>
+    </div>
+
+  } @else {
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+
+      @if (esAdmin) {
+
+        <div
+          class="sass-card sass-summary-card bg-white border border-neutral-200 rounded-xl p-5 flex items-center gap-4">
+
+          <div
+            class="w-12 h-12 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0">
+
+            <span class="material-icons text-[#58595B]">
+              groups
+            </span>
+
+          </div>
+
+          <div>
+            <p class="text-sm font-medium text-neutral-500">
+              Pacientes
+            </p>
+
+            <p class="text-2xl font-bold text-neutral-900 leading-none mt-1">
+              {{ totalPacientes() }}
+            </p>
+          </div>
+
+        </div>
+
+        <div
+          class="sass-card sass-summary-card bg-white border border-neutral-200 rounded-xl p-5 flex items-center gap-4">
+
+          <div
+            class="w-12 h-12 rounded-lg bg-[#D9182A]/10 flex items-center justify-center shrink-0">
+
+            <span class="material-icons text-[#D9182A]">
+              local_hospital
+            </span>
+
+          </div>
+
+          <div>
+            <p class="text-sm font-medium text-neutral-500">
+              Especialidades
+            </p>
+
+            <p class="text-2xl font-bold text-neutral-900 leading-none mt-1">
+              {{ totalEspecialidades() }}
+            </p>
+          </div>
+
+        </div>
+
+      } @else {
+
+        <div
+          class="sass-card sass-summary-card bg-white border border-neutral-200 rounded-xl p-5 flex items-center gap-4">
+
+          <div
+            class="w-12 h-12 rounded-lg bg-neutral-100 flex items-center justify-center shrink-0">
+
+            <span class="material-icons text-[#58595B]">
+              groups
+            </span>
+
+          </div>
+
+          <div>
+            <p class="text-sm font-medium text-neutral-500">
+              Pacientes
+            </p>
+
+            <p class="text-2xl font-bold text-neutral-900 leading-none mt-1">
+              {{ totalPacientes() }}
+            </p>
+          </div>
+
+        </div>
+
+        <div
+          class="sass-card sass-summary-card bg-white border border-neutral-200 rounded-xl p-5 flex items-center gap-4">
+
+          <div
+            class="w-12 h-12 rounded-lg bg-[#D9182A]/10 flex items-center justify-center shrink-0">
+
+            <span class="material-icons text-[#D9182A]">
+              local_hospital
+            </span>
+
+          </div>
+
+          <div>
+            <p class="text-sm font-medium text-neutral-500">
+              Especialidades
+            </p>
+
+            <p class="text-2xl font-bold text-neutral-900 leading-none mt-1">
+              {{ totalEspecialidades() }}
+            </p>
+          </div>
+
+        </div>
+
+      }
+
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <div class="lg:col-span-2 flex flex-col gap-6">
+
+        <div
+          class="sass-card sass-panel bg-white border border-neutral-200 rounded-xl p-6">
+
+          <div class="flex items-center justify-between mb-4">
+
+            <div>
+              <h3 class="text-base font-bold text-neutral-900">
+                Accesos rápidos
+              </h3>
+
+              <p class="text-sm text-neutral-500 mt-0.5">
+                Accede rápidamente a las principales funcionalidades
+              </p>
+            </div>
+
+            <span class="material-icons text-neutral-400">
+              apps
+            </span>
+
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+            @for (item of accesosVisibles; track item.ruta) {
+
+              <a
+                [routerLink]="item.ruta"
+                class="sass-action sass-quick-link flex items-center gap-3 p-3 rounded-lg bg-neutral-50 border border-transparent hover:bg-neutral-100 transition-colors group">
+
+                <div
+                  class="w-10 h-10 rounded flex items-center justify-center shrink-0 text-white"
+                  [ngClass]="item.color">
+
+                  <span class="material-icons text-[20px]">
+                    {{ item.icon }}
+                  </span>
+
+                </div>
+
+                <div>
+                  <p
+                    class="text-sm font-bold text-neutral-800 group-hover:text-[#58595B]">
+                    {{ item.titulo }}
+                  </p>
+
+                  <p class="text-xs text-neutral-500">
+                    {{ item.desc }}
+                  </p>
+                </div>
+
+              </a>
+
+            }
+
+          </div>
+
+        </div>
+
+        <div
+          class="sass-card sass-panel bg-white border border-neutral-200 rounded-xl p-6">
+
+          <h3
+            class="text-base font-bold text-neutral-900 mb-4 flex items-center gap-2">
+
+            <span class="material-icons text-[#58595B] text-base">
+              campaign
+            </span>
+
+            Comunicados
+
+          </h3>
+
+          @if (comunicados().length) {
+
+            <div class="space-y-3">
+
+              @for (c of comunicados(); track c.id) {
+
+                <div
+                  class="p-3 rounded-lg bg-neutral-50 border border-neutral-100">
+
+                  <div class="flex items-center justify-between gap-4">
+
+                    <p class="text-sm font-bold text-neutral-800">
+                      {{ c.titulo }}
+                    </p>
+
+                    <span
+                      class="text-[10px] font-mono text-neutral-400 shrink-0">
+                      {{ c.fecha }}
+                    </span>
+
+                  </div>
+
+                  <p class="text-xs text-neutral-500 mt-1">
+                    {{ c.mensaje }}
+                  </p>
+
+                </div>
+
+              }
+
+            </div>
+
+          } @else {
+
+            <div
+              class="flex flex-col items-center justify-center py-8 text-center">
+
+              <span class="material-icons text-3xl text-neutral-300 mb-2">
+                campaign
+              </span>
+
+              <p class="text-xs text-neutral-400">
+                No hay comunicados por el momento.
+              </p>
+
+            </div>
+
+          }
+
+        </div>
+
+      </div>
+
+      <div
+        class="sass-system-card relative overflow-hidden bg-[#58595B] rounded-xl p-6 text-white flex flex-col justify-between border border-neutral-700 min-h-[420px]">
+
+        <img
+          src="/inicio/img_1.png"
+          alt=""
+          class="absolute inset-0 w-full h-full object-cover pointer-events-none select-none"
+        />
+
+        <div
+          class="absolute inset-0 bg-[#58595B]/80">
+        </div>
+
+        <div
+          class="absolute inset-0 bg-gradient-to-t from-[#58595B]/95 via-[#58595B]/55 to-[#58595B]/80">
+        </div>
+
+
+        <div class="relative z-10">
+
+          <div class="flex items-center gap-2 mb-6">
+
+            <span class="w-2.5 h-2.5 rounded-full bg-white"></span>
+
+            <span
+              class="text-[10px] font-bold text-neutral-300 uppercase tracking-widest">
+              Sistema Activo
+            </span>
+
+          </div>
+
+
+          <div
+            class="w-12 h-12 rounded bg-[#D9182A] flex items-center justify-center mb-4">
+
+            <span class="material-icons text-white text-2xl">
+              local_hospital
+            </span>
+
+          </div>
+
+
+          <h3 class="text-xl font-bold mb-2">
+            SaludConsultorio
+          </h3>
+
+          <p
+            class="text-sm text-neutral-200/70 leading-relaxed mb-8 max-w-md">
+
+            Plataforma integral para la gestión de pacientes,
+            especialistas y agenda médica de su consultorio.
+
+          </p>
+
+        </div>
+
+
+        <!-- Estadísticas -->
+        <div
+          class="relative z-10 space-y-4 pt-6 border-t border-neutral-400/40">
+
+          <!-- Especialidades -->
+          <div class="flex items-center justify-between">
+
+            <div class="flex items-center gap-2 text-neutral-200">
+
+              <span class="material-icons text-[18px]">
+                category
+              </span>
+
+              <span class="text-sm font-medium">
+                Especialidades
+              </span>
+
+            </div>
+
+            <span class="text-lg font-bold text-white">
+              {{ totalEspecialidades() }}
+            </span>
+
+          </div>
+
+
+          <!-- Pacientes -->
+          <div class="flex items-center justify-between">
+
+            <div class="flex items-center gap-2 text-neutral-200">
+
+              <span class="material-icons text-[18px]">
+                groups
+              </span>
+
+              <span class="text-sm font-medium">
+                Pacientes
+              </span>
+
+            </div>
+
+            <span class="text-lg font-bold text-white">
+              {{ totalPacientes() }}
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  }
+
+</div>
