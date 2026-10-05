@@ -30,14 +30,6 @@ export const routes: Routes = [
             (m) => m.InicioComponent,
           ),
       },
-      {
-        path: 'horario',
-        loadComponent: () =>
-          import('./features/dashboard/pages/horario/horario.component').then(
-            (m) => m.HorarioComponent,
-          ),
-      },
-
       ...ADMIN_ROUTES,
       ...CLINICA_ROUTES,
       ...DOCTOR_ROUTES,

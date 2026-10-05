@@ -1,18 +1,14 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
-import { CitaService } from '../../../clinica/citas/services/cita.service';
-import { DoctorService } from '../../../clinica/doctores/services/doctor.service';
+
+import { AuthService } from '../../../auth/services/auth.service';
 import { PacienteService } from '../../../clinica/pacientes/services/paciente.service';
 import { EspecialidadService } from '../../../clinica/especialidad/services/especialidad.service';
-import { CitaMedica } from '../../../clinica/citas/models/cita.model';
-import { CitaMedicaLeer } from '../../../clinica/citas/interface/cita.interface';
-import { AuthService } from '../../../auth/services/auth.service';
-import { DoctorPortalService } from '../../../doctor/services/doctor-portal.service';
-import { PacientePortalService } from '../../../paciente/services/paciente-portal.service';
-import { PacienteCita } from '../../../paciente/models/paciente-portal.model';
-import { ComunicadoService, Comunicado } from '../../../../core/services/comunicado.service';
+import {
+  ComunicadoService,
+  Comunicado,
+} from '../../../../core/services/comunicado.service';
 
 @Component({
   selector: 'app-inicio',
@@ -21,27 +17,21 @@ import { ComunicadoService, Comunicado } from '../../../../core/services/comunic
   templateUrl: './inicio.component.html',
 })
 export class InicioComponent implements OnInit {
-  private citaService = inject(CitaService);
-  private doctorService = inject(DoctorService);
-  private pacienteService = inject(PacienteService);
-  private especialidadService = inject(EspecialidadService);
-  private authService = inject(AuthService);
-  private doctorPortalService = inject(DoctorPortalService);
-  private pacientePortalService = inject(PacientePortalService);
-  private comunicadoService = inject(ComunicadoService);
+  private readonly authService = inject(AuthService);
+  private readonly pacienteService = inject(PacienteService);
+  private readonly especialidadService = inject(EspecialidadService);
+  private readonly comunicadoService = inject(ComunicadoService);
 
   esRecepcionista = false;
   esDoctor = false;
   esAdmin = false;
   esPaciente = false;
-  proximaCita = signal<PacienteCita | null>(null);
 
   cargando = signal(true);
+
   totalPacientes = signal(0);
-  totalDoctores = signal(0);
-  totalCitas = signal(0);
-  citasHoy = signal(0);
   totalEspecialidades = signal(0);
+
   comunicados = signal<Comunicado[]>([]);
 
   accesosRapidos = [
@@ -129,82 +119,41 @@ export class InicioComponent implements OnInit {
 
   get accesosVisibles() {
     const rol = this.authService.getRole();
-    return this.accesosRapidos.filter((a) => !a.roles || a.roles.includes(rol));
+
+    return this.accesosRapidos.filter((acceso) => !acceso.roles || acceso.roles.includes(rol));
   }
 
   ngOnInit(): void {
     const rol = this.authService.getRole();
+
     this.esRecepcionista = rol === 'RECEPCIONISTA';
     this.esDoctor = rol === 'DOCTOR';
     this.esAdmin = rol === 'ADMINISTRADOR';
     this.esPaciente = rol === 'PACIENTE';
 
-    this.comunicadoService.listar().subscribe({ next: (c) => this.comunicados.set(c) });
+    this.cargarComunicados();
+    this.cargarDatos();
+  }
 
-    if (this.esPaciente) {
-      this.pacientePortalService.misCitas().subscribe({
-        next: (citas) => {
-          this.totalCitas.set(citas.length);
-          const hoy = new Date().toISOString().slice(0, 10);
-          this.citasHoy.set(citas.filter((c) => c.estado === 1 && c.fecha === hoy).length);
-          const proximas = citas
-            .filter((c) => c.estado === 1 && c.fecha >= hoy)
-            .sort((a, b) => a.fecha.localeCompare(b.fecha));
-          this.proximaCita.set(proximas[0] ?? null);
-          this.cargando.set(false);
-        },
-        error: () => this.cargando.set(false),
-      });
-      return;
-    }
+  private cargarComunicados(): void {
+    this.comunicadoService.listar().subscribe({
+      next: (comunicados) => this.comunicados.set(comunicados),
+    });
+  }
 
-    if (this.esRecepcionista) {
-      this.citaService.mias().subscribe({
-        next: (res) => {
-          const data = res.object;
-          const citas: any[] = Array.isArray(data) ? data : data ? [data] : [];
-          this.totalCitas.set(citas.length);
-          const hoy = new Date().toISOString().slice(0, 10);
-          this.citasHoy.set(citas.filter((c) => c.diaConsulta === hoy).length);
-          this.cargando.set(false);
-        },
-        error: () => this.cargando.set(false),
-      });
-      return;
-    }
-
-    if (this.esDoctor) {
-      forkJoin({
-        pendientes: this.doctorPortalService.misCitas(1),
-        atendidas: this.doctorPortalService.misCitas(2),
-      }).subscribe({
-        next: ({ pendientes, atendidas }) => {
-          this.totalCitas.set(pendientes.length + atendidas.length);
-          const hoy = new Date().toISOString().slice(0, 10);
-          this.citasHoy.set(pendientes.filter((c) => c.fecha === hoy).length);
-          this.cargando.set(false);
-        },
-        error: () => this.cargando.set(false),
-      });
-      return;
-    }
-
-    forkJoin({
-      pacientes: this.pacienteService.listarPacientes(),
-      doctores: this.doctorService.listar(),
-      citas: this.citaService.listar(),
-      especialidades: this.especialidadService.listarActivos(),
-    }).subscribe({
-      next: ({ pacientes, doctores, citas, especialidades }) => {
-        this.totalPacientes.set(pacientes.length);
-        this.totalDoctores.set(doctores.length);
-        this.totalCitas.set(8);
-        this.totalEspecialidades.set(especialidades.object?.length ?? 0);
-
-        const hoy = new Date().toISOString().slice(0, 10);
+  private cargarDatos(): void {
+    this.pacienteService.listar().subscribe({
+      next: (response) => {
+        this.totalPacientes.set(response.object?.length ?? 0);
         this.cargando.set(false);
       },
       error: () => this.cargando.set(false),
+    });
+
+    this.especialidadService.listarActivos().subscribe({
+      next: (response) => {
+        this.totalEspecialidades.set(response.object?.length ?? 0);
+      },
     });
   }
 }

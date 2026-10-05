@@ -1,10 +1,24 @@
-import { Component, computed, inject, input, OnInit, output, signal } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnChanges,
+  SimpleChanges,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import {
-  PacienteDetalleLeerDTO,
-  PacienteActualizarDTO,
-  PacienteMensajeResponse,
+  GENEROS,
+  Paciente,
+  PacienteDetalle,
+  PacienteForm,
+  TipoDocumentoResumen,
+  fechaMaximaNacimiento,
+  formularioAActualizarDto,
+  formularioVacio,
 } from '../../interface/paciente.interface';
 import { PacienteService } from '../../services/paciente.service';
 import { ToastService } from '../../../../../core/services/toast.service';
@@ -15,123 +29,127 @@ import { ToastService } from '../../../../../core/services/toast.service';
   imports: [CommonModule, FormsModule],
   templateUrl: './editar-paciente-modal.component.html',
 })
-export class EditarPacienteModalComponent implements OnInit {
-  private readonly pacienteService = inject(PacienteService);
-  private readonly toastService = inject(ToastService);
+export class EditarPacienteModalComponent implements OnChanges {
+  @Input() paciente: Paciente | null = null;
+  @Input() isOpen = false;
+  @Output() onClose = new EventEmitter<void>();
+  @Output() onPacienteEditado = new EventEmitter<void>();
 
-  paciente = input.required<PacienteDetalleLeerDTO>();
-  close = output<void>();
-  save = output<PacienteDetalleLeerDTO>();
+  pacienteForm: PacienteForm = formularioVacio();
+  tiposDocumento: TipoDocumentoResumen[] = [];
+  generos = GENEROS;
+  fechaMaxima = fechaMaximaNacimiento();
 
-  form = signal<PacienteActualizarDTO>({
-    entidadAseguradora: '',
-    codigoAseguradora: '',
-    estado: 1,
-    persona: {
-      dni: '',
-      nombre: '',
-      apellidos: '',
-      fechaNacimiento: '',
-      genero: '',
-      telefono: '',
-      nacionalidad: '',
-      correo: '',
-      estado: 1,
-    },
-  });
+  cargandoDatos = false;
+  guardando = false;
 
-  guardando = signal<boolean>(false);
+  constructor(
+    private readonly pacienteService: PacienteService,
+    private readonly toastService: ToastService,
+    private readonly cdr: ChangeDetectorRef,
+  ) {}
 
-  seguros = ['SIS', 'ESSALUD', 'RIMAC', 'PACÍFICO', 'MAPFRE', 'PARTICULAR'];
-  generos = ['MASCULINO', 'FEMENINO', 'OTRO'];
-
-  fechaMaxima = computed(() => {
-    const hoy = new Date();
-    const anio = hoy.getFullYear();
-    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
-    const dia = String(hoy.getDate()).padStart(2, '0');
-    return `${anio}-${mes}-${dia}`;
-  });
-
-  ngOnInit(): void {
-    const p = this.paciente();
-    if (p) {
-      this.form.set({
-        entidadAseguradora: p.entidadAseguradora || '',
-        codigoAseguradora: p.codigoAseguradora || '',
-        estado: 1,
-        persona: {
-          dni: p.persona?.dni || '',
-          nombre: p.persona?.nombre || '',
-          apellidos: p.persona?.apellidos || '',
-          fechaNacimiento: p.persona?.fechaNacimiento || '',
-          genero: p.persona?.genero || '',
-          telefono: p.persona?.telefono || '',
-          nacionalidad: p.persona?.nacionalidad || '',
-          correo: p.persona?.correo || '',
-          estado: 1,
-        },
-      });
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['paciente'] && this.paciente) {
+      this.cargarDatos(this.paciente.id);
     }
   }
 
-  iniciales = computed(() => {
-    const f = this.form();
-    if (!f || !f.persona || !f.persona.nombre) return 'P';
-    return f.persona.nombre[0].toUpperCase();
-  });
+  get longitudDocumento(): number | null {
+    const tipo = this.tiposDocumento.find(
+      (t) => t.idTipoDocumento === this.pacienteForm.idTipoDocumento,
+    );
+    return tipo ? tipo.longitud : null;
+  }
 
-  handleSubmit(): void {
-    if (this.guardando()) return;
+  private cargarDatos(id: number): void {
+    this.cargandoDatos = true;
 
-    const payload = this.form();
-
-    if (
-      !payload.entidadAseguradora ||
-      !payload.codigoAseguradora ||
-      !payload.persona.dni ||
-      !payload.persona.nombre ||
-      !payload.persona.apellidos
-    ) {
-      this.toastService.warning('Por favor, complete todos los campos obligatorios.');
-      return;
-    }
-
-    if (payload.persona.dni.length !== 8 || !/^\d+$/.test(payload.persona.dni)) {
-      this.toastService.warning('El DNI debe contener exactamente 8 números.');
-      return;
-    }
-
-    if (
-      payload.persona.telefono &&
-      (payload.persona.telefono.length !== 9 || !/^\d+$/.test(payload.persona.telefono))
-    ) {
-      this.toastService.warning('El teléfono debe contener exactamente 9 números.');
-      return;
-    }
-
-    this.guardando.set(true);
-    const idPaciente = this.paciente().id;
-
-    payload.estado = 1;
-    payload.persona.estado = 1;
-
-    this.pacienteService.actualizarPaciente(idPaciente, payload).subscribe({
-      next: (pacienteActualizado: PacienteDetalleLeerDTO) => {
-        this.guardando.set(false);
-
-        this.toastService.success('Los datos del paciente fueron actualizados correctamente.');
-
-        this.save.emit(pacienteActualizado);
-        this.close.emit();
+    forkJoin({
+      detalle: this.pacienteService.obtenerPorId(id),
+      tipos: this.pacienteService.listarTiposDocumentoResumen(),
+    }).subscribe({
+      next: ({ detalle, tipos }) => {
+        this.tiposDocumento = tipos.object || [];
+        this.llenarFormulario(detalle.object);
+        this.cargandoDatos = false;
+        this.cdr.detectChanges();
       },
-      error: (err) => {
-        this.guardando.set(false);
-        console.error('Error al actualizar el paciente:', err);
+      error: (error) => {
+        console.error(error);
+        this.toastService.error('No se pudieron cargar los datos del paciente.');
+        this.cargandoDatos = false;
+        this.handleClose();
+      },
+    });
+  }
 
-        const mensajeError =
-          err.error?.mensaje || 'No se pudieron guardar los cambios del paciente.';
-        this.toastService.error(mensajeError);
+  private llenarFormulario(detalle: PacienteDetalle): void {
+    this.pacienteForm = {
+      idTipoDocumento: detalle.idTipoDocumento,
+      numeroDocumento: detalle.numeroDocumento || '',
+      nombre: detalle.nombre || '',
+      apellidos: detalle.apellidos || '',
+      fechaNacimiento: detalle.fechaNacimiento || '',
+      genero: detalle.genero || '',
+      telefono: detalle.telefono || '',
+      direccion: detalle.direccion || '',
+      correo: detalle.correo || '',
+      nacionalidad: detalle.nacionalidad || '',
+      entidadAsegurado: detalle.entidadAsegurado || '',
+      codigoAsegurado: detalle.codigoAsegurado || '',
+    };
+  }
+
+  onTipoDocumentoChange(): void {
+    const longitud = this.longitudDocumento;
+    if (longitud !== null) {
+      this.pacienteForm.numeroDocumento = this.pacienteForm.numeroDocumento.slice(0, longitud);
+    }
+  }
+
+  soloNumeros(event: KeyboardEvent): void {
+    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !/\d/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  handleClose(): void {
+    this.onClose.emit();
+  }
+
+  onSubmit(): void {
+    const f = this.pacienteForm;
+
+    if (!this.paciente?.id || this.guardando) {
+      return;
+    }
+
+    if (
+      !f.idTipoDocumento ||
+      !f.numeroDocumento.trim() ||
+      !f.nombre.trim() ||
+      !f.apellidos.trim() ||
+      !f.codigoAsegurado.trim()
+    ) {
+      this.toastService.warning('Por favor, complete todos los campos requeridos.');
+      return;
+    }
+
+    this.guardando = true;
+
+    this.pacienteService.actualizar(this.paciente.id, formularioAActualizarDto(f)).subscribe({
+      next: (response) => {
+        this.toastService.success(response?.mensaje || 'Paciente actualizado con éxito');
+        this.guardando = false;
+        this.onPacienteEditado.emit();
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error(error);
+        this.toastService.error(error.error?.mensaje || 'Hubo un error al actualizar el paciente');
+        this.guardando = false;
+        this.cdr.detectChanges();
       },
     });
   }

@@ -1,77 +1,150 @@
-export interface PacienteInterface {
+export interface MensajeResponse<T> {
+  mensaje: string;
+  object: T;
+}
+
+export interface Paciente {
   id: number;
-  dni: string;
   paciente: string;
   genero: string;
-  telefono: string;
-  entidadAseguradora: string;
+  telefono: string | null;
+  codigoAsegurado: string;
+  entidadAsegurado: string;
   estado: number;
 }
 
-export interface PersonaLeerDTO {
+export interface PacienteDetalle {
   id: number;
-  dni: string;
+  idTipoDocumento: number;
+  codigoTipoDocumento: string;
+  descripcionTipoDocumento: string;
+  numeroDocumento: string;
   nombre: string;
   apellidos: string;
   fechaNacimiento: string;
   genero: string;
-  telefono: string;
+  telefono: string | null;
+  direccion: string | null;
+  correo: string | null;
   nacionalidad: string;
-  correo: string;
+  fechaCreacion: string;
+  fechaActualizacion: string;
+  codigoAsegurado: string;
+  entidadAsegurado: string;
+  estado: number;
 }
 
-export interface PacienteDetalleLeerDTO {
+export interface PacienteRespuesta {
   id: number;
-  persona: PersonaLeerDTO;
-  entidadAseguradora: string;
-  codigoAseguradora: string;
+  entidadAsegurado: string;
+  codigoAsegurado: string;
   estado: number;
 }
 
-export interface PersonaActualizarDTO {
-  dni: string;
+export interface PersonaDTO {
+  tipoDocumento: number;
+  numeroDocumento: string;
   nombre: string;
   apellidos: string;
   fechaNacimiento: string;
   genero: string;
-  telefono: string;
+  telefono: string | null;
+  direccion: string | null;
+  correo: string | null;
   nacionalidad: string;
-  correo: string;
-  estado: number;
-}
-
-export interface PacienteActualizarDTO {
-  entidadAseguradora: string;
-  codigoAseguradora: string;
-  estado: number;
-  persona: PersonaActualizarDTO;
-}
-
-export interface PersonaCrearDTO {
-  dni: string;
-  nombre: string;
-  apellidos: string;
-  fechaNacimiento: string;
-  genero: string;
-  telefono: string;
-  nacionalidad: string;
-  correo: string;
-  estado: number;
 }
 
 export interface PacienteCrearDTO {
-  entidadAseguradora: string;
-  codigoAseguradora: string;
-  estado: number;
-  persona: PersonaCrearDTO;
+  entidadAsegurado: string;
+  codigoAsegurado: string;
+  persona: PersonaDTO;
 }
 
-export interface PacienteMensajeResponse {
-  mensaje: string;
-  object: PacienteDetalleLeerDTO;
+export interface PacienteActualizarDTO {
+  codigoAsegurado: string;
+  persona: PersonaDTO;
 }
 
-export interface PacienteResumenDTO {
-  idPaciente: number;
-  nombrePaciente: string;
+export interface PersonaCrearDTO {
+  codigoAsegurado: string;
+  persona: PersonaDTO;
+}
+
+
+export interface PacienteForm {
+  idTipoDocumento: number | null;
+  numeroDocumento: string;
+  nombre: string;
+  apellidos: string;
+  fechaNacimiento: string;
+  genero: string;
+  telefono: string;
+  direccion: string;
+  correo: string;
+  nacionalidad: string;
+  entidadAsegurado: string;
+  codigoAsegurado: string;
+}
+
+export interface TipoDocumentoResumen {
+  idTipoDocumento: number;
+  codigo: string;
+  longitud: number;
+}
+
+export const GENEROS = ['Masculino', 'Femenino'];
+
+export function fechaMaximaNacimiento(): string {
+  const ayer = new Date();
+  ayer.setDate(ayer.getDate() - 1);
+  const mes = String(ayer.getMonth() + 1).padStart(2, '0');
+  const dia = String(ayer.getDate()).padStart(2, '0');
+  return `${ayer.getFullYear()}-${mes}-${dia}`;
+}
+
+export function formularioVacio(): PacienteForm {
+  return {
+    idTipoDocumento: null,
+    numeroDocumento: '',
+    nombre: '',
+    apellidos: '',
+    fechaNacimiento: '',
+    genero: '',
+    telefono: '',
+    direccion: '',
+    correo: '',
+    nacionalidad: '',
+    entidadAsegurado: '',
+    codigoAsegurado: '',
+  };
+}
+
+function personaDesdeFormulario(form: PacienteForm): PersonaDTO {
+  return {
+    tipoDocumento: form.idTipoDocumento as number,
+    numeroDocumento: form.numeroDocumento.trim(),
+    nombre: form.nombre.trim(),
+    apellidos: form.apellidos.trim(),
+    fechaNacimiento: form.fechaNacimiento,
+    genero: form.genero,
+    telefono: form.telefono.trim() || null,
+    direccion: form.direccion.trim() || null,
+    correo: form.correo.trim() || null,
+    nacionalidad: form.nacionalidad.trim(),
+  };
+}
+
+export function formularioACrearDto(form: PacienteForm): PacienteCrearDTO {
+  return {
+    entidadAsegurado: form.entidadAsegurado.trim(),
+    codigoAsegurado: form.codigoAsegurado.trim(),
+    persona: personaDesdeFormulario(form),
+  };
+}
+
+export function formularioAActualizarDto(form: PacienteForm): PacienteActualizarDTO {
+  return {
+    codigoAsegurado: form.codigoAsegurado.trim(),
+    persona: personaDesdeFormulario(form),
+  };
 }

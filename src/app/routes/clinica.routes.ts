@@ -6,43 +6,8 @@ export const CLINICA_ROUTES: Routes = [
   {
     path: 'citas',
     children: [
-      {
-        path: '',
-        canActivate: [authGuard],
-        data: { roles: ['ADMINISTRADOR'] },
-        loadComponent: () =>
-          import('../features/clinica/citas/pages/lista-citas/lista-citas-medicas-component').then(
-            (m) => m.ListaCitaComponent,
-          ),
-      },
-      {
-        path: 'nuevo',
-        canActivate: [authGuard],
-        data: { roles: ['ADMINISTRADOR', 'RECEPCIONISTA'] },
-        loadComponent: () =>
-          import('../features/clinica/citas/pages/crear-cita/crear-cita.component').then(
-            (m) => m.CrearCitaComponent,
-          ),
-      },
-      {
-        path: 'por-doctor',
-        canActivate: [authGuard],
-        data: { roles: ['ADMINISTRADOR'] },
-        loadComponent: () =>
-          import('../features/clinica/citas/pages/lista-citas/lista-citas-medicas-component').then(
-            (m) => m.ListaCitaComponent,
-          ),
-      },
+
     ],
-  },
-  {
-    path: 'historial-citas',
-    canActivate: [authGuard],
-    data: { roles: ['RECEPCIONISTA'] },
-    loadComponent: () =>
-      import('../features/clinica/citas/pages/historial-citas/historial-citas.component').then(
-        (m) => m.HistorialCitasComponent,
-      ),
   },
   {
     path: 'pacientes',
@@ -52,8 +17,8 @@ export const CLINICA_ROUTES: Routes = [
         canActivate: [authGuard],
         data: { roles: ['ADMINISTRADOR'] },
         loadComponent: () =>
-          import('../features/clinica/pacientes/pages/lista-pacientes/lista-pacientes.component').then(
-            (m) => m.ListaPacientesComponent,
+          import('../features/clinica/pacientes/pages/lista-paciente/lista-paciente.component').then(
+            (m) => m.ListaPacienteComponent,
           ),
       },
       {
@@ -61,8 +26,8 @@ export const CLINICA_ROUTES: Routes = [
         canActivate: [authGuard],
         data: { roles: ['ADMINISTRADOR', 'RECEPCIONISTA'] },
         loadComponent: () =>
-          import('../features/clinica/pacientes/pages/crear-paciente/crear-paciente.component').then(
-            (m) => m.CrearPacienteComponent,
+          import('../features/clinica/pacientes/components/crear-paciente-modal/crear-paciente-modal.component').then(
+            (m) => m.CrearPacienteModalComponent,
           ),
       },
     ],

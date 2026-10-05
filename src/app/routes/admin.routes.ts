@@ -8,13 +8,6 @@ export const ADMIN_ROUTES: Routes = [
     data: { roles: ['ADMINISTRADOR'] },
     children: [
       {
-        path: 'horarios',
-        loadComponent: () =>
-          import('../features/clinica/horarios/pages/lista-horarios/lista-horarios.component').then(
-            (m) => m.ListaHorariosComponent,
-          ),
-      },
-      {
         path: 'doctores',
         children: [
           {
@@ -55,23 +48,11 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
-        path: 'recepcionistas',
-        children: [
-          {
-            path: '',
-            loadComponent: () =>
-              import('../features/clinica/recepcionistas/pages/lista-recepcionistas/lista-recepcionistas.component').then(
-                (m) => m.ListaRecepcionistasComponent,
-              ),
-          },
-          {
-            path: 'nuevo',
-            loadComponent: () =>
-              import('../features/clinica/recepcionistas/pages/crear-recepcionista/crear-recepcionista.component').then(
-                (m) => m.CrearRecepcionistaComponent,
-              ),
-          },
-        ],
+        path: 'pacientes',
+        loadComponent: () =>
+          import('../features/clinica/pacientes/pages/lista-paciente/lista-paciente.component').then(
+            (m) => m.ListaPacienteComponent,
+          ),
       },
       {
         path: 'roles',

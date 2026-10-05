@@ -92,11 +92,6 @@ export const MENU_BASE: NavItem[] = [
     icon: 'groups',
     sub: [
       { label: 'Ver pacientes', route: '/dashboard/pacientes', roles: ['ADMINISTRADOR'] },
-      {
-        label: 'Nuevo paciente',
-        route: '/dashboard/pacientes/nuevo',
-        roles: ['ADMINISTRADOR', 'RECEPCIONISTA'],
-      },
     ],
   },
   {
