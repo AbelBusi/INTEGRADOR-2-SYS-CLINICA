@@ -57,6 +57,70 @@
             </div>
           </div>
 
+          <div class="space-y-2">
+
+            <label class="text-[10px] uppercase font-bold text-[#D9182A] tracking-wider block">
+              ¿Es personal médico?
+            </label>
+
+            <div class="grid grid-cols-2 gap-3">
+
+              <label
+                class="flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors"
+                [ngClass]="
+        cargoForm.esPersonalMedico
+          ? 'border-[#0d6b68] bg-[#0d6b68]/5'
+          : 'border-neutral-300 bg-white hover:bg-neutral-50'
+      "
+              >
+                <input
+                  type="radio"
+                  name="esPersonalMedico"
+                  [value]="true"
+                  [(ngModel)]="cargoForm.esPersonalMedico"
+                  class="accent-[#0d6b68]"
+                />
+
+                <div>
+                  <p class="text-sm font-semibold text-neutral-800">
+                    Sí
+                  </p>
+                  <p class="text-[11px] text-neutral-500">
+                    Es personal médico
+                  </p>
+                </div>
+              </label>
+
+              <label
+                class="flex items-center gap-3 p-3 rounded border cursor-pointer transition-colors"
+                [ngClass]="
+        !cargoForm.esPersonalMedico
+          ? 'border-[#58595B] bg-neutral-50'
+          : 'border-neutral-300 bg-white hover:bg-neutral-50'
+      "
+              >
+                <input
+                  type="radio"
+                  name="esPersonalMedico"
+                  [value]="false"
+                  [(ngModel)]="cargoForm.esPersonalMedico"
+                  class="accent-[#58595B]"
+                />
+
+                <div>
+                  <p class="text-sm font-semibold text-neutral-800">
+                    No
+                  </p>
+                  <p class="text-[11px] text-neutral-500">
+                    No es personal médico
+                  </p>
+                </div>
+              </label>
+
+            </div>
+
+          </div>
+
           <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 pt-4 border-t border-neutral-200">
             <button
               type="button"

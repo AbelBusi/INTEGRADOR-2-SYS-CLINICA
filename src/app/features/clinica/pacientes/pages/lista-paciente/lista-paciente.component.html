@@ -108,55 +108,33 @@
       }
 
       @if (field === 'id') {
-
-        <div class="flex items-center justify-end gap-2" (click)="$event.stopPropagation()">
-
-          <button
-            type="button"
-            title="Ver detalle"
-            (click)="setPacienteVer(row)"
-            class="w-9 h-9 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
-            <span class="material-icons text-[18px]">visibility</span>
+        <div class="flex flex-wrap items-center justify-center gap-2 sm:gap-1.5 lg:gap-2"
+             (click)="$event.stopPropagation()"> <!-- Ver -->
+          <button type="button" title="Ver detalle" (click)="setPacienteVer(row)"
+                  class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 sm:px-2 lg:px-2.5">
+            <span class="material-icons text-[18px]">visibility</span> <span class="hidden lg:inline">Ver</span>
           </button>
-
-          <button
-            type="button"
-            title="Editar"
-            (click)="setPacienteEditar(row)"
-            class="w-9 h-9 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
-            <span class="material-icons text-[18px]">edit</span>
-          </button>
+          <button type="button" title="Editar" (click)="setPacienteEditar(row)"
+                  class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 sm:px-2 lg:px-2.5">
+            <span class="material-icons text-[18px]">edit</span> <span class="hidden lg:inline">Editar</span></button>
 
           @if (row.estado === 1) {
-            <button
-              type="button"
-              title="Desactivar"
-              (click)="cambiarEstado(row, 'INACTIVO')"
-              class="w-9 h-9 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 transition-colors">
-              <span class="material-icons text-[18px]">toggle_off</span>
-            </button>
+            <button type="button" title="Desactivar" (click)="cambiarEstado(row, 'INACTIVO')"
+                    class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 sm:px-2 lg:px-2.5">
+              <span class="material-icons text-[18px]">toggle_off</span> <span
+              class="hidden lg:inline">Desactivar</span></button>
           } @else {
-            <button
-              type="button"
-              title="Activar"
-              (click)="cambiarEstado(row, 'ACTIVO')"
-              class="w-9 h-9 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68] transition-colors">
-              <span class="material-icons text-[18px]">toggle_on</span>
+            <button type="button" title="Activar" (click)="cambiarEstado(row, 'ACTIVO')"
+                    class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68] sm:px-2 lg:px-2.5">
+              <span class="material-icons text-[18px]">toggle_on</span> <span class="hidden lg:inline">Activar</span>
             </button>
           }
-
-          <button
-            type="button"
-            title="Eliminar"
-            (click)="eliminarPaciente(row)"
-            class="w-9 h-9 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] transition-colors">
-            <span class="material-icons text-[18px]">delete</span>
+          <button type="button" title="Eliminar" (click)="eliminarPaciente(row)"
+                  class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] sm:px-2 lg:px-2.5">
+            <span class="material-icons text-[18px]">delete</span> <span class="hidden lg:inline">Eliminar</span>
           </button>
-
         </div>
-
       }
-
     </ng-template>
 
   </app-custom-table>

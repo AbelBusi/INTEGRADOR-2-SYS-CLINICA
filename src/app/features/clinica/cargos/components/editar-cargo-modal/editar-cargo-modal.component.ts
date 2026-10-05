@@ -28,6 +28,7 @@ export class EditarCargoModalComponent implements OnChanges {
   cargoForm: CargoActualizarDTO = {
     nombre: '',
     descripcion: '',
+    esPersonalMedico: false,
   };
   cargando = false;
 
@@ -42,6 +43,7 @@ export class EditarCargoModalComponent implements OnChanges {
       this.cargoForm = {
         nombre: this.cargo.nombre || '',
         descripcion: this.cargo.descripcion || '',
+        esPersonalMedico: this.cargo.esPersonalMedico,
       };
     }
   }

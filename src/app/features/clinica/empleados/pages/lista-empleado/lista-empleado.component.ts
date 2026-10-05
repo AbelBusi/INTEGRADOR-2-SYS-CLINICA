@@ -46,7 +46,7 @@ export class ListaEmpleadoComponent implements OnInit {
     { header: 'Cargo', field: 'cargo', type: 'text' },
     { header: 'Ingreso', field: 'fechaIngreso', type: 'custom' },
     { header: 'Estado', field: 'estado', type: 'custom' },
-    { header: 'Acciones', field: 'id', type: 'custom' },
+    { header: 'Acciones', field: 'id', type: 'custom', align:'center' },
   ];
 
   constructor(

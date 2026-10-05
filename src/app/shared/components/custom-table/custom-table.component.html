@@ -16,17 +16,23 @@
         <thead class="sticky top-0 z-10">
         <tr>
           @for (col of columns(); track col.header) {
+
             <th
-              [class]="col.type === 'actions'
-                  ? 'px-5 py-4 text-right text-xs font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap bg-[#f4f7f7] shadow-[inset_0_-2px_0_#0d6b68]'
-                  : 'px-5 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap bg-[#f4f7f7] shadow-[inset_0_-2px_0_#0d6b68]'"
+              class="px-5 py-4 text-xs font-bold text-gray-600 uppercase tracking-wide
+         whitespace-nowrap bg-[#f4f7f7]
+         shadow-[inset_0_-2px_0_#0d6b68]"
+              [class.text-left]="!col.align || col.align === 'left'"
+              [class.text-center]="col.align === 'center'"
+              [class.text-right]="col.align === 'right'"
               [class.cursor-pointer]="col.sortable"
               [class.hover:bg-[#eaf1f1]]="col.sortable"
               (click)="col.sortable && handleSort(col.field.toString())"
             >
               <div
                 class="flex items-center gap-2"
-                [class.justify-end]="col.type === 'actions'"
+                [class.justify-start]="!col.align || col.align === 'left'"
+                [class.justify-center]="col.align === 'center'"
+                [class.justify-end]="col.align === 'right'"
               >
                 {{ col.header }}
 
@@ -34,16 +40,17 @@
                   <span
                     class="material-icons text-[18px]"
                     [ngClass]="
-                        sortField() === col.field
-                          ? 'text-[#0d6b68]'
-                          : 'text-gray-400'
-                      "
+          sortField() === col.field
+            ? 'text-[#0d6b68]'
+            : 'text-gray-400'
+        "
                   >
-                      unfold_more
-                    </span>
+        unfold_more
+      </span>
                 }
               </div>
             </th>
+
           }
         </tr>
         </thead>
@@ -59,27 +66,29 @@
               @for (col of columns(); track col.header) {
 
                 <td
-                  [class]="col.type === 'actions'
-                    ? 'px-5 py-4 text-right whitespace-nowrap'
-                    : 'px-5 py-4'"
+                  class="px-5 py-4"
+                  [class.text-left]="!col.align || col.align === 'left'"
+                  [class.text-center]="col.align === 'center'"
+                  [class.text-right]="col.align === 'right'"
+                  [class.whitespace-nowrap]="col.type === 'actions'"
                 >
 
                   @if (col.type === 'actions') {
 
-                    <div class="flex justify-end items-center gap-1">
+                    <div class="flex justify-center items-center gap-1">
 
                       <button
                         type="button"
                         title="Eliminar"
                         (click)="$event.stopPropagation(); deleteAction.emit(row)"
                         class="w-9 h-9 inline-flex items-center justify-center rounded-md
-                               text-gray-500 border border-gray-200 bg-white
-                               hover:text-red-600 hover:border-red-200 hover:bg-red-50
-                               transition-colors"
+                       text-gray-500 border border-gray-200 bg-white
+                       hover:text-red-600 hover:border-red-200 hover:bg-red-50
+                       transition-colors"
                       >
-                        <span class="material-icons text-[19px]">
-                          delete
-                        </span>
+                <span class="material-icons text-[19px]">
+                  delete
+                </span>
                       </button>
 
                     </div>
@@ -88,23 +97,24 @@
 
                     <ng-container
                       *ngTemplateOutlet="
-                        customColumnTemplate;
-                        context: {
-                          $implicit: row,
-                          field: col.field
-                        }
-                      "
+                customColumnTemplate;
+                context: {
+                  $implicit: row,
+                  field: col.field
+                }
+              "
                     ></ng-container>
 
                   } @else {
 
                     <span class="text-gray-800 font-medium">
-                      {{ getCellValue(row, col.field) }}
-                    </span>
+              {{ getCellValue(row, col.field) }}
+            </span>
 
                   }
 
                 </td>
+
               }
 
             </tr>
@@ -120,11 +130,11 @@
 
                   <div
                     class="w-12 h-12 rounded-full bg-gray-100
-                           flex items-center justify-center mb-3"
+                   flex items-center justify-center mb-3"
                   >
-                    <span class="material-icons text-gray-400 text-2xl">
-                      search_off
-                    </span>
+            <span class="material-icons text-gray-400 text-2xl">
+              search_off
+            </span>
                   </div>
 
                   <p class="text-sm font-semibold text-gray-600">
@@ -142,6 +152,7 @@
           }
 
         </tbody>
+
       </table>
     </div>
 

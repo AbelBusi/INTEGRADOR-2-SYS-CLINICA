@@ -42,8 +42,9 @@ export class ListaCargoComponent implements OnInit {
   columns: TableColumn<cargo>[] = [
     { header: 'Cargo', field: 'nombre', sortable: true, type: 'custom' },
     { header: 'Descripción', field: 'descripcion', type: 'text' },
+    { header: '¿ES PERSONAL MEDICO?', field: 'esPersonalMedico', type: 'custom' },
     { header: 'Estado', field: 'estado', type: 'custom' },
-    { header: 'Acciones', field: 'id', type: 'custom' },
+    { header: 'Acciones', field: 'id', type: 'custom' , align:'center' },
   ];
 
   constructor(

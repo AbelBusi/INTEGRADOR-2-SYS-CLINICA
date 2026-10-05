@@ -26,6 +26,7 @@ export const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = 
   '/dashboard/doctores/nuevo': { title: 'Nuevo doctor', subtitle: 'Alta de especialista' },
   '/dashboard/especialidades': { title: 'Especialidades', subtitle: 'Áreas médicas disponibles' },
   '/dashboard/empleados': { title: 'Empleados', subtitle: 'Empleados disponibles' },
+  '/dashboard/medicos': { title: 'Medicos', subtitle: 'Medicos disponibles' },
   '/dashboard/cargos': { title: 'Cargos', subtitle: 'Áreas de cargos' },
   '/dashboard/recepcionistas': { title: 'Recepcionistas', subtitle: 'Personal de recepción' },
   '/dashboard/recepcionistas/nuevo': { title: 'Nuevo recepcionista', subtitle: 'Alta de recepcionista' },
@@ -90,18 +91,21 @@ export const MENU_BASE: NavItem[] = [
     label: 'Pacientes',
     roles: ['ADMINISTRADOR', 'RECEPCIONISTA'],
     icon: 'groups',
-    sub: [
-      { label: 'Ver pacientes', route: '/dashboard/pacientes', roles: ['ADMINISTRADOR'] },
-    ],
+    sub: [{ label: 'Ver pacientes', route: '/dashboard/pacientes', roles: ['ADMINISTRADOR'] }],
   },
   {
     grupo: 'PERSONAL Y PACIENTES',
     label: 'Empleados',
     roles: ['ADMINISTRADOR', 'RECEPCIONISTA'],
     icon: 'groups',
-    sub: [
-      { label: 'Ver Empleados', route: '/dashboard/empleados', roles: ['ADMINISTRADOR'] },
-    ],
+    sub: [{ label: 'Ver Empleados', route: '/dashboard/empleados', roles: ['ADMINISTRADOR'] }],
+  },
+  {
+    grupo: 'PERSONAL Y PACIENTES',
+    label: 'Medicos',
+    roles: ['ADMINISTRADOR', 'RECEPCIONISTA'],
+    icon: 'groups',
+    sub: [{ label: 'Ver Medicos', route: '/dashboard/medicos', roles: ['ADMINISTRADOR'] }],
   },
   {
     label: 'Doctores',

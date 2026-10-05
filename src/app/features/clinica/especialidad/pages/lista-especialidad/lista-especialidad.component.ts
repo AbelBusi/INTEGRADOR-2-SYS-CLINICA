@@ -41,7 +41,7 @@ export class ListaEspecialidadComponent implements OnInit {
     { header: 'Especialidad', field: 'nombre', sortable: true, type: 'custom' },
     { header: 'Descripción', field: 'descripcion', type: 'text' },
     { header: 'Estado', field: 'estado', type: 'custom' },
-    { header: 'Acciones', field: 'id', type: 'custom' }, // <- ahora custom
+    { header: 'Acciones', field: 'id', type: 'custom', align:'center' },
   ];
 
   constructor(

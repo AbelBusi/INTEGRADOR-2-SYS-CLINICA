@@ -46,9 +46,8 @@ export class ListaPacienteComponent implements OnInit {
     { header: 'Entidad', field: 'entidadAsegurado', type: 'text' },
     { header: 'Código asegurado', field: 'codigoAsegurado', type: 'text' },
     { header: 'Estado', field: 'estado', type: 'custom' },
-    { header: 'Acciones', field: 'id', type: 'custom' },
+    { header: 'Acciones', field: 'id', type: 'custom', align: 'center' },
   ];
-
   constructor(
     private readonly pacienteService: PacienteService,
     private readonly toastService: ToastService,

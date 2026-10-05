@@ -2,12 +2,14 @@ export interface cargo {
   id: number;
   nombre: string;
   descripcion: string;
+  esPersonalMedico: boolean;
   estado: number;
 }
 
 export interface CargoCrearDTO {
   nombre: string;
   descripcion: string;
+  esPersonalMedico: boolean;
 }
 
 export interface MensajeResponse {
@@ -23,4 +25,5 @@ export interface MensajeResponseSingle {
 export interface CargoActualizarDTO {
   nombre: string;
   descripcion: string;
+  esPersonalMedico: boolean;
 }

@@ -19,6 +19,7 @@ export class CrearCargoModalComponent {
   cargoForm: CargoCrearDTO = {
     nombre: '',
     descripcion: '',
+    esPersonalMedico: false,
   };
 
   constructor(
@@ -37,6 +38,7 @@ export class CrearCargoModalComponent {
     this.cargoForm = {
       nombre: '',
       descripcion: '',
+      esPersonalMedico: false,
     };
   }
 
