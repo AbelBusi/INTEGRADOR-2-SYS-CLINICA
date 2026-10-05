@@ -2,7 +2,7 @@ package com.salud.consultorio.dto.medico;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-@Schema(description = "Datos resumidos de un doctor para listados")
+@Schema(description = "Datos resumidos de un medico para listados")
 public record MedicoLeerDTO(
 
         @Schema(description = "ID del doctor", example = "1")

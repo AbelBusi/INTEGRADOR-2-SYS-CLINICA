@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
-@Schema(description = "Datos para registrar un doctor a partir de un empleado existente")
+@Schema(description = "Datos para registrar un medico a partir de un empleado existente")
 public record MedicoCrearDTO(
 
         @Schema(description = "ID del empleado que será doctor (debe estar activo)", example = "1")

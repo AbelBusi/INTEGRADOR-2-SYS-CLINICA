@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
-@Schema(description = "Datos editables de un doctor. No incluye datos de persona ni de empleado")
+@Schema(description = "Datos editables de un medico. No incluye datos de persona ni de empleado")
 public record MedicoActualizarDTO(
 
         @Schema(description = "ID de la especialidad (debe estar activa)", example = "2")

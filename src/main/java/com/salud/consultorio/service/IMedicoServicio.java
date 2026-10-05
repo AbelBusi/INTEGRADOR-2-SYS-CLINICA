@@ -19,4 +19,6 @@ public interface IMedicoServicio {
 
     void cambiarEstado(Integer id, EntidadEstado estado);
 
+    DisponibilidadCodigosDTO verificarDisponibilidad(String numeroColegiatura, String numeroEspecialidad);
+
 }

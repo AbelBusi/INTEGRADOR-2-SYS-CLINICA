@@ -113,4 +113,5 @@ public interface IMedicoRepositorio extends JpaRepository<Medico, Integer> {
 
     boolean existsByNumeroColegiaturaAndIdNot(String numeroColegiatura, Integer id);
 
+    boolean existsByNumeroEspecialidad(String numeroEspecialidad);
 }

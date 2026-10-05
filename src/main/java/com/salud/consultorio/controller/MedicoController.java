@@ -139,4 +139,18 @@ public class MedicoController {
 
     }
 
+    @Operation(summary = "Verificar disponibilidad de numero de colegiatura y de especialidad")
+    @GetMapping("/disponibilidad")
+    public ResponseEntity<MensajeResponse> verificarDisponibilidad(
+            @RequestParam String numeroColegiatura,
+            @RequestParam(required = false) String numeroEspecialidad) {
+
+        DisponibilidadCodigosDTO dto = medicoServicio.verificarDisponibilidad(numeroColegiatura, numeroEspecialidad);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("DISPONIBILIDAD DE CODIGOS")
+                .object(dto).build(), HttpStatus.OK);
+
+    }
+
 }

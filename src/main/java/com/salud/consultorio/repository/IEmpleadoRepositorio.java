@@ -42,7 +42,13 @@ public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
             FROM Empleado em
             JOIN em.persona pe
             JOIN em.cargo ca
-            WHERE em.estado = 1 and ca.esPersonalMedico = true
+            WHERE em.estado = 1
+              AND ca.esPersonalMedico = true
+              AND NOT EXISTS (
+                  SELECT 1
+                  FROM Medico me
+                  WHERE me.empleado.id = em.id
+              )
             """)
     List<EmpleadoMedicoResumenDTO> listarEmpleadoCargoMedico();
 

@@ -186,6 +186,18 @@ public class MedicoServicioImpl implements IMedicoServicio {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public DisponibilidadCodigosDTO verificarDisponibilidad(String numeroColegiatura, String numeroEspecialidad) {
+        boolean colegiaturaDisponible = !medicoRepositorio.existsByNumeroColegiatura(numeroColegiatura);
+
+        boolean especialidadDisponible = numeroEspecialidad == null
+                || numeroEspecialidad.isBlank()
+                || !medicoRepositorio.existsByNumeroEspecialidad(numeroEspecialidad);
+
+        return new DisponibilidadCodigosDTO(colegiaturaDisponible, especialidadDisponible);
+    }
+
     private void validarId(Integer id) {
 
         if (id == null || id <= 0) {
