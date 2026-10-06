@@ -15,8 +15,8 @@ import { MensajeResponses } from '../../../../shared/models/mensaje-response.mod
 @Injectable({
   providedIn: 'root',
 })
-export class EspecialidadService {
-  private readonly baseUrl = `${environment.apiUrl}/especialidades`;
+export class RolService {
+  private readonly baseUrl = `${environment.apiUrl}/auth/roles`;
 
   constructor(private readonly http: HttpClient) {}
 

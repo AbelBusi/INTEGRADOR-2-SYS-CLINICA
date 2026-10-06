@@ -23,7 +23,6 @@ export interface MensajeResponseSingle {
 export interface RolActualizar {
   nombre: string;
   descripcion: string;
-  estado: number;
 }
 
 export interface NombreRolDTO {

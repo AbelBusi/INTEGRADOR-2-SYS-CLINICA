@@ -48,6 +48,13 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
+        path: 'roles',
+        loadComponent: () =>
+          import('../features/clinica/roles/pages/lista-roles/lista-rol.component').then(
+            (m) => m.ListaRolComponent,
+          ),
+      },
+      {
         path: 'empleados',
         loadComponent: () =>
           import('../features/clinica/empleados/pages/lista-empleado/lista-empleado.component').then(
