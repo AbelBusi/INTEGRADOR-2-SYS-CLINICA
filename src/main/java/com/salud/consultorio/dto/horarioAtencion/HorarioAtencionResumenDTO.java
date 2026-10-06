@@ -1,5 +1,6 @@
 package com.salud.consultorio.dto.horarioAtencion;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 public record HorarioAtencionResumenDTO(
@@ -10,5 +11,7 @@ public record HorarioAtencionResumenDTO(
         Integer diaSemana,
         LocalTime horaEntrada,
         LocalTime horaSalida,
+        LocalDate fechaInicio,
+        LocalDate fechaFin,
         Integer estado
 ) {}

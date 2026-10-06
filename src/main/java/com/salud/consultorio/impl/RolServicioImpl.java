@@ -44,6 +44,8 @@ public class RolServicioImpl implements IRolServicio {
 
         Rol rol = rolMapper.toEntity(dto);
 
+        rolRepositorio.save(rol);
+
         return rolMapper.toDtoRol(rol);
     }
 
