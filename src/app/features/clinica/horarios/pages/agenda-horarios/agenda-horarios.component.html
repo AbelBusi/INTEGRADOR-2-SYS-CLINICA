@@ -1,0 +1,396 @@
+<div class="space-y-6">
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+
+    <div class="bg-white border border-gray-200 rounded-lg px-5 py-4 flex items-center gap-4">
+      <div class="w-11 h-11 rounded-md bg-[#58595B] flex items-center justify-center shrink-0">
+        <span class="material-icons text-white text-[22px]">groups</span>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Personal activo</p>
+        <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ personalActivo() }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-lg px-5 py-4 flex items-center gap-4">
+      <div class="w-11 h-11 rounded-md bg-[#58595B] flex items-center justify-center shrink-0">
+        <span class="material-icons text-white text-[22px]">event_note</span>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Horarios registrados</p>
+        <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ horariosActivos().length }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-lg px-5 py-4 flex items-center gap-4">
+      <div class="w-11 h-11 rounded-md bg-[#0d6b68] flex items-center justify-center shrink-0">
+        <span class="material-icons text-white text-[22px]">task_alt</span>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Personal con horario</p>
+        <p class="text-2xl font-bold text-gray-900 mt-0.5">
+          {{ cobertura() }}%
+          <span class="text-xs font-medium text-gray-400">({{ empleadosConHorario() }}/{{ personalActivo() }})</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-lg px-5 py-4 flex items-center gap-4">
+      <div class="w-11 h-11 rounded-md bg-[#D9182A] flex items-center justify-center shrink-0">
+        <span class="material-icons text-white text-[22px]">report_problem</span>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Sin horario</p>
+        <p class="text-2xl font-bold mt-0.5" [ngClass]="sinHorario() > 0 ? 'text-[#D9182A]' : 'text-gray-900'">
+          {{ sinHorario() }}
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-lg p-5">
+
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+      <div>
+        <h2 class="text-lg font-bold text-gray-900">Agenda del personal</h2>
+        <p class="text-sm text-gray-500 mt-0.5">Horario base semanal asignado a cada empleado.</p>
+      </div>
+
+      <button
+        type="button"
+        (click)="modalCrear.set(true)"
+        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 h-10 rounded-md bg-[#D9182A] hover:bg-[#B81424] text-white text-sm font-semibold transition-colors">
+        <span class="material-icons text-[20px]">add</span>
+        Nuevo horario
+      </button>
+    </div>
+
+    <div class="mt-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_auto] gap-3">
+
+      <div
+        class="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-3 h-10 focus-within:border-[#58595B] focus-within:ring-1 focus-within:ring-[#58595B] transition-colors">
+        <span class="material-icons text-gray-400 text-[20px]">search</span>
+        <input
+          type="text"
+          name="busqueda"
+          [ngModel]="busqueda()"
+          (ngModelChange)="busqueda.set($event)"
+          placeholder="Buscar empleado..."
+          class="bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none w-full"
+        />
+      </div>
+
+      <select
+        name="filtroCargo"
+        [ngModel]="filtroCargo()"
+        (ngModelChange)="onCargoChange($event)"
+        class="h-10 bg-white border border-gray-300 rounded-md px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
+        <option [ngValue]="null">Todos los cargos</option>
+        @for (cargo of cargos(); track cargo.idCargo) {
+          <option [ngValue]="cargo.idCargo">{{ cargo.nombre }}</option>
+        }
+      </select>
+
+      <select
+        name="filtroEmpleado"
+        [ngModel]="filtroEmpleado()"
+        (ngModelChange)="onEmpleadoChange($event)"
+        class="h-10 bg-white border border-gray-300 rounded-md px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
+        <option [ngValue]="null">Todos los empleados</option>
+        @for (empleado of opcionesEmpleado(); track empleado.idEmpleado) {
+          <option [ngValue]="empleado.idEmpleado">{{ empleado.nombre }}</option>
+        }
+      </select>
+
+      <button
+        type="button"
+        (click)="limpiarFiltros()"
+        [disabled]="!hayFiltros()"
+        class="h-10 px-4 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        Limpiar filtros
+      </button>
+
+    </div>
+  </div>
+
+  <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 px-5 py-4 border-b border-gray-200">
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          (click)="mover(-1)"
+          aria-label="Anterior"
+          class="w-9 h-9 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
+          <span class="material-icons text-[20px]">chevron_left</span>
+        </button>
+
+        <button
+          type="button"
+          (click)="mover(1)"
+          aria-label="Siguiente"
+          class="w-9 h-9 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
+          <span class="material-icons text-[20px]">chevron_right</span>
+        </button>
+
+        <h3 class="mx-2 text-base font-bold text-gray-900">{{ titulo() }}</h3>
+
+        <button
+          type="button"
+          (click)="irAHoy()"
+          class="h-9 px-3 rounded-md border border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
+          Hoy
+        </button>
+      </div>
+
+      <div class="inline-flex self-start lg:self-auto overflow-hidden rounded-md border border-gray-300 bg-white">
+        @for (opcion of opcionesVista; track opcion.valor) {
+          <button
+            type="button"
+            (click)="cambiarVista(opcion.valor)"
+            class="h-9 px-4 text-sm font-semibold transition-colors"
+            [ngClass]="vista() === opcion.valor ? 'bg-[#58595B] text-white' : 'text-gray-600 hover:bg-gray-50'">
+            {{ opcion.etiqueta }}
+          </button>
+        }
+      </div>
+
+    </div>
+
+    @if (leyenda().length > 0) {
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-5 py-2.5 border-b border-gray-100 bg-[#fafafa]">
+        @for (item of leyenda(); track item.nombre) {
+          <span class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600">
+            <span class="w-2.5 h-2.5 rounded-sm" [style.background-color]="item.color"></span>
+            {{ item.nombre }}
+          </span>
+        }
+      </div>
+    }
+
+    @if (cargando()) {
+
+      <div class="flex justify-center items-center py-24">
+        <div class="w-8 h-8 border-4 border-gray-200 border-t-[#0d6b68] rounded-full animate-spin"></div>
+      </div>
+
+    } @else if (errorCarga()) {
+
+      <div class="flex flex-col items-center justify-center px-6 py-20 text-center">
+        <div class="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+          <span class="material-icons text-gray-400 text-2xl">cloud_off</span>
+        </div>
+        <p class="text-sm font-semibold text-gray-700">No se pudo cargar la agenda</p>
+        <p class="text-xs text-gray-400 mt-1">Comprueba tu conexión e inténtalo nuevamente.</p>
+        <button
+          type="button"
+          (click)="cargarDatos()"
+          class="mt-4 inline-flex items-center gap-2 h-9 px-4 rounded-md bg-[#58595B] hover:bg-[#434446] text-white text-sm font-semibold transition-colors">
+          <span class="material-icons text-[18px]">refresh</span>
+          Reintentar
+        </button>
+      </div>
+
+    } @else {
+
+      @if (horariosFiltrados().length === 0) {
+        <div class="flex items-center gap-2 px-5 py-3 border-b border-gray-100 bg-[#fafafa] text-sm text-gray-500">
+          <span class="material-icons text-[18px] text-gray-400">info</span>
+          No hay horarios que coincidan con los filtros seleccionados.
+        </div>
+      }
+
+      @if (vista() === 'mes') {
+
+        <div class="grid grid-cols-7 border-b border-gray-200 bg-[#fafafa]">
+          @for (dia of dias; track dia.numero) {
+            <div class="px-3 py-2.5 text-[11px] font-bold tracking-wider text-gray-500">{{ dia.corto }}</div>
+          }
+        </div>
+
+        <div class="grid grid-cols-7">
+          @for (celda of celdasMes(); track celda.fecha.getTime()) {
+            <div
+              role="button"
+              tabindex="0"
+              (click)="irADia(celda.fecha)"
+              (keydown.enter)="irADia(celda.fecha)"
+              class="min-h-[118px] border-r border-b border-gray-100 p-2 cursor-pointer transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#58595B]"
+              [ngClass]="celda.delMes ? 'bg-white' : 'bg-[#fafafa]'">
+
+              <span
+                class="inline-flex w-7 h-7 items-center justify-center rounded-full text-sm font-semibold"
+                [ngClass]="
+                  celda.esHoy
+                    ? 'bg-[#D9182A] text-white'
+                    : celda.delMes
+                      ? 'text-gray-800'
+                      : 'text-gray-300'
+                ">
+                {{ celda.fecha.getDate() }}
+              </span>
+
+              <div class="mt-1 space-y-1">
+                @for (chip of celda.chips; track chip.id) {
+                  <div
+                    class="flex items-center gap-1.5 rounded-sm border-l-2 px-1.5 py-0.5 text-[11px] leading-4"
+                    [style.background-color]="chip.color + '1F'"
+                    [style.border-left-color]="chip.color">
+                    <span class="font-bold text-gray-800 shrink-0">{{ chip.entrada }}</span>
+                    <span class="truncate text-gray-600">{{ chip.nombre }}</span>
+                  </div>
+                }
+
+                @if (celda.extra > 0) {
+                  <span class="block px-1 text-[11px] font-semibold text-gray-500">+{{ celda.extra }} más</span>
+                }
+              </div>
+
+            </div>
+          }
+        </div>
+
+      } @else {
+
+        <div
+          class="overflow-auto overscroll-contain [scrollbar-width:thin]"
+          style="max-height: calc(100vh - 360px); min-height: 380px;">
+
+          <div [style.min-width.px]="vista() === 'semana' ? 900 : null">
+
+            <div
+              class="sticky top-0 z-20 grid border-b border-gray-200 bg-white"
+              [style.grid-template-columns]="'56px repeat(' + columnasVista().length + ', minmax(0, 1fr))'">
+
+              <div class="border-r border-gray-100"></div>
+
+              @for (columna of columnasVista(); track columna.fecha.getTime()) {
+                <button
+                  type="button"
+                  (click)="irADia(columna.fecha)"
+                  class="border-r border-gray-100 px-3 py-3 text-left transition-colors hover:bg-gray-50">
+                  <span
+                    class="block text-[11px] font-bold tracking-wider"
+                    [ngClass]="columna.esHoy ? 'text-[#D9182A]' : 'text-gray-500'">
+                    {{ columna.dia.corto }}
+                  </span>
+                  <span
+                    class="mt-1 inline-flex w-8 h-8 items-center justify-center rounded-full text-lg font-bold"
+                    [ngClass]="columna.esHoy ? 'bg-[#D9182A] text-white' : 'text-gray-900'">
+                    {{ columna.fecha.getDate() }}
+                  </span>
+                </button>
+              }
+
+            </div>
+
+            <div
+              class="grid"
+              [style.grid-template-columns]="'56px repeat(' + columnasVista().length + ', minmax(0, 1fr))'">
+
+              <div class="border-r border-gray-100 bg-white">
+                @for (hora of horas(); track hora) {
+                  <div
+                    class="pr-2 pt-1 text-right text-[11px] font-medium text-gray-400"
+                    [style.height.px]="ALTURA">
+                    {{ etiquetaHora(hora) }}
+                  </div>
+                }
+              </div>
+
+              @for (columna of columnasVista(); track columna.fecha.getTime()) {
+                <div
+                  class="relative border-r border-gray-100"
+                  [ngClass]="columna.esHoy ? 'bg-[#D9182A]/[0.025]' : 'bg-white'"
+                  [style.height.px]="alturaTotal()">
+
+                  @for (hora of horas(); track hora) {
+                    <div class="border-t border-gray-100" [style.height.px]="ALTURA"></div>
+                  }
+
+                  @for (bloque of columna.bloques; track bloque.horario.id) {
+                    <button
+                      type="button"
+                      (click)="verEmpleado(bloque.horario)"
+                      class="absolute overflow-hidden rounded-md border-l-[3px] px-2 py-1 text-left transition-shadow hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#58595B]"
+                      [style.top.px]="bloque.top"
+                      [style.height.px]="bloque.alto"
+                      [style.left]="'calc(' + bloque.izquierda + '% + 2px)'"
+                      [style.width]="'calc(' + bloque.ancho + '% - 4px)'"
+                      [style.background-color]="bloque.color + '1F'"
+                      [style.border-left-color]="bloque.color">
+
+                      <div class="flex items-start gap-2">
+
+                        @if (vista() === 'dia') {
+                          @if (fotoUrl(bloque.horario.foto); as url) {
+                            <img
+                              [src]="url"
+                              [alt]="bloque.horario.empleado"
+                              class="w-8 h-8 rounded-full object-cover border border-white shrink-0"
+                            />
+                          } @else {
+                            <span
+                              class="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
+                              [style.background-color]="bloque.color">
+                              {{ iniciales(bloque.horario.empleado) }}
+                            </span>
+                          }
+                        }
+
+                        <div class="min-w-0">
+                          <p class="truncate text-[12px] font-bold leading-4 text-gray-900">
+                            {{ bloque.horario.empleado }}
+                          </p>
+                          <p class="truncate text-[11px] font-medium leading-4 text-gray-600">
+                            {{ bloque.entrada }} - {{ bloque.salida }}
+                          </p>
+                          @if (bloque.alto >= 52 && bloque.cargo) {
+                            <p class="truncate text-[10px] leading-4 text-gray-500">{{ bloque.cargo }}</p>
+                          }
+                        </div>
+
+                      </div>
+
+                    </button>
+                  }
+
+                  @if (columna.esHoy && lineaAhora() !== null) {
+                    <div class="pointer-events-none absolute left-0 right-0 z-10 h-px bg-[#D9182A]" [style.top.px]="lineaAhora()">
+                      <span class="absolute -left-1 -top-[3px] h-[7px] w-[7px] rounded-full bg-[#D9182A]"></span>
+                    </div>
+                  }
+
+                </div>
+              }
+
+            </div>
+
+          </div>
+
+        </div>
+
+      }
+
+    }
+
+  </div>
+
+</div>
+
+@if (modalCrear()) {
+  <app-crear-horario-modal
+    [isOpen]="true"
+    (onClose)="modalCrear.set(false)"
+    (onHorarioCreado)="handleHorarioCreado()"
+  ></app-crear-horario-modal>
+}
+
+@if (empleadoVer(); as empleado) {
+  <app-ver-horario-empleado-modal
+    [empleado]="empleado"
+    (close)="empleadoVer.set(null)"
+  ></app-ver-horario-empleado-modal>
+}

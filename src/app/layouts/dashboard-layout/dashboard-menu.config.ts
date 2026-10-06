@@ -19,7 +19,7 @@ export const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = 
     title: 'Horarios Médicos',
     subtitle: 'Planificación de turnos y disponibilidad',
   },
-  '/dashboard/horarios': {
+  '/dashboard/horariosXD': {
     title: 'Gestión de Horarios',
     subtitle: 'Horarios de trabajo de doctores y recepcionistas',
   },
@@ -35,6 +35,7 @@ export const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = 
   '/dashboard/doctores/nuevo': { title: 'Nuevo doctor', subtitle: 'Alta de especialista' },
   '/dashboard/especialidades': { title: 'Especialidades', subtitle: 'Áreas médicas disponibles' },
   '/dashboard/roles': { title: 'Roles', subtitle: 'Roles disponibles' },
+  '/dashboard/horarios': { title: 'Horarios', subtitle: 'Horarios disponibles' },
   '/dashboard/empleados': { title: 'Empleados', subtitle: 'Empleados disponibles' },
   '/dashboard/medicos': { title: 'Medicos', subtitle: 'Medicos disponibles' },
   '/dashboard/cargos': { title: 'Cargos', subtitle: 'Áreas de cargos' },
@@ -160,6 +161,13 @@ export const MENU_BASE: NavItem[] = [
     roles: ['ADMINISTRADOR'],
     icon: 'local_hospital',
     sub: [{ label: 'Ver Roles', route: '/dashboard/roles', roles: ['ADMINISTRADOR'] }],
+  },
+  {
+    grupo: 'ADMINISTRACION',
+    label: 'Horarios',
+    roles: ['ADMINISTRADOR'],
+    icon: 'local_hospital',
+    sub: [{ label: 'Ver Horarios', route: '/dashboard/horarios', roles: ['ADMINISTRADOR'] }],
   },
   {
     label: 'Recepcionistas',

@@ -55,6 +55,13 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
+        path: 'horarios',
+        loadComponent: () =>
+          import('../features/clinica/horarios/pages/agenda-horarios/agenda-horarios.component').then(
+            (m) => m.AgendaHorariosComponent,
+          ),
+      },
+      {
         path: 'empleados',
         loadComponent: () =>
           import('../features/clinica/empleados/pages/lista-empleado/lista-empleado.component').then(

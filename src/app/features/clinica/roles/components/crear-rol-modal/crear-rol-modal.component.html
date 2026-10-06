@@ -32,7 +32,7 @@
 
           <div class="space-y-1.5">
             <div class="flex justify-between items-center">
-              <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Nombre de la Especialidad</label>
+              <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Nombre del Rol</label>
               <span class="text-[11px] font-medium text-neutral-400" [class.text-[#D9182A]]="rolForm.nombre.length >= 40">
                 {{ rolForm.nombre.length || 0 }}/40
               </span>
@@ -45,7 +45,7 @@
               maxlength="40"
               class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
               [class.border-[#D9182A]]="nombreInput.invalid && (nombreInput.dirty || nombreInput.touched)"
-              placeholder="Ej. Odontología"
+              placeholder="Ej. Administrador"
               required
             />
             <div *ngIf="nombreInput.invalid && (nombreInput.dirty || nombreInput.touched)" class="text-xs text-[#D9182A] font-medium">
@@ -67,7 +67,7 @@
               maxlength="100"
               class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors h-24 resize-none"
               [class.border-[#D9182A]]="descInput.invalid && (descInput.dirty || descInput.touched)"
-              placeholder="Breve descripción del área..."
+              placeholder="Breve descripción del rol..."
               required></textarea>
             <div *ngIf="descInput.invalid && (descInput.dirty || descInput.touched)" class="text-xs text-[#D9182A] font-medium">
               La descripción es obligatoria.

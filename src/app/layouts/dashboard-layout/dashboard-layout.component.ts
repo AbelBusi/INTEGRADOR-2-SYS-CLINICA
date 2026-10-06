@@ -9,7 +9,7 @@ import { environment } from '../../../environments/environment';
 import { MENU_BASE, PAGE_TITLES } from './dashboard-menu.config';
 
 interface UsuarioRolInfo {
-  nombres: string;
+  nombre: string;
   rol: string;
 }
 
@@ -37,7 +37,7 @@ export class DashboardLayoutComponent implements OnInit {
 
   inicialAvatar = computed(() => {
     const info = this.usuarioInfo();
-    return info && info.nombres ? info.nombres.charAt(0).toUpperCase() : '?';
+    return info && info.nombre ? info.nombre.charAt(0).toUpperCase() : '?';
   });
 
   private currentUrl = toSignal(
