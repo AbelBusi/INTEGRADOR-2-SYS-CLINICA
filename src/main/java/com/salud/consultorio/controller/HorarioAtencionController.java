@@ -1,10 +1,7 @@
 package com.salud.consultorio.controller;
 
 import com.salud.consultorio.dto.especialidad.EspecialidadRespuestaDTO;
-import com.salud.consultorio.dto.horarioAtencion.EmpleadoHorarioRespuesta;
-import com.salud.consultorio.dto.horarioAtencion.HorarioAtencionRespuesta;
-import com.salud.consultorio.dto.horarioAtencion.HorarioAtencionRespuestaDTO;
-import com.salud.consultorio.dto.horarioAtencion.HorarioCrearDTO;
+import com.salud.consultorio.dto.horarioAtencion.*;
 import com.salud.consultorio.model.payload.MensajeResponse;
 import com.salud.consultorio.service.IHorarioAtencionServicio;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/horarios")
@@ -52,6 +51,22 @@ public class HorarioAtencionController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Informacion del horario del empleado solicitado")
                 .object(entidad).build(),HttpStatus.OK);
+
+    }
+
+    @Operation(summary = "Obtener horarios")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Horarios encontrados"),
+            @ApiResponse(responseCode = "404", description = "Horarios no encontrados")
+    })
+    @GetMapping()
+    public ResponseEntity<MensajeResponse> listar(){
+
+        List<HorarioAtencionResumenDTO> lista = horarioAtencionServicio.lista();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Informacion del horario del empleado solicitado")
+                .object(lista).build(),HttpStatus.OK);
 
     }
 

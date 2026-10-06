@@ -1,5 +1,6 @@
 package com.salud.consultorio.repository;
 
+import com.salud.consultorio.dto.horarioAtencion.HorarioAtencionResumenDTO;
 import com.salud.consultorio.model.entity.HorarioAtencion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -35,5 +36,21 @@ public interface IHorarioAtencionRepositorio extends JpaRepository<HorarioAtenci
                 ORDER BY h.diaSemana, h.horaEntrada
             """)
     List<HorarioAtencion> obtenerHorariosPorEmpleado(Integer idEmpleado);
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.horarioAtencion.HorarioAtencionResumenDTO(
+                h.id,
+                h.empleado.id,
+                CONCAT(h.empleado.persona.nombre, ' ', h.empleado.persona.apellidos),
+                h.empleado.foto,            
+                h.diaSemana,
+                h.horaEntrada,
+                h.horaSalida,
+                h.estado
+            )
+            FROM HorarioAtencion h
+            ORDER BY h.diaSemana, h.horaEntrada
+            """)
+    List<HorarioAtencionResumenDTO> obtenerTodosLosHorarios();
 
 }

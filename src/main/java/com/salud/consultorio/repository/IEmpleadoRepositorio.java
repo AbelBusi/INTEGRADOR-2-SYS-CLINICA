@@ -1,5 +1,6 @@
 package com.salud.consultorio.repository;
 
+import com.salud.consultorio.dto.empleado.EmpleadoActivoResumenDTO;
 import com.salud.consultorio.dto.empleado.EmpleadoDetalleDTO;
 import com.salud.consultorio.dto.empleado.EmpleadoLeerDTO;
 import com.salud.consultorio.dto.empleado.EmpleadoMedicoResumenDTO;
@@ -51,6 +52,30 @@ public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
               )
             """)
     List<EmpleadoMedicoResumenDTO> listarEmpleadoCargoMedico();
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.empleado.EmpleadoActivoResumenDTO(
+                em.id,
+                CONCAT(pe.nombre, ' ', pe.apellidos)
+            )
+            FROM Empleado em
+            JOIN em.persona pe
+            WHERE em.estado = 1
+            """)
+    List<EmpleadoActivoResumenDTO> listarEmpleadosActivos();
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.empleado.EmpleadoActivoResumenDTO(
+                em.id,
+                CONCAT(pe.nombre, ' ', pe.apellidos)
+            )
+            FROM Empleado em
+            JOIN em.persona pe
+            JOIN em.cargo ca
+            WHERE em.estado = 1
+              AND ca.id = :idCargo
+            """)
+    List<EmpleadoActivoResumenDTO> listarEmpleadosActivosPorCargo(@Param("idCargo") Integer idCargo);
 
     @Query("""
             SELECT new com.salud.consultorio.dto.empleado.EmpleadoLeerDTO(

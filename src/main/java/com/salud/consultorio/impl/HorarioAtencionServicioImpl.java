@@ -53,6 +53,12 @@ public class HorarioAtencionServicioImpl implements IHorarioAtencionServicio {
 
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public List<HorarioAtencionResumenDTO> lista() {
+        return horarioAtencionRepositorio.obtenerTodosLosHorarios();
+    }
+
     private void validarHorarios(HorarioCrearDTO dto, Integer idEmpleado) {
 
         for (HorarioAtencionDTO actual : dto.horarios()) {
