@@ -1,6 +1,6 @@
 package com.salud.consultorio.impl;
 
-import com.salud.consultorio.dto.rol.UsuarioRolDTO;
+import com.salud.consultorio.auth.dto.rol.UsuarioRolDTO;
 import com.salud.consultorio.dto.usuario.UsuarioListaDTO;
 import com.salud.consultorio.dto.usuario.UsuarioRespuestaDTO;
 import com.salud.consultorio.repository.IUsuarioRepositorio;

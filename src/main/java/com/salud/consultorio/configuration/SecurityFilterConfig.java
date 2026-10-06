@@ -34,6 +34,7 @@ public class SecurityFilterConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth-> auth
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/roles/**").permitAll()
                         .requestMatchers("/api/v1/pacientes/**").authenticated()
                         .requestMatchers("/api/v1/tipo-documentos/**").permitAll()
                         .requestMatchers("/api/v1/especialidades/**").authenticated()

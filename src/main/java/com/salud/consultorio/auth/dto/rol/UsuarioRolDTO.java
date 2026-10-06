@@ -1,4 +1,4 @@
-package com.salud.consultorio.dto.rol;
+package com.salud.consultorio.auth.dto.rol;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

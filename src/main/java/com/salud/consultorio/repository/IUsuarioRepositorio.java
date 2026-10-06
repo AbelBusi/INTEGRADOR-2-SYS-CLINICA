@@ -1,6 +1,6 @@
 package com.salud.consultorio.repository;
 
-import com.salud.consultorio.dto.rol.UsuarioRolDTO;
+import com.salud.consultorio.auth.dto.rol.UsuarioRolDTO;
 import com.salud.consultorio.model.entity.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -30,7 +30,7 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
     Optional<Usuario> findByUsuario(String usuario);
 
     @Query("""
-        SELECT new com.salud.consultorio.dto.rol.UsuarioRolDTO(
+        SELECT new com.salud.consultorio.auth.dto.rol.UsuarioRolDTO(
             UPPER(CONCAT(u.persona.nombre, ' ', u.persona.apellidos)), 
             UPPER(u.rol.nombre)
         )
