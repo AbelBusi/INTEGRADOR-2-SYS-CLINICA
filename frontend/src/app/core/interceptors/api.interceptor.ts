@@ -1,6 +1,7 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../../features/auth/services/auth.service';
+import { environment } from '../../../environments/environment';
 
 export const apiInterceptor: HttpInterceptorFn = (req, next) => {
 
@@ -11,15 +12,21 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const accessToken = authService.getAccessToken();
 
-  if (accessToken && !req.url.includes('/auth/')) {
-    return next(
-      req.clone({
-        setHeaders: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      })
-    );
+  let clonReq = req;
+
+  if (req.url.startsWith('/auth/')) {
+    clonReq = req.clone({
+      url: `${environment.apiUrl}${req.url}`,
+    });
   }
 
-  return next(req);
+  if (accessToken && !req.url.includes('/auth/')) {
+    clonReq = clonReq.clone({
+      setHeaders: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  }
+
+  return next(clonReq);
 };
