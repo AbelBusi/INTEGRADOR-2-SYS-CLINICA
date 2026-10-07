@@ -3,13 +3,24 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { CargoResumen, EmpleadoResumen, HorarioCrearDTO } from '../../interface/horario.interface';
-import { DIAS_SEMANA, aHHmm, formatearDuracion } from '../../utils/calendario.util';
+import {
+  DIAS_SEMANA,
+  aFechaISO,
+  aHHmm,
+  aISO,
+  fechaFinPorMeses,
+  finDeAnio,
+  formatearDuracion,
+  formatearFechaCorta,
+} from '../../utils/calendario.util';
 import { HorarioService } from '../../services/horario.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 
 interface Tramo {
   entrada: string;
   salida: string;
+  inicio: string;
+  fin: string;
 }
 
 interface DiaFormulario {
@@ -36,6 +47,9 @@ export class CrearHorarioModalComponent implements OnInit {
   empleados: EmpleadoResumen[] = [];
   idCargo: number | null = null;
   idEmpleado: number | null = null;
+
+  fechaInicio = aISO(new Date());
+  fechaFin = fechaFinPorMeses(aISO(new Date()), 1);
 
   dias: DiaFormulario[] = DIAS_SEMANA.map((dia) => ({
     numero: dia.numero,
@@ -92,10 +106,21 @@ export class CrearHorarioModalComponent implements OnInit {
     }, 0);
   }
 
+  get errorVigencia(): string | null {
+    if (!this.fechaInicio || !this.fechaFin) {
+      return 'Indica la fecha de inicio y la de fin.';
+    }
+    if (this.fechaFin < this.fechaInicio) {
+      return 'La fecha de fin no puede ser anterior a la de inicio.';
+    }
+    return null;
+  }
+
   get formularioValido(): boolean {
     return (
       !!this.idEmpleado &&
       !this.cargandoExistentes &&
+      !this.errorVigencia &&
       this.diasActivos.length > 0 &&
       this.diasActivos.every((dia) => !this.errorDia(dia))
     );
@@ -103,6 +128,10 @@ export class CrearHorarioModalComponent implements OnInit {
 
   formatearDuracion(minutos: number): string {
     return formatearDuracion(minutos);
+  }
+
+  formatearFecha(iso: string): string {
+    return formatearFechaCorta(iso);
   }
 
   private aMinutos(hora: string): number {
@@ -124,12 +153,28 @@ export class CrearHorarioModalComponent implements OnInit {
     }
 
     const cruce = dia.existentes.find(
-      (existente) => dia.entrada < existente.salida && dia.salida > existente.entrada,
+      (existente) =>
+        dia.entrada < existente.salida &&
+        dia.salida > existente.entrada &&
+        this.fechaInicio <= existente.fin &&
+        this.fechaFin >= existente.inicio,
     );
 
     return cruce
-      ? `Se cruza con el horario ya registrado (${cruce.entrada} - ${cruce.salida}).`
+      ? `Se cruza con ${cruce.entrada} - ${cruce.salida}, vigente del ${formatearFechaCorta(cruce.inicio)} al ${formatearFechaCorta(cruce.fin)}.`
       : null;
+  }
+
+  aplicarMeses(meses: number): void {
+    if (this.fechaInicio) {
+      this.fechaFin = fechaFinPorMeses(this.fechaInicio, meses);
+    }
+  }
+
+  hastaFinDeAnio(): void {
+    if (this.fechaInicio) {
+      this.fechaFin = finDeAnio(this.fechaInicio);
+    }
   }
 
   onCargoChange(): void {
@@ -179,6 +224,8 @@ export class CrearHorarioModalComponent implements OnInit {
             dia?.existentes.push({
               entrada: aHHmm(horario.horaEntrada),
               salida: aHHmm(horario.horaSalida),
+              inicio: aFechaISO(horario.fechaInicio),
+              fin: aFechaISO(horario.fechaFin),
             });
           }
         }
@@ -223,6 +270,8 @@ export class CrearHorarioModalComponent implements OnInit {
 
     const dto: HorarioCrearDTO = {
       idEmpleado: this.idEmpleado as number,
+      fechaInicio: this.fechaInicio,
+      fechaFin: this.fechaFin,
       horarios: this.diasActivos.map((dia) => ({
         diaSemana: dia.numero,
         horaEntrada: dia.entrada,

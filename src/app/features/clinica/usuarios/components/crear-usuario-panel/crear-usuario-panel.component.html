@@ -1,0 +1,163 @@
+<div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
+
+  <div class="px-6 py-5 border-b border-gray-200">
+    <h2 class="text-lg font-bold text-gray-900">Crear usuarios</h2>
+    <p class="text-sm text-gray-500 mt-0.5">Asigna una cuenta de acceso a un paciente o empleado.</p>
+  </div>
+
+  @switch (fase()) {
+
+    @case ('formulario') {
+
+      <div class="p-6 space-y-4">
+
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)_auto] gap-4 items-end">
+
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-gray-600">Tipo de usuario</label>
+            <select
+              name="tipo"
+              [ngModel]="tipo()"
+              (ngModelChange)="onTipoChange($event)"
+              class="h-10 w-full bg-white border border-gray-300 rounded-md px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
+              <option value="PACIENTE">Paciente</option>
+              <option value="EMPLEADO">Empleado</option>
+            </select>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-gray-600">{{ etiquetaPersona() }}</label>
+            <select
+              name="idPersona"
+              [ngModel]="idPersona()"
+              (ngModelChange)="idPersona.set($event)"
+              [disabled]="cargandoPersonas()"
+              class="h-10 w-full bg-white border border-gray-300 rounded-md px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B] disabled:bg-gray-100">
+              <option [ngValue]="null" disabled>
+                {{ cargandoPersonas() ? 'Cargando...' : 'Seleccionar ' + etiquetaPersona().toLowerCase() }}
+              </option>
+              @for (persona of personas(); track persona.idPersona) {
+                <option [ngValue]="persona.idPersona">{{ persona.nombreCompleto }}</option>
+              }
+            </select>
+          </div>
+
+          @if (tipo() === 'EMPLEADO') {
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold text-gray-600">Rol</label>
+              <select
+                name="idRol"
+                [ngModel]="idRol()"
+                (ngModelChange)="idRol.set($event)"
+                class="h-10 w-full bg-white border border-gray-300 rounded-md px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
+                <option [ngValue]="null" disabled>Seleccionar rol</option>
+                @for (rol of rolesEmpleado(); track rol.idRol) {
+                  <option [ngValue]="rol.idRol">{{ rol.nombre }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          <button
+            type="button"
+            (click)="crear()"
+            [disabled]="!puedeCrear()"
+            class="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-md bg-[#D9182A] hover:bg-[#B81424] text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            <span class="material-icons text-[20px]">add</span>
+            Crear usuario
+          </button>
+
+        </div>
+
+        @if (!cargandoPersonas() && personas().length === 0) {
+          <p class="text-xs font-medium text-gray-500">
+            No hay {{ tipo() === 'PACIENTE' ? 'pacientes' : 'empleados' }} pendientes de usuario.
+          </p>
+        }
+
+        <div class="flex items-start gap-2 rounded-md border border-gray-200 bg-[#fafafa] px-4 py-3">
+          <span class="material-icons text-[18px] text-[#58595B] mt-px">lock</span>
+          <p class="text-xs leading-5 text-gray-600">
+            El nombre de usuario y la clave temporal se generan automáticamente. La clave se envía al correo
+            registrado de la persona y no queda visible para nadie; deberá cambiarla en su primer ingreso.
+          </p>
+        </div>
+
+      </div>
+
+    }
+
+    @case ('generando') {
+
+      <div class="flex flex-col items-center justify-center px-6 py-14 text-center" role="status" aria-live="polite">
+
+        <div class="relative w-16 h-16">
+          <span class="absolute inset-0 rounded-full border-4 border-gray-200"></span>
+          <span class="absolute inset-0 rounded-full border-4 border-transparent border-t-[#D9182A] animate-spin"></span>
+          <span class="absolute inset-0 flex items-center justify-center">
+            <span class="material-icons text-[26px] text-[#58595B]">lock</span>
+          </span>
+        </div>
+
+        <p class="mt-5 text-base font-bold text-gray-900">Generando accesos al sistema</p>
+        <p class="mt-1 max-w-sm text-sm text-gray-500">
+          Estamos creando el usuario y su clave temporal, y preparando el envío al correo registrado.
+        </p>
+
+        <div class="mt-5 h-1 w-48 overflow-hidden rounded-full bg-gray-200">
+          <span class="barra-indeterminada block h-full w-1/3 rounded-full bg-[#D9182A]"></span>
+        </div>
+
+      </div>
+
+    }
+
+    @case ('listo') {
+
+      @if (resultado(); as creado) {
+        <div class="flex flex-col items-center justify-center px-6 py-12 text-center" role="status" aria-live="polite">
+
+          <svg class="w-16 h-16" viewBox="0 0 52 52" fill="none" aria-hidden="true">
+            <circle cx="26" cy="26" r="24" fill="#0d6b68" fill-opacity="0.08" />
+            <circle class="trazo-circulo" cx="26" cy="26" r="24" stroke="#0d6b68" stroke-width="3" />
+            <path
+              class="trazo-check"
+              d="M14 27 l8 8 l16 -17"
+              stroke="#0d6b68"
+              stroke-width="3.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+
+          <p class="mt-5 text-base font-bold text-gray-900">Accesos creados correctamente</p>
+          <p class="mt-1 max-w-md text-sm text-gray-500">
+            Enviamos las credenciales a
+            <span class="font-semibold text-gray-700">{{ creado.correoEnmascarado }}</span>.
+          </p>
+
+          <div class="mt-5 w-full max-w-sm rounded-md border border-gray-200 bg-[#fafafa] px-5 py-4 text-left">
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Nombre de usuario</p>
+            <p class="mt-1 font-mono text-xl font-bold text-gray-900">{{ creado.usuario }}</p>
+
+            <p class="mt-4 text-xs font-semibold uppercase tracking-wide text-gray-500">Contraseña temporal</p>
+            <p class="mt-1 font-mono text-xl tracking-widest text-gray-400">••••••••••••</p>
+            <p class="mt-1 text-[11px] text-gray-400">Solo la recibe la persona por correo.</p>
+          </div>
+
+          <button
+            type="button"
+            (click)="crearOtro()"
+            class="mt-6 inline-flex items-center gap-2 h-10 px-5 rounded-md border border-gray-300 bg-white text-sm font-semibold text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
+            <span class="material-icons text-[18px]">person_add</span>
+            Crear otro usuario
+          </button>
+
+        </div>
+      }
+
+    }
+
+  }
+
+</div>

@@ -76,30 +76,18 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
+        path: 'usuarios',
+        loadComponent: () =>
+          import('../features/clinica/usuarios/pages/gestion-usuarios/gestion-usuarios.component').then(
+            (m) => m.GestionUsuariosComponent,
+          ),
+      },
+      {
         path: 'roles',
         loadComponent: () =>
           import('../features/admin/roles/pages/lista-roles/lista-roles.component').then(
             (m) => m.ListaRolesComponent,
           ),
-      },
-      {
-        path: 'usuarios',
-        children: [
-          {
-            path: '',
-            loadComponent: () =>
-              import('../features/admin/usuarios/pages/lista-usuarios/lista-usuarios.component').then(
-                (m) => m.ListaUsuariosComponent,
-              ),
-          },
-          {
-            path: 'nuevo',
-            loadComponent: () =>
-              import('../features/admin/usuarios/pages/crear-usuario/crear-usuario.component').then(
-                (m) => m.CrearUsuarioComponent,
-              ),
-          },
-        ],
       },
     ],
   },

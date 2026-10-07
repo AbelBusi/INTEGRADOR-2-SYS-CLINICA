@@ -1,5 +1,4 @@
-import { HoraApi } from '../interface/horario.interface';
-
+import { EstadoVigencia, FechaApi, HoraApi } from '../interface/horario.interface';
 export const DIAS_SEMANA = [
   { numero: 1, corto: 'LUN', largo: 'Lunes' },
   { numero: 2, corto: 'MAR', largo: 'Martes' },
@@ -173,4 +172,57 @@ export function distribuirBloques<T>(
   }
 
   return resultado;
+}
+
+export function aFechaISO(valor: FechaApi): string {
+  if (Array.isArray(valor)) {
+    const [anio, mes, dia] = valor;
+    return `${anio}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+  }
+  return valor.substring(0, 10);
+}
+
+export function aISO(fecha: Date): string {
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  return `${fecha.getFullYear()}-${mes}-${dia}`;
+}
+
+export function fechaDesdeISO(iso: string): Date {
+  const [anio, mes, dia] = iso.split('-').map(Number);
+  return new Date(anio, mes - 1, dia);
+}
+
+export function formatearFechaCorta(iso: string): string {
+  const [anio, mes, dia] = iso.split('-');
+  return `${dia}/${mes}/${anio}`;
+}
+
+export function estadoVigencia(inicio: string, fin: string, hoy: string): EstadoVigencia {
+  if (hoy < inicio) {
+    return 'proximo';
+  }
+  if (hoy > fin) {
+    return 'vencido';
+  }
+  return 'vigente';
+}
+
+export function fechaFinPorMeses(inicioISO: string, meses: number): string {
+  const inicio = fechaDesdeISO(inicioISO);
+  const ultimoDiaDestino = new Date(
+    inicio.getFullYear(),
+    inicio.getMonth() + meses + 1,
+    0,
+  ).getDate();
+  const destino = new Date(
+    inicio.getFullYear(),
+    inicio.getMonth() + meses,
+    Math.min(inicio.getDate(), ultimoDiaDestino),
+  );
+  return aISO(sumarDias(destino, -1));
+}
+
+export function finDeAnio(inicioISO: string): string {
+  return `${inicioISO.substring(0, 4)}-12-31`;
 }

@@ -9,6 +9,8 @@ import {
   EmpleadoResumen,
   HorarioCreado,
   HorarioCrearDTO,
+  HorarioActualizarDTO,
+  HorarioDia,
   HorarioResumen,
   MensajeResponse,
 } from '../interface/horario.interface';
@@ -64,5 +66,16 @@ export class HorarioService {
       return foto;
     }
     return `${environment.serverUrl}/${foto.replace(/^\/+/, '')}`;
+  }
+
+  actualizar(
+    idHorario: number,
+    dto: HorarioActualizarDTO,
+  ): Observable<MensajeResponse<HorarioDia>> {
+    return this.http.put<MensajeResponse<HorarioDia>>(`${this.baseUrl}/${idHorario}`, dto);
+  }
+
+  eliminar(idHorario: number): Observable<MensajeResponse<null>> {
+    return this.http.delete<MensajeResponse<null>>(`${this.baseUrl}/${idHorario}`);
   }
 }

@@ -16,11 +16,14 @@ import {
   COLORES_CARGO,
   COLOR_SIN_CARGO,
   DIAS_SEMANA,
+  aFechaISO,
   aHHmm,
+  aISO,
   aMinutos,
   diaSemanaDeFecha,
   distribuirBloques,
   formatearDiaLargo,
+  formatearFechaCorta,
   formatearMes,
   formatearRangoSemana,
   iniciales,
@@ -34,12 +37,21 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { CrearHorarioModalComponent } from '../../components/crear-horario-modal/crear-horario-modal.component';
 import { VerHorarioEmpleadoModalComponent } from '../../components/ver-horario-empleado-modal/ver-horario-empleado-modal.component';
 
+interface HorarioVista {
+  horario: HorarioResumen;
+  inicio: string;
+  fin: string;
+  entradaMin: number;
+  salidaMin: number;
+}
+
 interface BloqueVista {
   horario: HorarioResumen;
   entrada: string;
   salida: string;
   cargo: string;
   color: string;
+  vigencia: string;
   top: number;
   alto: number;
   izquierda: number;
@@ -83,6 +95,7 @@ export class AgendaHorariosComponent implements OnInit {
   readonly ALTURA = ALTURA_HORA;
   readonly dias = DIAS_SEMANA;
   readonly hoy = new Date();
+  readonly hoyISO = aISO(this.hoy);
   readonly opcionesVista: { valor: VistaCalendario; etiqueta: string }[] = [
     { valor: 'mes', etiqueta: 'Mes' },
     { valor: 'semana', etiqueta: 'Semana' },
@@ -116,8 +129,15 @@ export class AgendaHorariosComponent implements OnInit {
 
   personalActivo = computed(() => this.empleados().filter((e) => e.estado === 1).length);
 
+  vigentesHoy = computed(() =>
+    this.horariosActivos().filter((h) => {
+      const vista = this.aVista(h);
+      return vista.inicio <= this.hoyISO && vista.fin >= this.hoyISO;
+    }),
+  );
+
   empleadosConHorario = computed(() => {
-    const ids = new Set(this.horariosActivos().map((h) => h.idEmpleado));
+    const ids = new Set(this.vigentesHoy().map((h) => h.idEmpleado));
     return this.empleados().filter((e) => e.estado === 1 && ids.has(e.id)).length;
   });
 
@@ -157,17 +177,45 @@ export class AgendaHorariosComponent implements OnInit {
     });
   });
 
+  rangoVisible = computed(() => {
+    const referencia = this.fechaRef();
+
+    switch (this.vista()) {
+      case 'mes': {
+        const primero = new Date(referencia.getFullYear(), referencia.getMonth(), 1);
+        const ultimo = new Date(referencia.getFullYear(), referencia.getMonth() + 1, 0);
+        return {
+          desde: aISO(inicioSemana(primero)),
+          hasta: aISO(sumarDias(inicioSemana(ultimo), 6)),
+        };
+      }
+      case 'semana': {
+        const inicio = inicioSemana(referencia);
+        return { desde: aISO(inicio), hasta: aISO(sumarDias(inicio, 6)) };
+      }
+      default:
+        return { desde: aISO(referencia), hasta: aISO(referencia) };
+    }
+  });
+
+  horariosEnRango = computed(() => {
+    const { desde, hasta } = this.rangoVisible();
+    return this.horariosFiltrados()
+      .map((h) => this.aVista(h))
+      .filter((v) => v.inicio <= hasta && v.fin >= desde);
+  });
+
   horaInicio = computed(() => {
-    const minimo = this.horariosFiltrados().reduce(
-      (acumulado, h) => Math.min(acumulado, Math.floor(aMinutos(h.horaEntrada) / 60)),
+    const minimo = this.horariosEnRango().reduce(
+      (acumulado, v) => Math.min(acumulado, Math.floor(v.entradaMin / 60)),
       7,
     );
     return Math.max(minimo, 0);
   });
 
   horaFin = computed(() => {
-    const maximo = this.horariosFiltrados().reduce(
-      (acumulado, h) => Math.max(acumulado, Math.ceil(aMinutos(h.horaSalida) / 60)),
+    const maximo = this.horariosEnRango().reduce(
+      (acumulado, v) => Math.max(acumulado, Math.ceil(v.salidaMin / 60)),
       19,
     );
     return Math.min(maximo, 24);
@@ -201,8 +249,8 @@ export class AgendaHorariosComponent implements OnInit {
 
   leyenda = computed(() => {
     const cargos = new Set(
-      this.horariosFiltrados()
-        .map((h) => this.cargoDe(h.idEmpleado))
+      this.horariosEnRango()
+        .map((v) => this.cargoDe(v.horario.idEmpleado))
         .filter((cargo) => cargo !== ''),
     );
     return [...cargos]
@@ -217,24 +265,26 @@ export class AgendaHorariosComponent implements OnInit {
         ? [referencia]
         : Array.from({ length: 7 }, (_, i) => sumarDias(inicioSemana(referencia), i));
     const inicioMinutos = this.horaInicio() * 60;
-    const visibles = this.horariosFiltrados();
+    const visibles = this.horariosEnRango();
 
     return fechas.map((fecha) => {
       const numeroDia = diaSemanaDeFecha(fecha);
+      const iso = aISO(fecha);
 
       const items = visibles
-        .filter((h) => h.diaSemana === numeroDia)
-        .map((h) => ({ item: h, inicio: aMinutos(h.horaEntrada), fin: aMinutos(h.horaSalida) }))
+        .filter((v) => v.horario.diaSemana === numeroDia && v.inicio <= iso && v.fin >= iso)
+        .map((v) => ({ item: v, inicio: v.entradaMin, fin: v.salidaMin }))
         .filter((i) => i.fin > i.inicio);
 
       const bloques = distribuirBloques(items).map((b) => {
-        const cargo = this.cargoDe(b.item.idEmpleado);
+        const cargo = this.cargoDe(b.item.horario.idEmpleado);
         return {
-          horario: b.item,
-          entrada: aHHmm(b.item.horaEntrada),
-          salida: aHHmm(b.item.horaSalida),
+          horario: b.item.horario,
+          entrada: aHHmm(b.item.horario.horaEntrada),
+          salida: aHHmm(b.item.horario.horaSalida),
           cargo,
           color: this.colorDeCargo(cargo),
+          vigencia: `${formatearFechaCorta(b.item.inicio)} - ${formatearFechaCorta(b.item.fin)}`,
           top: ((b.inicio - inicioMinutos) * ALTURA_HORA) / 60,
           alto: Math.max(((b.fin - b.inicio) * ALTURA_HORA) / 60 - 2, 22),
           izquierda: (b.carril / b.carriles) * 100,
@@ -258,30 +308,26 @@ export class AgendaHorariosComponent implements OnInit {
     const inicio = inicioSemana(primero);
     const fin = sumarDias(inicioSemana(ultimo), 6);
     const total = Math.round((fin.getTime() - inicio.getTime()) / 86400000) + 1;
-
-    const porDia = new Map<number, HorarioResumen[]>();
-    for (const h of this.horariosFiltrados()) {
-      const lista = porDia.get(h.diaSemana) ?? [];
-      lista.push(h);
-      porDia.set(h.diaSemana, lista);
-    }
-    porDia.forEach((lista) =>
-      lista.sort((a, b) => aMinutos(a.horaEntrada) - aMinutos(b.horaEntrada)),
-    );
+    const visibles = this.horariosEnRango();
 
     return Array.from({ length: total }, (_, i) => {
       const fecha = sumarDias(inicio, i);
-      const lista = porDia.get(diaSemanaDeFecha(fecha)) ?? [];
+      const iso = aISO(fecha);
+      const numeroDia = diaSemanaDeFecha(fecha);
+
+      const lista = visibles
+        .filter((v) => v.horario.diaSemana === numeroDia && v.inicio <= iso && v.fin >= iso)
+        .sort((a, b) => a.entradaMin - b.entradaMin);
 
       return {
         fecha,
         delMes: fecha.getMonth() === referencia.getMonth(),
         esHoy: mismoDia(fecha, this.hoy),
-        chips: lista.slice(0, 3).map((h) => ({
-          id: h.id,
-          entrada: aHHmm(h.horaEntrada),
-          nombre: h.empleado,
-          color: this.colorDeCargo(this.cargoDe(h.idEmpleado)),
+        chips: lista.slice(0, 3).map((v) => ({
+          id: v.horario.id,
+          entrada: aHHmm(v.horario.horaEntrada),
+          nombre: v.horario.empleado,
+          color: this.colorDeCargo(this.cargoDe(v.horario.idEmpleado)),
         })),
         extra: Math.max(lista.length - 3, 0),
       };
@@ -295,6 +341,16 @@ export class AgendaHorariosComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarDatos();
+  }
+
+  private aVista(horario: HorarioResumen): HorarioVista {
+    return {
+      horario,
+      inicio: aFechaISO(horario.fechaInicio),
+      fin: aFechaISO(horario.fechaFin),
+      entradaMin: aMinutos(horario.horaEntrada),
+      salidaMin: aMinutos(horario.horaSalida),
+    };
   }
 
   cargarDatos(): void {

@@ -1,6 +1,8 @@
 export type HoraApi = string | number[];
+export type FechaApi = string | number[];
 
 export type VistaCalendario = 'mes' | 'semana' | 'dia';
+export type EstadoVigencia = 'vigente' | 'proximo' | 'vencido';
 
 export interface MensajeResponse<T> {
   mensaje: string;
@@ -15,6 +17,8 @@ export interface HorarioResumen {
   diaSemana: number;
   horaEntrada: HoraApi;
   horaSalida: HoraApi;
+  fechaInicio: FechaApi;
+  fechaFin: FechaApi;
   estado: number;
 }
 
@@ -23,6 +27,8 @@ export interface HorarioDia {
   diaSemana: number;
   horaEntrada: HoraApi;
   horaSalida: HoraApi;
+  fechaInicio: FechaApi;
+  fechaFin: FechaApi;
 }
 
 export interface EmpleadoHorario {
@@ -38,12 +44,33 @@ export interface HorarioCrearItem {
 
 export interface HorarioCrearDTO {
   idEmpleado: number;
+  fechaInicio: string;
+  fechaFin: string;
   horarios: HorarioCrearItem[];
+}
+
+export interface HorarioActualizarDTO {
+  diaSemana: number;
+  horaEntrada: string;
+  horaSalida: string;
+  fechaInicio: string;
+  fechaFin: string;
 }
 
 export interface HorarioCreado {
   idEmpleado: number;
-  horarios: unknown[];
+  horarios: HorarioDia[];
+}
+
+export interface TramoDetalle {
+  id: number;
+  diaSemana: number;
+  entrada: string;
+  salida: string;
+  minutos: number;
+  inicio: string;
+  fin: string;
+  vigencia: EstadoVigencia;
 }
 
 export interface EmpleadoLista {
