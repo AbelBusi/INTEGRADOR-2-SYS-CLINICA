@@ -15,6 +15,7 @@ import {
   TipoDocumentoResumen,
   fechaMaximaNacimiento,
   formularioACrearDto,
+  NACIONALIDADES,
   formularioVacio,
 } from '../../interface/paciente.interface';
 import { PacienteService } from '../../services/paciente.service';
@@ -36,7 +37,7 @@ export class CrearPacienteModalComponent implements OnInit {
   tiposDocumento: TipoDocumentoResumen[] = [];
   generos = GENEROS;
   fechaMaxima = fechaMaximaNacimiento();
-
+  nacionalidades = NACIONALIDADES;
   cargandoCatalogos = false;
   guardando = false;
   consultandoReniec = false;
@@ -131,6 +132,16 @@ export class CrearPacienteModalComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
+  soloLetras(event: KeyboardEvent): void {
+    if (event.key.length === 1 && !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]$/.test(event.key)) {
+      event.preventDefault();
+    }
+  }
+
+  limpiarNombre(): void {
+    this.pacienteForm.nombre = this.pacienteForm.nombre.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+  }
+
   onSubmit(): void {
     const f = this.pacienteForm;
 
@@ -143,6 +154,7 @@ export class CrearPacienteModalComponent implements OnInit {
       !f.numeroDocumento.trim() ||
       !f.nombre.trim() ||
       !f.apellidos.trim() ||
+      !f.nacionalidad.trim() ||
       !f.entidadAsegurado.trim() ||
       !f.codigoAsegurado.trim()
     ) {

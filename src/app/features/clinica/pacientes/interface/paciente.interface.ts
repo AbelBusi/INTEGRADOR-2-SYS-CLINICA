@@ -102,6 +102,19 @@ export function fechaMaximaNacimiento(): string {
   return `${ayer.getFullYear()}-${mes}-${dia}`;
 }
 
+export const NACIONALIDADES = [
+  'Peruana',
+  'Argentina',
+  'Boliviana',
+  'Brasileña',
+  'Chilena',
+  'Colombiana',
+  'Ecuatoriana',
+  'Mexicana',
+  'Venezolana',
+  'Otra',
+];
+
 export function formularioVacio(): PacienteForm {
   return {
     idTipoDocumento: null,
@@ -113,7 +126,7 @@ export function formularioVacio(): PacienteForm {
     telefono: '',
     direccion: '',
     correo: '',
-    nacionalidad: '',
+    nacionalidad: 'Peruana',
     entidadAsegurado: '',
     codigoAsegurado: '',
   };

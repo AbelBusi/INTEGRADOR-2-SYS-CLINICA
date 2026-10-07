@@ -16,6 +16,7 @@ import {
   PacienteDetalle,
   PacienteForm,
   TipoDocumentoResumen,
+  NACIONALIDADES,
   fechaMaximaNacimiento,
   formularioAActualizarDto,
   formularioVacio,
@@ -39,6 +40,7 @@ export class EditarPacienteModalComponent implements OnChanges {
   tiposDocumento: TipoDocumentoResumen[] = [];
   generos = GENEROS;
   fechaMaxima = fechaMaximaNacimiento();
+  nacionalidades = NACIONALIDADES;
 
   cargandoDatos = false;
   guardando = false;
@@ -130,6 +132,7 @@ export class EditarPacienteModalComponent implements OnChanges {
       !f.numeroDocumento.trim() ||
       !f.nombre.trim() ||
       !f.apellidos.trim() ||
+      !f.nacionalidad.trim() ||
       !f.codigoAsegurado.trim()
     ) {
       this.toastService.warning('Por favor, complete todos los campos requeridos.');
