@@ -27,7 +27,7 @@ export class EditarRolModalComponent implements OnChanges {
 
   rolForm: RolActualizar = {
     nombre: '',
-    descripcion: ''
+    descripcion: '',
   };
   cargando = false;
 
@@ -41,13 +41,28 @@ export class EditarRolModalComponent implements OnChanges {
     if (changes['rol'] && this.rol) {
       this.rolForm = {
         nombre: this.rol.nombre || '',
-        descripcion: this.rol.descripcion || ''
+        descripcion: this.rol.descripcion || '',
       };
     }
   }
 
   handleClose() {
     this.onClose.emit();
+  }
+
+  soloLetras(event: KeyboardEvent): void {
+    if (
+      event.key.length === 1 &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]$/.test(event.key)
+    ) {
+      event.preventDefault();
+    }
+  }
+
+  limpiarNombre(): void {
+    this.rolForm.nombre = this.rolForm.nombre.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
   }
 
   onSubmit() {

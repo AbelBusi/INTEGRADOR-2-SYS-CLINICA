@@ -40,6 +40,21 @@ export class CrearRolModalComponent {
     };
   }
 
+  soloLetras(event: KeyboardEvent): void {
+    if (
+      event.key.length === 1 &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]$/.test(event.key)
+    ) {
+      event.preventDefault();
+    }
+  }
+
+  limpiarNombre(): void {
+    this.rolForm.nombre = this.rolForm.nombre.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+  }
+
   onSubmit() {
     if (!this.rolForm.nombre.trim() || !this.rolForm.descripcion.trim()) {
       this.toastService.warning('Por favor, complete todos los campos requeridos.');

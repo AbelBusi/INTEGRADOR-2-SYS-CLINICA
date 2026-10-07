@@ -42,6 +42,22 @@ export class CrearEspecialidadModalComponent {
     };
   }
 
+  soloLetras(event: KeyboardEvent): void {
+    if (
+      event.key.length === 1 &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]$/.test(event.key)
+    ) {
+      event.preventDefault();
+    }
+  }
+
+  limpiarNombre(): void {
+    this.especialidadForm.nombre = this.especialidadForm.nombre.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+  }
+
+
   onSubmit() {
     if (!this.especialidadForm.nombre.trim() || !this.especialidadForm.descripcion.trim()) {
       this.toastService.warning('Por favor, complete todos los campos requeridos.');
