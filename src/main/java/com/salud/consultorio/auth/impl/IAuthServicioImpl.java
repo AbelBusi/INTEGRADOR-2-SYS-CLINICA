@@ -26,6 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.util.List;
 
 @Service
@@ -42,6 +43,7 @@ public class IAuthServicioImpl implements IAuthServicio {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final IPersonaRepositorio personaRepositorio;
+    private final CorreoServicio correoServicio;
 
     @Transactional
     @Override
@@ -73,16 +75,19 @@ public class IAuthServicioImpl implements IAuthServicio {
                 )
         );
 
+        String claveTemporal = generarClaveTemporal();
+
         Rol rol = rolMapper.rolRefDtoToRol(dto.getRol());
 
         Usuario usuario = usuarioMapper.toEntity(dto);
 
         usuario.setClaveAcceso(
-                passwordEncoder.encode(dto.getClaveAcceso())
+                passwordEncoder.encode(claveTemporal)
         );
 
         usuario.setPersona(persona);
         usuario.setRol(rol);
+        usuario.setRequiereCambioClave(true);
 
         Usuario guardado = usuarioRepositorio.save(usuario);
 
@@ -181,4 +186,28 @@ public class IAuthServicioImpl implements IAuthServicio {
             tokenRepositorio.saveAll(validUserTokens);
         }
     }
+
+    private static final String CARACTERES =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+                    "abcdefghijklmnopqrstuvwxyz" +
+                    "0123456789" +
+                    "@#$%&*";
+
+    private static final SecureRandom RANDOM = new SecureRandom();
+
+    private String generarClaveTemporal() {
+
+        int longitud = 12;
+
+        StringBuilder clave = new StringBuilder(longitud);
+
+        for (int i = 0; i < longitud; i++) {
+            clave.append(CARACTERES.charAt(
+                    RANDOM.nextInt(CARACTERES.length())
+            ));
+        }
+
+        return clave.toString();
+    }
+
 }

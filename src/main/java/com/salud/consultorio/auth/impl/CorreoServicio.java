@@ -36,13 +36,14 @@ public class CorreoServicio {
 
     public void enviarCodigoRecuperacion(String destino, String codigo, int minutos) {
         try {
-            ClassPathResource escudo   = new ClassPathResource("email/escudo-peru.png");
+            ClassPathResource escudo = new ClassPathResource("email/escudo-peru.png");
             ClassPathResource logoMins = new ClassPathResource("email/logo-minsa.png");
             ClassPathResource hospital = new ClassPathResource("email/hospital-jose-olaya.png");
 
             Context ctx = new Context(new Locale("es", "PE"));
             ctx.setVariable("codigo", codigo);
-            ctx.setVariable("urlRecuperacion", urlRecuperacion);            ctx.setVariable("minutos", minutos);
+            ctx.setVariable("urlRecuperacion", urlRecuperacion);
+            ctx.setVariable("minutos", minutos);
             ctx.setVariable("horaLimite",
                     LocalDateTime.now(LIMA).plusMinutes(minutos).format(HORA).toLowerCase());
             ctx.setVariable("tieneEscudo", escudo.exists());
@@ -61,7 +62,7 @@ public class CorreoServicio {
             helper.setText("Tu código de recuperación es: " + codigo
                     + ". Expira en " + minutos + " minutos.", html);   // texto plano + HTML
 
-            if (escudo.exists())   helper.addInline("escudo", escudo, "image/png");
+            if (escudo.exists()) helper.addInline("escudo", escudo, "image/png");
             if (logoMins.exists()) helper.addInline("logoMinsa", logoMins, "image/png");
             if (hospital.exists()) helper.addInline("hospital", hospital, "image/png");
 
@@ -71,4 +72,84 @@ public class CorreoServicio {
             throw new MailPreparationException("No se pudo construir el correo", e);
         }
     }
+
+    public void enviarCredencialesUsuario(
+            String destino,
+            String usuario,
+            String claveTemporal
+    ) {
+        try {
+            ClassPathResource escudo =
+                    new ClassPathResource("email/escudo-peru.png");
+
+            ClassPathResource logoMins =
+                    new ClassPathResource("email/logo-minsa.png");
+
+            ClassPathResource hospital =
+                    new ClassPathResource("email/hospital-jose-olaya.png");
+
+            Context ctx = new Context(new Locale("es", "PE"));
+
+            ctx.setVariable("usuario", usuario);
+            ctx.setVariable("claveTemporal", claveTemporal);
+
+            ctx.setVariable("tieneEscudo", escudo.exists());
+            ctx.setVariable("tieneLogoMinsa", logoMins.exists());
+            ctx.setVariable("tieneHospital", hospital.exists());
+
+            String html = templateEngine.process(
+                    "email/credenciales-usuario",
+                    ctx
+            );
+
+            MimeMessage mime = mailSender.createMimeMessage();
+
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(
+                            mime,
+                            true,
+                            StandardCharsets.UTF_8.name()
+                    );
+
+            helper.setFrom(
+                    remitente,
+                    "MINSA - Hospital José Olaya"
+            );
+
+            helper.setTo(destino);
+
+            helper.setSubject(
+                    "Credenciales de acceso - Hospital José Olaya"
+            );
+
+            helper.setText(
+                    "Tu cuenta ha sido creada. " +
+                            "Usuario: " + usuario +
+                            ". Contraseña temporal: " + claveTemporal +
+                            ". Deberás cambiarla al iniciar sesión.",
+                    html
+            );
+
+            if (escudo.exists()) {
+                helper.addInline("escudo", escudo, "image/png");
+            }
+
+            if (logoMins.exists()) {
+                helper.addInline("logoMinsa", logoMins, "image/png");
+            }
+
+            if (hospital.exists()) {
+                helper.addInline("hospital", hospital, "image/png");
+            }
+
+            mailSender.send(mime);
+
+        } catch (Exception e) {
+            throw new MailPreparationException(
+                    "No se pudo enviar las credenciales del usuario",
+                    e
+            );
+        }
+    }
+
 }
