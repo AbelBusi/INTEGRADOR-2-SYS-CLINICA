@@ -5,7 +5,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
 import { AuthService } from '../../features/auth/services/auth.service';
-import { CambioClaveService } from '../../features/auth/services/cambio-clave.services';
+import { CambioClaveService, esCambioClaveRequerido } from '../../features/auth/services/cambio-clave.services';
 import { CambiarClaveModalComponent } from '../../features/auth/components/cambiar-clave-modal/cambiar-clave-modal.component';
 import { environment } from '../../../environments/environment';
 import { MENU_BASE, PAGE_TITLES } from './dashboard-menu.config';
@@ -82,16 +82,7 @@ export class DashboardLayoutComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.cambioClave.verificarEstado().subscribe({
-      next: (estado) => {
-        if (estado.requiere_cambio_clave) {
-          this.cargandoPerfil.set(false);
-          return;
-        }
-        this.obtenerPerfilUsuario();
-      },
-      error: () => this.obtenerPerfilUsuario(),
-    });
+    this.obtenerPerfilUsuario();
   }
 
   private obtenerPerfilUsuario() {
@@ -110,7 +101,11 @@ export class DashboardLayoutComponent implements OnInit {
           this.cargandoPerfil.set(false);
         },
         error: (err) => {
-          console.error('Error al capturar datos del usuario', err);
+          if (esCambioClaveRequerido(err)) {
+            this.cambioClave.marcarRequerido();
+          } else {
+            console.error('Error al capturar datos del usuario', err);
+          }
           this.cargandoPerfil.set(false);
         },
       });

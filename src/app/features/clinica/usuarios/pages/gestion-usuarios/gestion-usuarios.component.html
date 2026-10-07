@@ -193,8 +193,9 @@
               title="Desactivar"
               (click)="cambiarEstado(row, 'INACTIVO')"
               [disabled]="procesando()"
-              class="w-9 h-9 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 transition-colors disabled:opacity-50">
+              class="inline-flex h-9 items-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 disabled:cursor-not-allowed disabled:opacity-50">
               <span class="material-icons text-[18px]">toggle_off</span>
+              <span>Desactivar</span>
             </button>
           } @else {
             <button
@@ -202,11 +203,11 @@
               title="Activar"
               (click)="cambiarEstado(row, 'ACTIVO')"
               [disabled]="procesando()"
-              class="w-9 h-9 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68] transition-colors disabled:opacity-50">
+              class="inline-flex h-9 items-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68] disabled:cursor-not-allowed disabled:opacity-50">
               <span class="material-icons text-[18px]">toggle_on</span>
+              <span>Activar</span>
             </button>
           }
-
         </div>
 
       }
