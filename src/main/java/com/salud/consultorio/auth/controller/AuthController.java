@@ -39,17 +39,6 @@ public class AuthController {
 
     }
 
-    @GetMapping("/estado-cuenta")
-    public ResponseEntity<EstadoCuentaResponse> estadoCuenta(Authentication authentication) {
-
-        if (sinSesion(authentication)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        return ResponseEntity.ok(authServicio.estadoCuenta(authentication.getName()));
-
-    }
-
     @PostMapping("/cambiar-clave")
     public ResponseEntity<MensajeResponse> cambiarClave(
             Authentication authentication,
