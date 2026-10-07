@@ -1,6 +1,5 @@
 package com.salud.consultorio.controller;
 
-import com.salud.consultorio.dto.especialidad.EspecialidadRespuestaDTO;
 import com.salud.consultorio.dto.horarioAtencion.*;
 import com.salud.consultorio.model.payload.MensajeResponse;
 import com.salud.consultorio.service.IHorarioAtencionServicio;
@@ -67,6 +66,42 @@ public class HorarioAtencionController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Informacion del horario del empleado solicitado")
                 .object(lista).build(),HttpStatus.OK);
+
+    }
+
+    @Operation(summary = "Actualizar un horario por su ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Horario actualizado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o cruce de horarios"),
+            @ApiResponse(responseCode = "404", description = "Horario no encontrado")
+    })
+    @PutMapping("/{idHorario}")
+    public ResponseEntity<MensajeResponse> actualizar(
+            @PathVariable Integer idHorario,
+            @Valid @RequestBody HorarioActualizarDTO dto) {
+
+        HorarioAtencionRespuestaDTO horario = horarioAtencionServicio.actualizar(idHorario, dto);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Horario actualizado con exito")
+                .object(horario).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(summary = "Eliminar un horario por su ID", description = "Eliminación lógica (estado = 0)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Horario eliminado correctamente"),
+            @ApiResponse(responseCode = "400", description = "El horario ya se encuentra eliminado"),
+            @ApiResponse(responseCode = "404", description = "Horario no encontrado")
+    })
+    @DeleteMapping("/{idHorario}")
+    public ResponseEntity<MensajeResponse> eliminar(@PathVariable Integer idHorario) {
+
+        horarioAtencionServicio.eliminarPorId(idHorario);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Horario eliminado con exito")
+                .build(), HttpStatus.OK);
 
     }
 

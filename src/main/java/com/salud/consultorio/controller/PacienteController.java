@@ -2,6 +2,7 @@ package com.salud.consultorio.controller;
 
 
 import com.salud.consultorio.dto.paciente.*;
+import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.payload.MensajeResponse;
 import com.salud.consultorio.service.IPacienteServicio;
@@ -127,5 +128,22 @@ public class PacienteController {
                 .object(null).build(), HttpStatus.NO_CONTENT);
 
     }
+
+    @Operation(summary = "Listar pacientes sin usuario")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de pacientes obtenida correctamente"),
+            @ApiResponse(responseCode = "204", description = "No existen pacientes")
+    })
+    @GetMapping("sin-usuario")
+    public ResponseEntity<MensajeResponse> listarPacientesSinUsuario() {
+
+        List<PersonaUsuarioDTO> entidad = pacienteServicio.listarPacientesSinUusario();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Lista de Pacientes sin usuario")
+                .object(entidad).build(), HttpStatus.OK);
+
+    }
+
 
 }

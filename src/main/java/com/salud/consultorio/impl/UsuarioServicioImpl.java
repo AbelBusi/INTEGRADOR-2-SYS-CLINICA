@@ -2,7 +2,9 @@ package com.salud.consultorio.impl;
 
 import com.salud.consultorio.auth.dto.rol.UsuarioRolDTO;
 import com.salud.consultorio.dto.usuario.UsuarioListaDTO;
+import com.salud.consultorio.dto.usuario.UsuarioListadoDTO;
 import com.salud.consultorio.dto.usuario.UsuarioRespuestaDTO;
+import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.repository.IUsuarioRepositorio;
 import com.salud.consultorio.service.IUsuarioServicio;
 import lombok.RequiredArgsConstructor;
@@ -63,6 +65,16 @@ public class UsuarioServicioImpl implements IUsuarioServicio {
     @Override
     public void eliminarPorId(Integer id) {
         usuarioRepositorio.UsuarioCambiarEstado(0,id);
+    }
+
+    @Override
+    public void cambiarEstado(Integer id, EntidadEstado estado) {
+
+    }
+
+    @Override
+    public List<UsuarioListadoDTO> lista(EntidadEstado estado) {
+        return List.of();
     }
 
 }

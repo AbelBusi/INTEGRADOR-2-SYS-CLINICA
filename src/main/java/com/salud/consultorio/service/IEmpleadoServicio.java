@@ -1,6 +1,7 @@
 package com.salud.consultorio.service;
 
 import com.salud.consultorio.dto.empleado.*;
+import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.entity.Empleado;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,5 +30,7 @@ public interface IEmpleadoServicio {
     void eliminarPorId(Integer id);
 
     void cambiarEstado(Integer id, EntidadEstado estado);
+
+    List<PersonaUsuarioDTO> listarPacientesSinUusario();
 
 }

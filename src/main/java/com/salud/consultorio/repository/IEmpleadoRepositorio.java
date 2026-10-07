@@ -4,6 +4,7 @@ import com.salud.consultorio.dto.empleado.EmpleadoActivoResumenDTO;
 import com.salud.consultorio.dto.empleado.EmpleadoDetalleDTO;
 import com.salud.consultorio.dto.empleado.EmpleadoLeerDTO;
 import com.salud.consultorio.dto.empleado.EmpleadoMedicoResumenDTO;
+import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.entity.Empleado;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -138,5 +139,21 @@ public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Empleado em SET em.estado = 0 WHERE em.id = :id")
     void eliminarLogicamente(@Param("id") Integer id);
+
+    @Query("""
+                SELECT new com.salud.consultorio.dto.usuario.PersonaUsuarioDTO(
+                    e.persona.id,
+                    CONCAT(e.persona.nombre, ' ', e.persona.apellidos)
+                )
+                FROM Empleado e
+                WHERE e.estado = 1
+                AND NOT EXISTS (
+                    SELECT u.id
+                    FROM Usuario u
+                    WHERE u.persona.id = e.persona.id
+                )
+                ORDER BY e.persona.apellidos, e.persona.nombre
+            """)
+    List<PersonaUsuarioDTO> listarParaCrearUsuario();
 
 }

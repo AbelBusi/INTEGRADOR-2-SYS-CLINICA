@@ -2,6 +2,7 @@ package com.salud.consultorio.repository;
 
 import com.salud.consultorio.dto.paciente.PacienteDetalleDTO;
 import com.salud.consultorio.dto.paciente.PacienteLeerDTO;
+import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.entity.Paciente;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -89,5 +90,21 @@ public interface IPacienteRepositorio extends JpaRepository<Paciente, Integer> {
 
     boolean existsByCodigoAseguradoAndIdNot(String codigoAsegurado, Integer id);
 
+
+    @Query("""
+                SELECT new com.salud.consultorio.dto.usuario.PersonaUsuarioDTO(
+                    p.persona.id,
+                    CONCAT(p.persona.nombre, ' ', p.persona.apellidos)
+                )
+                FROM Paciente p
+                WHERE p.estado = 1
+                AND NOT EXISTS (
+                    SELECT u.id
+                    FROM Usuario u
+                    WHERE u.persona.id = p.persona.id
+                )
+                ORDER BY p.persona.apellidos, p.persona.nombre
+            """)
+    List<PersonaUsuarioDTO> listarParaCrearUsuario();
 
 }

@@ -1,6 +1,7 @@
 package com.salud.consultorio.impl;
 
 import com.salud.consultorio.dto.empleado.*;
+import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.entity.Cargo;
 import com.salud.consultorio.model.entity.Empleado;
 import com.salud.consultorio.model.entity.Persona;
@@ -229,6 +230,12 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
 
             default -> throw new IllegalArgumentException("Solo se permite cambiar a estado ACTIVO o INACTIVO.");
         }
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<PersonaUsuarioDTO> listarPacientesSinUusario() {
+        return empleadoRepositorio.listarParaCrearUsuario();
     }
 
     private void validarId(Integer id) {
