@@ -98,6 +98,18 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
             throw new IllegalArgumentException("Los datos del empleado son obligatorios.");
         }
 
+        if (personaServicio.existePersonaNumeroDocumento(dto.persona().numeroDocumento())){
+            throw new IllegalArgumentException("Ya existe un empleado con este numero de documento.");
+        }
+
+        if (personaServicio.existePersonaCorreo(dto.persona().correo())){
+            throw new IllegalArgumentException("Ya existe un empleado con este correo.");
+        }
+
+        if (personaServicio.existePersonaTelefono(dto.persona().telefono())){
+            throw new IllegalArgumentException("Ya existe un empleado con este telefono.");
+        }
+
         Cargo cargo = obtenerCargoActivo(dto.idCargo());
 
         Empleado empleado = empleadoMapper.toEntity(dto);
