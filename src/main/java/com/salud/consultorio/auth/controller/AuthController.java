@@ -6,7 +6,10 @@ import com.salud.consultorio.auth.service.IRecuperacionClaveServicio;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,7 +23,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> autenticar(
             @RequestBody final InicioSolicitud dto
-            ){
+    ) {
 
         final TokenResponse token = authServicio.ingresar(dto);
 
@@ -30,12 +33,39 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public TokenResponse refrescarToken(
-            @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader){
+            @RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
 
         return authServicio.refrescarToken(authHeader);
 
     }
 
+    @GetMapping("/estado-cuenta")
+    public ResponseEntity<EstadoCuentaResponse> estadoCuenta(Authentication authentication) {
+
+        if (sinSesion(authentication)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(authServicio.estadoCuenta(authentication.getName()));
+
+    }
+
+    @PostMapping("/cambiar-clave")
+    public ResponseEntity<MensajeResponse> cambiarClave(
+            Authentication authentication,
+            @Valid @RequestBody CambiarClaveRequest dto) {
+
+        if (sinSesion(authentication)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new MensajeResponse("Debes iniciar sesión para cambiar tu contraseña"));
+        }
+
+        authServicio.cambiarClave(authentication.getName(), dto);
+
+        return ResponseEntity.ok(new MensajeResponse(
+                "Contraseña actualizada correctamente. Inicia sesión con tu nueva contraseña"));
+
+    }
 
     @PostMapping("/recuperar-clave")
     public ResponseEntity<MensajeResponse> recuperarClave(@Valid @RequestBody RecuperarClaveRequest dto) {
@@ -54,6 +84,12 @@ public class AuthController {
     public ResponseEntity<MensajeResponse> restablecerClave(@Valid @RequestBody RestablecerClaveRequest dto) {
         recuperacionServicio.restablecerClave(dto.usuario(), dto.codigo(), dto.nuevaClave());
         return ResponseEntity.ok(new MensajeResponse("Contraseña actualizada correctamente"));
+    }
+
+    private boolean sinSesion(Authentication authentication) {
+        return authentication == null
+                || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken;
     }
 
 }

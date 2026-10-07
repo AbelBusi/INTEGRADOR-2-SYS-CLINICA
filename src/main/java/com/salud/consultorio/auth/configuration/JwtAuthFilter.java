@@ -1,7 +1,9 @@
 package com.salud.consultorio.auth.configuration;
 
 import com.salud.consultorio.auth.service.IJwtServicio;
+import com.salud.consultorio.model.entity.Usuario;
 import com.salud.consultorio.repository.ITokenRepositorio;
+import com.salud.consultorio.repository.IUsuarioRepositorio;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
@@ -22,13 +24,35 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
+    private static final Set<String> RUTAS_PUBLICAS = Set.of(
+            "/api/v1/auth/login",
+            "/api/v1/auth/refresh",
+            "/api/v1/auth/logout",
+            "/api/v1/auth/recuperar-clave",
+            "/api/v1/auth/verificar-codigo",
+            "/api/v1/auth/restablecer-clave"
+    );
+
+    private static final Set<String> RUTAS_PERMITIDAS_CON_CAMBIO_PENDIENTE = Set.of(
+            "/api/v1/auth/cambiar-clave",
+            "/api/v1/auth/estado-cuenta"
+    );
+
+    private static final String MENSAJE_INACTIVO =
+            "Tu cuenta está desactivada. Comunícate con el administrador del sistema.";
+
+    private static final String MENSAJE_CAMBIO_CLAVE =
+            "Debes cambiar tu contraseña temporal para continuar";
+
     private final IJwtServicio jwtServicio;
     private final ITokenRepositorio tokenRepositorio;
+    private final IUsuarioRepositorio usuarioRepositorio;
 
     @Override
     protected void doFilterInternal(
@@ -36,14 +60,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain) throws ServletException, IOException {
 
-        if (request.getServletPath().contains("/api/v1/auth")){
+        final String ruta = request.getServletPath();
+
+        if (RUTAS_PUBLICAS.contains(ruta)) {
             filterChain.doFilter(request, response);
             return;
         }
 
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")){
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -63,6 +89,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     return;
                 }
 
+                Usuario cuenta = usuarioRepositorio.findByUsuario(usuario).orElse(null);
+
+                if (cuenta == null) {
+                    sendUnauthorizedResponse(response, "El token suministrado no es válido o ha sido revocado.");
+                    return;
+                }
+
+                if (!Integer.valueOf(1).equals(cuenta.getEstado())) {
+                    SecurityContextHolder.clearContext();
+                    sendUnauthorizedResponse(response, MENSAJE_INACTIVO);
+                    return;
+                }
+
                 List<String> rolesPermisos = jwtServicio.extraerPermisos(jwtToken);
 
                 List<SimpleGrantedAuthority> authorities = rolesPermisos.stream()
@@ -72,6 +111,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 UserDetails userDetails = new User(usuario, "", authorities);
 
                 if (jwtServicio.tokenValido(jwtToken, userDetails)) {
+
+                    if (cuenta.isRequiereCambioClave()
+                            && !RUTAS_PERMITIDAS_CON_CAMBIO_PENDIENTE.contains(ruta)) {
+                        sendCambioClaveRequerido(response);
+                        return;
+                    }
+
                     final var authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -88,17 +134,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
 
-
-        }catch (ExpiredJwtException e){
+        } catch (ExpiredJwtException e) {
             SecurityContextHolder.clearContext();
             sendUnauthorizedResponse(response, "El token ha expirado");
-        }catch (JwtException e) {
-
+        } catch (JwtException e) {
             SecurityContextHolder.clearContext();
-            sendUnauthorizedResponse(response,"El token suministrado no es valido");
-
+            sendUnauthorizedResponse(response, "El token suministrado no es valido");
         }
-
 
     }
 
@@ -107,5 +149,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(String.format("{\"error\": \"Unauthorized\", \"message\": \"%s\"}", mensaje));
+    }
+
+    private void sendCambioClaveRequerido(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpStatus.FORBIDDEN.value());
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(String.format(
+                "{\"mensaje\": \"%s\", \"codigo\": \"CAMBIO_CLAVE_REQUERIDO\"}", MENSAJE_CAMBIO_CLAVE));
     }
 }

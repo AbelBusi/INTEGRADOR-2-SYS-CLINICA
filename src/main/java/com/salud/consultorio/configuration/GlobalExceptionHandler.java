@@ -1,5 +1,6 @@
 package com.salud.consultorio.configuration;
 
+import com.salud.consultorio.auth.exception.UsuarioInactivoException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -79,6 +80,14 @@ public class GlobalExceptionHandler {
         respuesta.put("object", null);
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(respuesta);
+    }
+
+    @ExceptionHandler(UsuarioInactivoException.class)
+    public ResponseEntity<Map<String, Object>> manejarUsuarioInactivo(UsuarioInactivoException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of(
+                "mensaje", ex.getMessage(),
+                "codigo", "USUARIO_INACTIVO"
+        ));
     }
 
 }

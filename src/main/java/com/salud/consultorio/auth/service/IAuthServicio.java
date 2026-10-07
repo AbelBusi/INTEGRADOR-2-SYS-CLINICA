@@ -1,8 +1,6 @@
 package com.salud.consultorio.auth.service;
 
-import com.salud.consultorio.auth.dto.InicioSolicitud;
-import com.salud.consultorio.auth.dto.TokenResponse;
-import com.salud.consultorio.auth.dto.UsuarioCrearDTO;
+import com.salud.consultorio.auth.dto.*;
 import com.salud.consultorio.dto.usuario.UsuarioAltaDTO;
 import com.salud.consultorio.dto.usuario.UsuarioCreadoDTO;
 
@@ -13,5 +11,9 @@ public interface IAuthServicio {
     TokenResponse ingresar(InicioSolicitud request);
 
     TokenResponse refrescarToken(String authHeder);
+
+    void cambiarClave(String nombreUsuario, CambiarClaveRequest dto);
+
+    EstadoCuentaResponse estadoCuenta(String nombreUsuario);
 
 }

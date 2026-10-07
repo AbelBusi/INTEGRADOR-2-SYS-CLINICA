@@ -1,7 +1,10 @@
 package com.salud.consultorio.auth.impl;
 
+import com.salud.consultorio.auth.dto.CambiarClaveRequest;
+import com.salud.consultorio.auth.dto.EstadoCuentaResponse;
 import com.salud.consultorio.auth.dto.InicioSolicitud;
 import com.salud.consultorio.auth.dto.TokenResponse;
+import com.salud.consultorio.auth.exception.UsuarioInactivoException;
 import com.salud.consultorio.auth.service.IAuthServicio;
 import com.salud.consultorio.auth.service.IJwtServicio;
 import com.salud.consultorio.dto.usuario.UsuarioAltaDTO;
@@ -17,6 +20,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -40,6 +46,8 @@ import java.util.Set;
 public class IAuthServicioImpl implements IAuthServicio {
 
     private static final String ROL_PACIENTE = "PACIENTE";
+    private static final String MENSAJE_INACTIVO =
+            "Tu cuenta está desactivada. Comunícate con el administrador del sistema.";
     private static final Set<String> PARTICULAS =
             Set.of("de", "del", "la", "las", "los", "san", "santa", "y");
     private static final int INTENTOS_POR_LONGITUD = 15;
@@ -103,23 +111,37 @@ public class IAuthServicioImpl implements IAuthServicio {
     @Transactional
     @Override
     public TokenResponse ingresar(InicioSolicitud request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.usuario(),
-                        request.claveAcceso()
-                )
-        );
 
-        Usuario guardado = usuarioRepositorio.findByUsuario(request.usuario())
-                .orElseThrow(() -> new UsernameNotFoundException("No existe el usuario"));
+        Usuario existente = usuarioRepositorio.findByUsuario(request.usuario()).orElse(null);
 
-        String jwtToken = jwtServicio.generarToken(guardado);
-        String refreshToken = jwtServicio.generarTokenRefrescado(guardado);
+        if (existente != null
+                && !esActivo(existente)
+                && passwordEncoder.matches(request.claveAcceso(), existente.getClaveAcceso())) {
+            throw new UsuarioInactivoException(MENSAJE_INACTIVO);
+        }
 
-        revokeAllUserToken(guardado);
-        saveUserToken(guardado, jwtToken);
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.usuario(),
+                            request.claveAcceso()
+                    )
+            );
+        } catch (DisabledException | LockedException e) {
+            throw new BadCredentialsException("Credenciales inválidas");
+        }
 
-        return new TokenResponse(jwtToken, refreshToken);
+        if (existente == null) {
+            throw new UsernameNotFoundException("No existe el usuario");
+        }
+
+        String jwtToken = jwtServicio.generarToken(existente);
+        String refreshToken = jwtServicio.generarTokenRefrescado(existente);
+
+        revokeAllUserToken(existente);
+        saveUserToken(existente, jwtToken);
+
+        return new TokenResponse(jwtToken, refreshToken, requiereCambio(existente));
     }
 
     @Transactional
@@ -141,6 +163,10 @@ public class IAuthServicioImpl implements IAuthServicio {
                 () -> new UsernameNotFoundException(user)
         );
 
+        if (!esActivo(usuario)) {
+            throw new UsuarioInactivoException(MENSAJE_INACTIVO);
+        }
+
         List<SimpleGrantedAuthority> authorities = usuario.getRol()
                 .getRolPermisos()
                 .stream()
@@ -158,7 +184,52 @@ public class IAuthServicioImpl implements IAuthServicio {
         revokeAllUserToken(usuario);
         saveUserToken(usuario, accesoToken);
 
-        return new TokenResponse(accesoToken, refreshToken);
+        return new TokenResponse(accesoToken, refreshToken, requiereCambio(usuario));
+    }
+
+    @Transactional
+    @Override
+    public void cambiarClave(String nombreUsuario, CambiarClaveRequest dto) {
+
+        Usuario usuario = usuarioRepositorio.findByUsuario(nombreUsuario)
+                .orElseThrow(() -> new UsernameNotFoundException("No existe el usuario"));
+
+        if (!esActivo(usuario)) {
+            throw new UsuarioInactivoException(MENSAJE_INACTIVO);
+        }
+
+        if (!passwordEncoder.matches(dto.claveActual(), usuario.getClaveAcceso())) {
+            throw new IllegalArgumentException("La contraseña actual no es correcta");
+        }
+
+        if (passwordEncoder.matches(dto.nuevaClave(), usuario.getClaveAcceso())) {
+            throw new IllegalArgumentException("La nueva contraseña debe ser distinta a la actual");
+        }
+
+        usuario.setClaveAcceso(passwordEncoder.encode(dto.nuevaClave()));
+        usuario.setRequiereCambioClave(false);
+
+        usuarioRepositorio.save(usuario);
+
+        revokeAllUserToken(usuario);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public EstadoCuentaResponse estadoCuenta(String nombreUsuario) {
+
+        Usuario usuario = usuarioRepositorio.findByUsuario(nombreUsuario)
+                .orElseThrow(() -> new UsernameNotFoundException("No existe el usuario"));
+
+        return new EstadoCuentaResponse(usuario.isRequiereCambioClave());
+    }
+
+    private boolean esActivo(Usuario usuario) {
+        return Integer.valueOf(1).equals(usuario.getEstado());
+    }
+
+    private boolean requiereCambio(Usuario usuario) {
+        return usuario.isRequiereCambioClave();
     }
 
     private Rol resolverRol(UsuarioAltaDTO dto) {
