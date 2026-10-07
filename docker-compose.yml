@@ -1,33 +1,55 @@
 services:
+
+  mariadb:
+    image: mariadb:12.3
+    container_name: hospital-mariadb
+
+    environment:
+      MARIADB_DATABASE: SISHPTL
+      MARIADB_USER: hospital_user
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+
+    volumes:
+      - mariadb_data:/var/lib/mysql
+
+    restart: unless-stopped
+
   backend:
     build:
-      context: ./SOFTWARE-CONSULTORIO-MEDICO/consultorio
-    container_name: consultorio-backend
-    restart: unless-stopped
+      context: ./backend
+    container_name: hospital-backend
+
     environment:
-      TZ: America/Lima
-      SPRING_DATASOURCE_URL: ${DB_URL:-jdbc:mariadb://host.docker.internal:3307/consultoriomedico}
-      SPRING_DATASOURCE_USERNAME: ${DB_USER:-admin_local}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-123456789}
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - "8088:8088"
-    networks:
-      - consultorio-net
+      PORT: ${PORT}
+      DB_DATASOURCE: ${DB_DATASOURCE}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      JWT_SECRET: ${JWT_SECRET}
+
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+
+      TEXTBEE_API_KEY: ${TEXTBEE_API_KEY}
+
+    depends_on:
+      - mariadb
+
+    restart: unless-stopped
 
   frontend:
     build:
-      context: ./proyecto-front/app-front-consultorio
-    container_name: consultorio-frontend
-    restart: unless-stopped
+      context: ./frontend
+    container_name: hospital-frontend
+
+    ports:
+      - "80:80"
+
     depends_on:
       - backend
-    ports:
-      - "5173:80"
-    networks:
-      - consultorio-net
 
-networks:
-  consultorio-net:
-    driver: bridge
+    restart: unless-stopped
+
+volumes:
+  mariadb_data:

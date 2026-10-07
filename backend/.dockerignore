@@ -7,6 +7,5 @@ target
 boot_out.log
 boot_err.log
 stress-test
-Dockerfile
 .dockerignore
 HELP.md
