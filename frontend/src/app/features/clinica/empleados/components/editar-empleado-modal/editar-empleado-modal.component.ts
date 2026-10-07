@@ -16,6 +16,7 @@ import {
   EmpleadoDetalle,
   EmpleadoForm,
   GENEROS,
+  NACIONALIDADES,
   TipoDocumentoResumen,
   formularioADto,
   formularioVacio,
@@ -40,6 +41,7 @@ export class EditarEmpleadoModalComponent implements OnChanges {
   cargos: CargoResumen[] = [];
   tiposDocumento: TipoDocumentoResumen[] = [];
   generos = GENEROS;
+  nacionalidades = NACIONALIDADES;
   fechaMaxima = fechaMaximaNacimiento();
 
   fotoActual: string | null = null;
@@ -58,6 +60,28 @@ export class EditarEmpleadoModalComponent implements OnChanges {
     if (changes['empleado'] && this.empleado) {
       this.cargarDatos(this.empleado.id);
     }
+  }
+
+  soloLetras(event: KeyboardEvent): void {
+    if (
+      event.key.length === 1 &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]$/.test(event.key)
+    ) {
+      event.preventDefault();
+    }
+  }
+
+  limpiarNombre(): void {
+    this.empleadoForm.nombre = this.empleadoForm.nombre.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+  }
+
+  limpiarApellidos(): void {
+    this.empleadoForm.apellidos = this.empleadoForm.apellidos.replace(
+      /[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g,
+      '',
+    );
   }
 
   get fotoMostrada(): string | null {
@@ -171,7 +195,8 @@ export class EditarEmpleadoModalComponent implements OnChanges {
       !f.idCargo ||
       !f.numeroDocumento.trim() ||
       !f.nombre.trim() ||
-      !f.apellidos.trim()
+      !f.apellidos.trim() ||
+      !f.nacionalidad.trim()
     ) {
       this.toastService.warning('Por favor, complete todos los campos requeridos.');
       return;

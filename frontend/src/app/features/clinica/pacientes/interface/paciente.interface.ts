@@ -94,6 +94,17 @@ export interface TipoDocumentoResumen {
 
 export const GENEROS = ['Masculino', 'Femenino'];
 
+export const ENTIDAD_ASEGURADORA = 'SIS';
+
+export function generarCodigoAsegurado(): string {
+  const numero = String(Math.floor(Math.random() * 100000000)).padStart(8, '0');
+  return `SIS-${numero}`;
+}
+
+export function esperar(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export function fechaMaximaNacimiento(): string {
   const ayer = new Date();
   ayer.setDate(ayer.getDate() - 1);
@@ -101,6 +112,19 @@ export function fechaMaximaNacimiento(): string {
   const dia = String(ayer.getDate()).padStart(2, '0');
   return `${ayer.getFullYear()}-${mes}-${dia}`;
 }
+
+export const NACIONALIDADES = [
+  'Peruana',
+  'Argentina',
+  'Boliviana',
+  'Brasileña',
+  'Chilena',
+  'Colombiana',
+  'Ecuatoriana',
+  'Mexicana',
+  'Venezolana',
+  'Otra',
+];
 
 export function formularioVacio(): PacienteForm {
   return {
@@ -113,8 +137,8 @@ export function formularioVacio(): PacienteForm {
     telefono: '',
     direccion: '',
     correo: '',
-    nacionalidad: '',
-    entidadAsegurado: '',
+    nacionalidad: 'Peruana',
+    entidadAsegurado: ENTIDAD_ASEGURADORA,
     codigoAsegurado: '',
   };
 }

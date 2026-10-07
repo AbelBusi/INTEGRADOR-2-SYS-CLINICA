@@ -1,6 +1,7 @@
 package com.salud.consultorio.service;
 
 import com.salud.consultorio.dto.empleado.*;
+import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.entity.Empleado;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,6 +17,10 @@ public interface IEmpleadoServicio {
 
     List<EmpleadoMedicoResumenDTO> listaEmpleadoMedico();
 
+    List<EmpleadoActivoResumenDTO> listaEmpleadosActivos();
+
+    List<EmpleadoActivoResumenDTO> listaEmpleadosActivosCargo(Integer id);
+
     Empleado entidadPorIDTransaccion(Integer id);
 
     EmpleadoRespuestaDTO crear(EmpleadoCrearDTO dto, MultipartFile imagen);
@@ -25,5 +30,9 @@ public interface IEmpleadoServicio {
     void eliminarPorId(Integer id);
 
     void cambiarEstado(Integer id, EntidadEstado estado);
+
+    List<PersonaUsuarioDTO> listarPacientesSinUusario();
+
+    boolean existeEmpleadoPorCargo(Integer idCargo);
 
 }

@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface IMedicoServicio {
 
+    boolean existeMedicoPorEspecialidad(Integer idEspecialidad);
+
     MedicoDetalleDTO entidadPorID(Integer id);
 
     List<MedicoLeerDTO> lista(EntidadEstado estado);

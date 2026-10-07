@@ -1,6 +1,7 @@
 package com.salud.consultorio.impl;
 
 import com.salud.consultorio.dto.empleado.*;
+import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.entity.Cargo;
 import com.salud.consultorio.model.entity.Empleado;
 import com.salud.consultorio.model.entity.Persona;
@@ -72,6 +73,18 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
 
     @Transactional(readOnly = true)
     @Override
+    public List<EmpleadoActivoResumenDTO> listaEmpleadosActivos() {
+        return empleadoRepositorio.listarEmpleadosActivos();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<EmpleadoActivoResumenDTO> listaEmpleadosActivosCargo(Integer id) {
+        return empleadoRepositorio.listarEmpleadosActivosPorCargo(id);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public Empleado entidadPorIDTransaccion(Integer id) {
         return empleadoRepositorio.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("El empleado que desea validar no existe o no se encuentra."));
@@ -83,6 +96,18 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
 
         if (dto == null || dto.persona() == null || dto.idCargo() == null) {
             throw new IllegalArgumentException("Los datos del empleado son obligatorios.");
+        }
+
+        if (personaServicio.existePersonaNumeroDocumento(dto.persona().numeroDocumento())){
+            throw new IllegalArgumentException("Ya existe un empleado con este numero de documento.");
+        }
+
+        if (personaServicio.existePersonaCorreo(dto.persona().correo())){
+            throw new IllegalArgumentException("Ya existe un empleado con este correo.");
+        }
+
+        if (personaServicio.existePersonaTelefono(dto.persona().telefono())){
+            throw new IllegalArgumentException("Ya existe un empleado con este telefono.");
         }
 
         Cargo cargo = obtenerCargoActivo(dto.idCargo());
@@ -217,6 +242,18 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
 
             default -> throw new IllegalArgumentException("Solo se permite cambiar a estado ACTIVO o INACTIVO.");
         }
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<PersonaUsuarioDTO> listarPacientesSinUusario() {
+        return empleadoRepositorio.listarParaCrearUsuario();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public boolean existeEmpleadoPorCargo(Integer idCargo) {
+        return empleadoRepositorio.existsByCargoId(idCargo);
     }
 
     private void validarId(Integer id) {

@@ -1,0 +1,256 @@
+<div *ngIf="isOpen" class="relative z-50">
+
+  <div class="fixed inset-0 bg-neutral-900/50"></div>
+
+  <div class="fixed inset-0 overflow-y-auto">
+    <div class="flex min-h-full items-center justify-center p-4">
+
+      <div class="w-full max-w-xl overflow-hidden rounded border border-neutral-300 bg-white">
+
+        <div class="flex justify-between items-center px-6 py-4 bg-[#58595B]">
+          <h3 class="text-base font-bold text-white flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded bg-[#D9182A] flex items-center justify-center">
+              <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+            </div>
+            Nuevo Horario
+          </h3>
+          <button (click)="handleClose()" [disabled]="guardando" class="p-1 rounded hover:bg-neutral-700 text-neutral-300 hover:text-white transition-colors disabled:opacity-50">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex h-1">
+          <div class="w-1/2 bg-[#58595B]"></div>
+          <div class="w-1/2 bg-[#D9182A]"></div>
+        </div>
+
+        @if (cargandoCatalogos) {
+          <div class="flex justify-center items-center py-16">
+            <div class="w-8 h-8 border-4 border-gray-200 border-t-[#0d6b68] rounded-full animate-spin"></div>
+          </div>
+        } @else {
+
+          <form #f="ngForm" (ngSubmit)="onSubmit()" class="space-y-4 p-6 max-h-[78vh] overflow-y-auto">
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">
+                  Cargo <span class="normal-case font-medium text-neutral-400">(filtro)</span>
+                </label>
+                <select
+                  name="idCargo"
+                  [(ngModel)]="idCargo"
+                  (ngModelChange)="onCargoChange()"
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors">
+                  <option [ngValue]="null">Todos los cargos</option>
+                  @for (cargo of cargos; track cargo.idCargo) {
+                    <option [ngValue]="cargo.idCargo">{{ cargo.nombre }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="space-y-1.5">
+                <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Empleado</label>
+                <select
+                  name="idEmpleado"
+                  [(ngModel)]="idEmpleado"
+                  (ngModelChange)="onEmpleadoChange()"
+                  [disabled]="cargandoEmpleados"
+                  required
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors disabled:bg-neutral-100">
+                  <option [ngValue]="null" disabled>
+                    {{ cargandoEmpleados ? 'Cargando...' : 'Seleccione un empleado...' }}
+                  </option>
+                  @for (empleado of empleados; track empleado.idEmpleado) {
+                    <option [ngValue]="empleado.idEmpleado">{{ empleado.nombre }}</option>
+                  }
+                </select>
+                @if (!cargandoEmpleados && empleados.length === 0) {
+                  <div class="text-xs text-neutral-500 font-medium">No hay empleados activos para este cargo.</div>
+                }
+              </div>
+
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <span class="text-xs font-bold text-neutral-500 uppercase tracking-wider">Vigencia</span>
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <button type="button" (click)="aplicarMeses(1)" class="px-2.5 py-1 text-xs font-semibold text-neutral-600 bg-white hover:bg-neutral-100 rounded border border-neutral-300 transition-colors">
+                    1 mes
+                  </button>
+                  <button type="button" (click)="aplicarMeses(3)" class="px-2.5 py-1 text-xs font-semibold text-neutral-600 bg-white hover:bg-neutral-100 rounded border border-neutral-300 transition-colors">
+                    3 meses
+                  </button>
+                  <button type="button" (click)="aplicarMeses(6)" class="px-2.5 py-1 text-xs font-semibold text-neutral-600 bg-white hover:bg-neutral-100 rounded border border-neutral-300 transition-colors">
+                    6 meses
+                  </button>
+                  <button type="button" (click)="hastaFinDeAnio()" class="px-2.5 py-1 text-xs font-semibold text-neutral-600 bg-white hover:bg-neutral-100 rounded border border-neutral-300 transition-colors">
+                    Fin de año
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Desde</label>
+                  <input
+                    type="date"
+                    name="fechaInicio"
+                    [(ngModel)]="fechaInicio"
+                    required
+                    class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                  />
+                </div>
+
+                <div class="space-y-1.5">
+                  <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Hasta</label>
+                  <input
+                    type="date"
+                    name="fechaFin"
+                    [(ngModel)]="fechaFin"
+                    [min]="fechaInicio"
+                    required
+                    class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                  />
+                </div>
+              </div>
+
+              @if (errorVigencia; as mensaje) {
+                <p class="text-[11px] font-medium text-[#D9182A]">{{ mensaje }}</p>
+              }
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <span class="text-xs font-bold text-neutral-500 uppercase tracking-wider">Días y horas</span>
+
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button type="button" (click)="seleccionarDias([1, 2, 3, 4, 5])" class="px-2.5 py-1 text-xs font-semibold text-neutral-600 bg-white hover:bg-neutral-100 rounded border border-neutral-300 transition-colors">
+                  Lun - Vie
+                </button>
+                <button type="button" (click)="seleccionarDias([1, 2, 3, 4, 5, 6])" class="px-2.5 py-1 text-xs font-semibold text-neutral-600 bg-white hover:bg-neutral-100 rounded border border-neutral-300 transition-colors">
+                  Lun - Sáb
+                </button>
+                <button type="button" (click)="seleccionarDias([1, 2, 3, 4, 5, 6, 7])" class="px-2.5 py-1 text-xs font-semibold text-neutral-600 bg-white hover:bg-neutral-100 rounded border border-neutral-300 transition-colors">
+                  Todos
+                </button>
+                <button type="button" (click)="seleccionarDias([])" class="px-2.5 py-1 text-xs font-semibold text-neutral-600 bg-white hover:bg-neutral-100 rounded border border-neutral-300 transition-colors">
+                  Ninguno
+                </button>
+                <button
+                  type="button"
+                  (click)="igualarHoras()"
+                  [disabled]="diasActivos.length < 2"
+                  title="Copia las horas del primer día marcado a los demás días marcados"
+                  class="px-2.5 py-1 text-xs font-semibold text-[#D9182A] bg-white hover:bg-[#D9182A]/10 rounded border border-[#D9182A]/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                  Igualar horas
+                </button>
+              </div>
+            </div>
+
+            @if (cargandoExistentes) {
+              <div class="flex items-center gap-2 text-xs text-neutral-500 font-medium">
+                <span class="w-3.5 h-3.5 border-2 border-neutral-300 border-t-[#D9182A] rounded-full animate-spin"></span>
+                Consultando horarios ya registrados...
+              </div>
+            }
+
+            <div class="space-y-2">
+              @for (dia of dias; track dia.numero) {
+                <div
+                  class="rounded border px-3 py-2.5 transition-colors"
+                  [ngClass]="dia.activo ? 'border-[#58595B]/40 bg-white' : 'border-neutral-200 bg-neutral-50'">
+
+                  <div class="grid grid-cols-1 sm:grid-cols-[140px_1fr_1fr] items-center gap-2">
+
+                    <label
+                      class="flex items-center gap-2 text-sm font-semibold cursor-pointer"
+                      [ngClass]="dia.activo ? 'text-neutral-800' : 'text-neutral-500'">
+                      <input
+                        type="checkbox"
+                        [name]="'activo' + dia.numero"
+                        [(ngModel)]="dia.activo"
+                        class="h-4 w-4 rounded border-neutral-300 accent-[#D9182A]"
+                      />
+                      {{ dia.nombre }}
+                    </label>
+
+                    <div class="flex items-center gap-2">
+                      <span class="w-11 text-[10px] font-bold uppercase tracking-wider text-neutral-400">Desde</span>
+                      <input
+                        type="time"
+                        [name]="'entrada' + dia.numero"
+                        [(ngModel)]="dia.entrada"
+                        [disabled]="!dia.activo"
+                        class="w-full bg-white border border-neutral-300 rounded px-2.5 py-1.5 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors disabled:bg-neutral-100 disabled:text-neutral-400"
+                      />
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                      <span class="w-11 text-[10px] font-bold uppercase tracking-wider text-neutral-400">Hasta</span>
+                      <input
+                        type="time"
+                        [name]="'salida' + dia.numero"
+                        [(ngModel)]="dia.salida"
+                        [disabled]="!dia.activo"
+                        class="w-full bg-white border border-neutral-300 rounded px-2.5 py-1.5 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors disabled:bg-neutral-100 disabled:text-neutral-400"
+                      />
+                    </div>
+
+                  </div>
+
+                  @if (dia.existentes.length > 0) {
+                    <div class="mt-1.5 space-y-0.5">
+                      @for (tramo of dia.existentes; track $index) {
+                        <p class="text-[11px] font-medium text-neutral-500">
+                          Ya registrado: {{ tramo.entrada }} - {{ tramo.salida }} ·
+                          {{ formatearFecha(tramo.inicio) }} al {{ formatearFecha(tramo.fin) }}
+                        </p>
+                      }
+                    </div>
+                  }
+                  @if (errorDia(dia); as mensaje) {
+                    <p class="mt-1.5 text-[11px] font-medium text-[#D9182A]">{{ mensaje }}</p>
+                  }
+
+                </div>
+              }
+            </div>
+
+            @if (diasActivos.length > 0) {
+              <p class="text-xs font-medium text-neutral-500">
+                {{ diasActivos.length }} {{ diasActivos.length === 1 ? 'día' : 'días' }} seleccionados ·
+                {{ formatearDuracion(totalMinutos) }} por semana
+              </p>
+            }
+
+            <div class="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+              <button
+                type="button"
+                (click)="handleClose()"
+                [disabled]="guardando"
+                class="flex-1 px-4 py-2 text-sm font-medium text-neutral-600 bg-white hover:bg-neutral-100 hover:text-neutral-900 rounded border border-neutral-300 transition-colors disabled:opacity-50">
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                [disabled]="!formularioValido || guardando"
+                class="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#D9182A] hover:bg-[#B81424] rounded transition-colors disabled:opacity-50">
+                <span *ngIf="guardando" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                Guardar Horarios
+              </button>
+            </div>
+
+          </form>
+
+        }
+
+      </div>
+    </div>
+  </div>
+</div>

@@ -2,6 +2,7 @@ package com.salud.consultorio.impl;
 
 import com.salud.consultorio.dto.paciente.*;
 import com.salud.consultorio.dto.persona.PersonaActualizarDTO;
+import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.entity.Paciente;
 import com.salud.consultorio.model.entity.Persona;
 import com.salud.consultorio.model.enums.EntidadEstado;
@@ -136,6 +137,12 @@ public class PacienteServicioImpl implements IPacienteServicio {
             pacienteRepositorio.desactivarLogicamente(paciente.getId());
 
         }
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<PersonaUsuarioDTO> listarPacientesSinUusario() {
+        return pacienteRepositorio.listarParaCrearUsuario();
     }
 
     private Paciente validarCambiarEstado(Integer id, EntidadEstado estado) {

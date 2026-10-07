@@ -31,6 +31,18 @@ public class IPersonaServicioImpl implements IPersonaServicio {
                         new EntityNotFoundException("No se encuentra el tipo de documento seleccionado")
                 );
 
+        if (existePersonaNumeroDocumento(dto.numeroDocumento())){
+            throw new IllegalArgumentException("Ya existe un empleado con este numero de documento.");
+        }
+
+        if (existePersonaCorreo(dto.correo())){
+            throw new IllegalArgumentException("Ya existe un empleado con este correo.");
+        }
+
+        if (existePersonaTelefono(dto.telefono())){
+            throw new IllegalArgumentException("Ya existe un empleado con este telefono.");
+        }
+
         Persona persona =personaMapper.toEntity(dto, tipoDocumento);
 
         return personaRepositorio.save(persona);
@@ -67,8 +79,29 @@ public class IPersonaServicioImpl implements IPersonaServicio {
 
     @Transactional(readOnly = true)
     @Override
+    public boolean existePersonaTelefono(String telefono) {
+        return personaRepositorio.existsByTelefono(telefono);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public boolean existePersonaCorreo(String correo) {
         return personaRepositorio.existsByCorreo(correo);
+    }
+
+    @Override
+    public boolean existePersonaNumeroDocumentoExcepto(String numeroDocumento, Integer idPersona) {
+        return false;
+    }
+
+    @Override
+    public boolean existePersonaTelefonoExcepto(String telefono, Integer idPersona) {
+        return false;
+    }
+
+    @Override
+    public boolean existePersonaCorreoExcepto(String correo, Integer idPersona) {
+        return false;
     }
 
     @Transactional(readOnly = true)

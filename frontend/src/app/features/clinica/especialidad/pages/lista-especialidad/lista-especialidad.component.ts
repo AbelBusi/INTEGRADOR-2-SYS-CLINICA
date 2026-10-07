@@ -41,7 +41,7 @@ export class ListaEspecialidadComponent implements OnInit {
     { header: 'Especialidad', field: 'nombre', sortable: true, type: 'custom' },
     { header: 'Descripción', field: 'descripcion', type: 'text' },
     { header: 'Estado', field: 'estado', type: 'custom' },
-    { header: 'Acciones', field: 'id', type: 'custom', align:'center' },
+    { header: 'Acciones', field: 'id', type: 'custom', align: 'center' },
   ];
 
   constructor(
@@ -192,13 +192,19 @@ export class ListaEspecialidadComponent implements OnInit {
             this.toastService.success(response?.mensaje || 'Especialidad eliminada con éxito');
 
             this.especialidades = this.especialidades.filter((e) => e.id !== especialidad.id);
+
             this.especialidadSeleccionada = null;
             this.cargando = false;
             this.cdr.detectChanges();
           },
+
           error: (error) => {
             console.error(error);
-            this.toastService.error('Hubo un error al eliminar la especialidad');
+
+            this.toastService.error(
+              error?.error?.mensaje || 'Hubo un error al eliminar la especialidad',
+            );
+
             this.cargando = false;
             this.cdr.detectChanges();
           },

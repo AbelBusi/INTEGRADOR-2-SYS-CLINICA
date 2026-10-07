@@ -44,7 +44,7 @@ export class ListaCargoComponent implements OnInit {
     { header: 'Descripción', field: 'descripcion', type: 'text' },
     { header: '¿ES PERSONAL MEDICO?', field: 'esPersonalMedico', type: 'custom' },
     { header: 'Estado', field: 'estado', type: 'custom' },
-    { header: 'Acciones', field: 'id', type: 'custom' , align:'center' },
+    { header: 'Acciones', field: 'id', type: 'custom', align: 'center' },
   ];
 
   constructor(
@@ -54,6 +54,7 @@ export class ListaCargoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+
     this.cargarCargos();
   }
 
@@ -199,7 +200,11 @@ export class ListaCargoComponent implements OnInit {
           },
           error: (error) => {
             console.error(error);
-            this.toastService.error('Hubo un error al eliminar el cargo');
+
+            this.toastService.error(
+              error?.error?.mensaje || 'Hubo un error al eliminar la especialidad',
+            );
+
             this.cargando = false;
             this.cdr.detectChanges();
           },

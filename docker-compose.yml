@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: ./SOFTWARE-CONSULTORIO-MEDICO/consultorio
+    container_name: consultorio-backend
+    restart: unless-stopped
+    environment:
+      TZ: America/Lima
+      SPRING_DATASOURCE_URL: ${DB_URL:-jdbc:mariadb://host.docker.internal:3307/consultoriomedico}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-admin_local}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-123456789}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "8088:8088"
+    networks:
+      - consultorio-net
+
+  frontend:
+    build:
+      context: ./proyecto-front/app-front-consultorio
+    container_name: consultorio-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:80"
+    networks:
+      - consultorio-net
+
+networks:
+  consultorio-net:
+    driver: bridge

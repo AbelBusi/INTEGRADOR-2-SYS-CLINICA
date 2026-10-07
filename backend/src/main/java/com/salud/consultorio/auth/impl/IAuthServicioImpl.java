@@ -1,22 +1,29 @@
 package com.salud.consultorio.auth.impl;
 
+import com.salud.consultorio.auth.dto.CambiarClaveRequest;
+import com.salud.consultorio.auth.dto.EstadoCuentaResponse;
 import com.salud.consultorio.auth.dto.InicioSolicitud;
 import com.salud.consultorio.auth.dto.TokenResponse;
-import com.salud.consultorio.auth.dto.UsuarioCrearDTO;
+import com.salud.consultorio.auth.exception.UsuarioInactivoException;
 import com.salud.consultorio.auth.service.IAuthServicio;
 import com.salud.consultorio.auth.service.IJwtServicio;
+import com.salud.consultorio.dto.usuario.UsuarioAltaDTO;
+import com.salud.consultorio.dto.usuario.UsuarioCambiarRolDTO;
+import com.salud.consultorio.dto.usuario.UsuarioCreadoDTO;
 import com.salud.consultorio.model.entity.*;
-import com.salud.consultorio.model.mapper.IRolMapper;
-import com.salud.consultorio.model.mapper.IUsuarioMapper;
+import com.salud.consultorio.model.enums.TipoUsuario;
 import com.salud.consultorio.repository.IPersonaRepositorio;
+import com.salud.consultorio.repository.IRolRepositorio;
 import com.salud.consultorio.repository.ITokenRepositorio;
 import com.salud.consultorio.repository.IUsuarioRepositorio;
-import com.salud.consultorio.service.IRolServicio;
 import com.salud.consultorio.service.IUsuarioServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -26,115 +33,140 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
+import java.text.Normalizer;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 public class IAuthServicioImpl implements IAuthServicio {
 
+    private static final String ROL_PACIENTE = "PACIENTE";
+    private static final String MENSAJE_INACTIVO =
+            "Tu cuenta está desactivada. Comunícate con el administrador del sistema.";
+    private static final Set<String> PARTICULAS =
+            Set.of("de", "del", "la", "las", "los", "san", "santa", "y");
+    private static final int INTENTOS_POR_LONGITUD = 15;
+    private static final int LONGITUD_CLAVE = 12;
+
+    private static final String MAYUSCULAS = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+    private static final String MINUSCULAS = "abcdefghijkmnpqrstuvwxyz";
+    private static final String NUMEROS = "23456789";
+    private static final String ESPECIALES = "@#$%&*";
+    private static final SecureRandom RANDOM = new SecureRandom();
+
     private final IUsuarioRepositorio usuarioRepositorio;
     private final ITokenRepositorio tokenRepositorio;
     private final IUsuarioServicio usuarioServicio;
     private final IJwtServicio jwtServicio;
-    private final IRolServicio rolServicio;
-    private final IUsuarioMapper usuarioMapper;
-    private final IRolMapper rolMapper;
+    private final IRolRepositorio rolRepositorio;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final IPersonaRepositorio personaRepositorio;
+    private final CorreoServicio correoServicio;
 
     @Transactional
     @Override
-    public TokenResponse registrar(UsuarioCrearDTO dto) {
+    public UsuarioCreadoDTO crearUsuario(UsuarioAltaDTO dto) {
 
-        if (!rolServicio.existeRolId(dto.getRol().getId())) {
-            throw new EntityNotFoundException(
-                    "No existe el rol indicado"
+        Persona persona = personaRepositorio.findById(dto.idPersona())
+                .orElseThrow(() -> new EntityNotFoundException("No existe la persona indicada"));
+
+        if (usuarioServicio.existeUsuarioPersona(persona.getId())) {
+            throw new DataIntegrityViolationException("La persona ya tiene un usuario registrado");
+        }
+
+        String correo = persona.getCorreo();
+
+        if (correo == null || correo.isBlank()) {
+            throw new IllegalArgumentException(
+                    "La persona no tiene un correo registrado. Actualiza sus datos antes de crear el usuario"
             );
         }
 
-        if (usuarioServicio.existeUsuario(dto.getUsuario())) {
-            throw new DataIntegrityViolationException(
-                    "No se puede guardar al usuario"
-            );
-        }
+        Rol rol = resolverRol(dto);
 
-        if (usuarioServicio.existeUsuarioPersona(dto.getPersona().getId())) {
-            throw new DataIntegrityViolationException(
-                    "La persona ya tiene un usuario registrado"
-            );
-        }
+        String nombreUsuario = generarNombreUsuario(persona);
+        String claveTemporal = generarClaveTemporal();
 
-        Persona persona = personaRepositorio.findById(
-                dto.getPersona().getId()
-        ).orElseThrow(() ->
-                new EntityNotFoundException(
-                        "No existe la persona indicada"
-                )
-        );
-
-        Rol rol = rolMapper.rolRefDtoToRol(dto.getRol());
-
-        Usuario usuario = usuarioMapper.toEntity(dto);
-
-        usuario.setClaveAcceso(
-                passwordEncoder.encode(dto.getClaveAcceso())
-        );
-
-        usuario.setPersona(persona);
-        usuario.setRol(rol);
+        Usuario usuario = Usuario.builder()
+                .usuario(nombreUsuario)
+                .claveAcceso(passwordEncoder.encode(claveTemporal))
+                .persona(persona)
+                .rol(rol)
+                .requiereCambioClave(true)
+                .build();
 
         Usuario guardado = usuarioRepositorio.save(usuario);
 
-        String jwtToken = jwtServicio.generarToken(guardado);
-        String refreshToken = jwtServicio.generarTokenRefrescado(guardado);
+        correoServicio.enviarCredencialesUsuario(correo, nombreUsuario, claveTemporal);
 
-        saveUserToken(guardado, jwtToken);
-
-        return new TokenResponse(jwtToken, refreshToken);
+        return new UsuarioCreadoDTO(guardado.getId(), nombreUsuario, enmascararCorreo(correo));
     }
 
     @Transactional
     @Override
     public TokenResponse ingresar(InicioSolicitud request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.usuario(),
-                        request.claveAcceso()
-                )
-        );
 
-        Usuario guardado = usuarioRepositorio.findByUsuario(request.usuario())
-                .orElseThrow(() -> new UsernameNotFoundException("No existe el usuario"));
+        Usuario existente = usuarioRepositorio.findByUsuario(request.usuario()).orElse(null);
 
+        if (existente != null
+                && !esActivo(existente)
+                && passwordEncoder.matches(request.claveAcceso(), existente.getClaveAcceso())) {
+            throw new UsuarioInactivoException(MENSAJE_INACTIVO);
+        }
 
-        String jwtToken = jwtServicio.generarToken(guardado);
-        String refreshToken = jwtServicio.generarTokenRefrescado(guardado);
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.usuario(),
+                            request.claveAcceso()
+                    )
+            );
+        } catch (DisabledException | LockedException e) {
+            throw new BadCredentialsException("Credenciales inválidas");
+        }
 
-        revokeAllUserToken(guardado);
-        saveUserToken(guardado, jwtToken);
+        if (existente == null) {
+            throw new UsernameNotFoundException("No existe el usuario");
+        }
 
-        return new TokenResponse(jwtToken, refreshToken);
+        String jwtToken = jwtServicio.generarToken(existente);
+        String refreshToken = jwtServicio.generarTokenRefrescado(existente);
+
+        revokeAllUserToken(existente);
+        saveUserToken(existente, jwtToken);
+
+        return new TokenResponse(jwtToken, refreshToken, requiereCambio(existente));
     }
 
     @Transactional
     @Override
     public TokenResponse refrescarToken(final String authHeder) {
 
-        if (authHeder == null || !authHeder.startsWith("Bearer ")){
+        if (authHeder == null || !authHeder.startsWith("Bearer ")) {
             throw new IllegalArgumentException("Token Bearer Invalido1");
         }
 
         final String refreshToken = authHeder.substring(7);
         final String user = jwtServicio.extraerUsuario(refreshToken);
 
-        if (user == null){
+        if (user == null) {
             throw new IllegalArgumentException("Token Bearer Invalido2");
         }
 
         final Usuario usuario = usuarioRepositorio.findByUsuario(user).orElseThrow(
                 () -> new UsernameNotFoundException(user)
         );
+
+        if (!esActivo(usuario)) {
+            throw new UsuarioInactivoException(MENSAJE_INACTIVO);
+        }
 
         List<SimpleGrantedAuthority> authorities = usuario.getRol()
                 .getRolPermisos()
@@ -144,7 +176,7 @@ public class IAuthServicioImpl implements IAuthServicio {
 
         UserDetails userDetails = new User(usuario.getUsuario(), usuario.getClaveAcceso(), authorities);
 
-        if (!jwtServicio.tokenValido(refreshToken, userDetails)){
+        if (!jwtServicio.tokenValido(refreshToken, userDetails)) {
             throw new IllegalArgumentException("Token Bearer Invalido3");
         }
 
@@ -153,10 +185,235 @@ public class IAuthServicioImpl implements IAuthServicio {
         revokeAllUserToken(usuario);
         saveUserToken(usuario, accesoToken);
 
-        return new TokenResponse(accesoToken, refreshToken);
+        return new TokenResponse(accesoToken, refreshToken, requiereCambio(usuario));
     }
 
-    private void saveUserToken(Usuario usuario, String jwtToken){
+    @Transactional
+    @Override
+    public void cambiarClave(String nombreUsuario, CambiarClaveRequest dto) {
+
+        Usuario usuario = usuarioRepositorio.findByUsuario(nombreUsuario)
+                .orElseThrow(() -> new UsernameNotFoundException("No existe el usuario"));
+
+        if (!esActivo(usuario)) {
+            throw new UsuarioInactivoException(MENSAJE_INACTIVO);
+        }
+
+        if (!passwordEncoder.matches(dto.claveActual(), usuario.getClaveAcceso())) {
+            throw new IllegalArgumentException("La contraseña actual no es correcta");
+        }
+
+        if (passwordEncoder.matches(dto.nuevaClave(), usuario.getClaveAcceso())) {
+            throw new IllegalArgumentException("La nueva contraseña debe ser distinta a la actual");
+        }
+
+        usuario.setClaveAcceso(passwordEncoder.encode(dto.nuevaClave()));
+        usuario.setRequiereCambioClave(false);
+
+        usuarioRepositorio.save(usuario);
+
+        revokeAllUserToken(usuario);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public EstadoCuentaResponse estadoCuenta(String nombreUsuario) {
+
+        Usuario usuario = usuarioRepositorio.findByUsuario(nombreUsuario)
+                .orElseThrow(() -> new UsernameNotFoundException("No existe el usuario"));
+
+        return new EstadoCuentaResponse(usuario.isRequiereCambioClave());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public void validarNoEsCuentaPropia(Integer idUsuario, String usuarioActual, String mensaje) {
+
+        boolean cuentaPropia = usuarioRepositorio.findByUsuario(usuarioActual)
+                .map(actual -> actual.getId().equals(idUsuario))
+                .orElse(false);
+
+        if (cuentaPropia) {
+            throw new IllegalArgumentException(mensaje);
+        }
+    }
+
+    @Transactional
+    @Override
+    public void cambiarRol(Integer idUsuario, UsuarioCambiarRolDTO dto, String usuarioActual) {
+
+        validarNoEsCuentaPropia(idUsuario, usuarioActual, "No puedes cambiar tu propio rol");
+
+        Usuario usuario = usuarioRepositorio.findById(idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("No existe el usuario indicado"));
+
+        if (ROL_PACIENTE.equalsIgnoreCase(usuario.getRol().getNombre())) {
+            throw new IllegalArgumentException("El rol de un paciente no se puede modificar");
+        }
+
+        Rol nuevoRol = rolRepositorio.findById(dto.idRol())
+                .orElseThrow(() -> new EntityNotFoundException("No existe el rol indicado"));
+
+        if (ROL_PACIENTE.equalsIgnoreCase(nuevoRol.getNombre())) {
+            throw new IllegalArgumentException("El rol " + ROL_PACIENTE + " no se puede asignar a un empleado");
+        }
+
+        if (!Integer.valueOf(1).equals(nuevoRol.getEstado())) {
+            throw new IllegalArgumentException("El rol seleccionado no está activo");
+        }
+
+        if (usuario.getRol().getId().equals(nuevoRol.getId())) {
+            throw new IllegalArgumentException("El usuario ya tiene ese rol");
+        }
+
+        usuario.setRol(nuevoRol);
+        usuarioRepositorio.save(usuario);
+
+        revokeAllUserToken(usuario);
+    }
+
+    private boolean esActivo(Usuario usuario) {
+        return Integer.valueOf(1).equals(usuario.getEstado());
+    }
+
+    private boolean requiereCambio(Usuario usuario) {
+        return usuario.isRequiereCambioClave();
+    }
+
+    private Rol resolverRol(UsuarioAltaDTO dto) {
+
+        if (dto.tipo() == TipoUsuario.PACIENTE) {
+            return rolRepositorio.findByNombreIgnoreCase(ROL_PACIENTE)
+                    .orElseThrow(() -> new EntityNotFoundException("No existe el rol " + ROL_PACIENTE));
+        }
+
+        if (dto.idRol() == null) {
+            throw new IllegalArgumentException("El rol es obligatorio para los empleados");
+        }
+
+        Rol rol = rolRepositorio.findById(dto.idRol())
+                .orElseThrow(() -> new EntityNotFoundException("No existe el rol indicado"));
+
+        if (ROL_PACIENTE.equalsIgnoreCase(rol.getNombre())) {
+            throw new IllegalArgumentException("El rol " + ROL_PACIENTE + " no se puede asignar a un empleado");
+        }
+
+        return rol;
+    }
+
+    private String generarNombreUsuario(Persona persona) {
+
+        String base = generarBaseUsuario(persona);
+
+        for (int digitos = 3; digitos <= 4; digitos++) {
+
+            int minimo = (int) Math.pow(10, digitos - 1);
+            int rango = 9 * minimo;
+
+            for (int i = 0; i < INTENTOS_POR_LONGITUD; i++) {
+
+                String candidato = base + "_" + (minimo + RANDOM.nextInt(rango));
+
+                if (!usuarioServicio.existeUsuario(candidato)) {
+                    return candidato;
+                }
+            }
+        }
+
+        throw new IllegalStateException("No se pudo generar un nombre de usuario disponible");
+    }
+
+    private String generarBaseUsuario(Persona persona) {
+
+        String inicial = "";
+
+        for (String palabra : Objects.toString(persona.getNombre(), "").trim().split("\\s+")) {
+            String letras = soloLetras(palabra);
+            if (!letras.isEmpty()) {
+                inicial = letras.substring(0, 1);
+                break;
+            }
+        }
+
+        String base = inicial + primerApellido(persona.getApellidos());
+
+        if (base.isEmpty()) {
+            base = "usuario";
+        }
+
+        return base.length() > 20 ? base.substring(0, 20) : base;
+    }
+
+    private String primerApellido(String apellidos) {
+
+        String respaldo = "";
+
+        for (String palabra : Objects.toString(apellidos, "").trim().split("\\s+")) {
+
+            String letras = soloLetras(palabra);
+
+            if (letras.isEmpty()) {
+                continue;
+            }
+
+            if (respaldo.isEmpty()) {
+                respaldo = letras;
+            }
+
+            if (!PARTICULAS.contains(letras)) {
+                return letras;
+            }
+        }
+
+        return respaldo;
+    }
+
+    private String soloLetras(String texto) {
+        return Normalizer.normalize(Objects.toString(texto, ""), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z]", "");
+    }
+
+    private String generarClaveTemporal() {
+
+        List<Character> caracteres = new ArrayList<>(LONGITUD_CLAVE);
+
+        caracteres.add(aleatorio(MAYUSCULAS));
+        caracteres.add(aleatorio(MINUSCULAS));
+        caracteres.add(aleatorio(NUMEROS));
+        caracteres.add(aleatorio(ESPECIALES));
+
+        String todos = MAYUSCULAS + MINUSCULAS + NUMEROS + ESPECIALES;
+
+        while (caracteres.size() < LONGITUD_CLAVE) {
+            caracteres.add(aleatorio(todos));
+        }
+
+        Collections.shuffle(caracteres, RANDOM);
+
+        StringBuilder clave = new StringBuilder(LONGITUD_CLAVE);
+        caracteres.forEach(clave::append);
+
+        return clave.toString();
+    }
+
+    private char aleatorio(String origen) {
+        return origen.charAt(RANDOM.nextInt(origen.length()));
+    }
+
+    private String enmascararCorreo(String correo) {
+
+        int arroba = correo.indexOf('@');
+
+        if (arroba <= 0) {
+            return "***";
+        }
+
+        return correo.charAt(0) + "***" + correo.substring(arroba);
+    }
+
+    private void saveUserToken(Usuario usuario, String jwtToken) {
 
         Token token = Token.builder()
                 .usuario(usuario)
@@ -169,16 +426,18 @@ public class IAuthServicioImpl implements IAuthServicio {
         tokenRepositorio.save(token);
     }
 
-    private void revokeAllUserToken(final Usuario usuario){
+    private void revokeAllUserToken(final Usuario usuario) {
+
         final List<Token> validUserTokens = tokenRepositorio
                 .findAllByUsuarioIdAndExpiredFalseAndRevokedFalse(usuario.getId());
 
-        if (!validUserTokens.isEmpty()){
-            for (final Token token : validUserTokens){
+        if (!validUserTokens.isEmpty()) {
+            for (final Token token : validUserTokens) {
                 token.setExpired(true);
                 token.setRevoked(true);
             }
             tokenRepositorio.saveAll(validUserTokens);
         }
     }
+
 }

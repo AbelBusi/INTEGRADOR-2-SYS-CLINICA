@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 
 @AllArgsConstructor
@@ -36,6 +37,12 @@ public class HorarioAtencion {
 
     @Column(name = "hora_salida", nullable = false)
     private LocalTime horaSalida;
+
+    @Column(name = "fec_inicio", nullable = false)
+    private LocalDate fechaInicio;
+
+    @Column(name = "fec_fin", nullable = false)
+    private LocalDate fechaFin;
 
     @Column(name = "estado", nullable = false)
     @Builder.Default

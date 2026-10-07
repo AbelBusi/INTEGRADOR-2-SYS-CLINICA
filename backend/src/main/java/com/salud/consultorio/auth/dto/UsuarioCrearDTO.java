@@ -1,6 +1,6 @@
 package com.salud.consultorio.auth.dto;
 import com.salud.consultorio.dto.persona.PersonaRefDTO;
-import com.salud.consultorio.dto.rol.RolRefDTO;
+import com.salud.consultorio.auth.dto.rol.RolRefDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.*;

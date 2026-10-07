@@ -110,17 +110,33 @@ export function formularioVacio(): EmpleadoForm {
     telefono: '',
     direccion: '',
     correo: '',
-    nacionalidad: '',
+    nacionalidad: 'Peruana',
     idCargo: null,
   };
 }
 
+export const NACIONALIDADES = [
+  'Peruana',
+  'Argentina',
+  'Boliviana',
+  'Brasileña',
+  'Chilena',
+  'Colombiana',
+  'Ecuatoriana',
+  'Mexicana',
+  'Venezolana',
+  'Otra',
+];
+
 export function fechaMaximaNacimiento(): string {
-  const ayer = new Date();
-  ayer.setDate(ayer.getDate() - 1);
-  const mes = String(ayer.getMonth() + 1).padStart(2, '0');
-  const dia = String(ayer.getDate()).padStart(2, '0');
-  return `${ayer.getFullYear()}-${mes}-${dia}`;
+  const fecha = new Date();
+
+  fecha.setFullYear(fecha.getFullYear() - 18);
+
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dia = String(fecha.getDate()).padStart(2, '0');
+
+  return `${fecha.getFullYear()}-${mes}-${dia}`;
 }
 
 export function formularioADto(form: EmpleadoForm): EmpleadoCrearDTO {

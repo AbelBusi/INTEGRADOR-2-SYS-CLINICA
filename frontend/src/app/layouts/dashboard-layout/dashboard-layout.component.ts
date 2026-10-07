@@ -5,11 +5,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
 import { AuthService } from '../../features/auth/services/auth.service';
+import { CambioClaveService, esCambioClaveRequerido } from '../../features/auth/services/cambio-clave.services';
+import { CambiarClaveModalComponent } from '../../features/auth/components/cambiar-clave-modal/cambiar-clave-modal.component';
 import { environment } from '../../../environments/environment';
 import { MENU_BASE, PAGE_TITLES } from './dashboard-menu.config';
 
 interface UsuarioRolInfo {
-  nombres: string;
+  nombre: string;
   rol: string;
 }
 
@@ -21,13 +23,15 @@ interface MensajeResponse {
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, CambiarClaveModalComponent],
   templateUrl: './dashboard-layout.component.html',
 })
 export class DashboardLayoutComponent implements OnInit {
   private http = inject(HttpClient);
   private router = inject(Router);
   private authService = inject(AuthService);
+
+  readonly cambioClave = inject(CambioClaveService);
 
   open = true;
   expandedItem: string | null = 'Inicio';
@@ -37,7 +41,7 @@ export class DashboardLayoutComponent implements OnInit {
 
   inicialAvatar = computed(() => {
     const info = this.usuarioInfo();
-    return info && info.nombres ? info.nombres.charAt(0).toUpperCase() : '?';
+    return info && info.nombre ? info.nombre.charAt(0).toUpperCase() : '?';
   });
 
   private currentUrl = toSignal(
@@ -77,7 +81,6 @@ export class DashboardLayoutComponent implements OnInit {
     });
   });
 
-
   ngOnInit(): void {
     this.obtenerPerfilUsuario();
   }
@@ -98,7 +101,11 @@ export class DashboardLayoutComponent implements OnInit {
           this.cargandoPerfil.set(false);
         },
         error: (err) => {
-          console.error('Error al capturar datos del usuario', err);
+          if (esCambioClaveRequerido(err)) {
+            this.cambioClave.marcarRequerido();
+          } else {
+            console.error('Error al capturar datos del usuario', err);
+          }
           this.cargandoPerfil.set(false);
         },
       });
@@ -112,6 +119,11 @@ export class DashboardLayoutComponent implements OnInit {
   toggleMenu(label: string) {
     if (!this.open) this.open = true;
     this.expandedItem = this.expandedItem === label ? null : label;
+  }
+
+  finalizarCambioClave() {
+    this.cambioClave.requerido.set(false);
+    this.limpiarSesionLocal();
   }
 
   logout() {

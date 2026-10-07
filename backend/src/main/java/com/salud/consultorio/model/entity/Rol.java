@@ -9,6 +9,7 @@ import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder(toBuilder = true)
 @Getter
 @Setter
 @Entity
@@ -27,7 +28,8 @@ public class Rol {
     private String descripcion;
 
     @Column(name = "estado", nullable = false, columnDefinition = "INT")
-    private Integer estado;
+    @Builder.Default
+    private Integer estado = 1;
 
     @OneToMany(mappedBy = "rol",fetch = FetchType.LAZY)
     private List<Usuario> usuarios = new ArrayList<>();

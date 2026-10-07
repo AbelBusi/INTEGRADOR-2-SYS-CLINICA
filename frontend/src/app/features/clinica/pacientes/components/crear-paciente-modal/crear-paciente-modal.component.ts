@@ -1,16 +1,30 @@
-import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  ChangeDetectorRef,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../../../../../../environments/environment';
 import {
+  ENTIDAD_ASEGURADORA,
   GENEROS,
   PacienteForm,
   TipoDocumentoResumen,
   fechaMaximaNacimiento,
   formularioACrearDto,
+  NACIONALIDADES,
   formularioVacio,
+  generarCodigoAsegurado,
+  esperar,
 } from '../../interface/paciente.interface';
 import { PacienteService } from '../../services/paciente.service';
 import { ToastService } from '../../../../../core/services/toast.service';
+import { ReniecService } from '../../../../../core/services/reniec.service';
 
 @Component({
   selector: 'app-crear-paciente-modal',
@@ -27,9 +41,15 @@ export class CrearPacienteModalComponent implements OnInit {
   tiposDocumento: TipoDocumentoResumen[] = [];
   generos = GENEROS;
   fechaMaxima = fechaMaximaNacimiento();
+  nacionalidades = NACIONALIDADES;
+  simulacionSeguro = !environment.production;
 
   cargandoCatalogos = false;
   guardando = false;
+  consultandoReniec = false;
+  consultandoSeguro = false;
+
+  private readonly reniecService = inject(ReniecService);
 
   constructor(
     private readonly pacienteService: PacienteService,
@@ -62,6 +82,23 @@ export class CrearPacienteModalComponent implements OnInit {
     return tipo ? tipo.longitud : null;
   }
 
+  get esDni(): boolean {
+    const tipo = this.tiposDocumento.find(
+      (t) => t.idTipoDocumento === this.pacienteForm.idTipoDocumento,
+    );
+    return tipo?.codigo.toUpperCase() === 'DNI';
+  }
+
+  get puedeConsultarSeguro(): boolean {
+    return (
+      this.esDni &&
+      this.pacienteForm.numeroDocumento.trim().length === 8 &&
+      !this.consultandoSeguro &&
+      !this.consultandoReniec &&
+      !this.guardando
+    );
+  }
+
   onTipoDocumentoChange(): void {
     const longitud = this.longitudDocumento;
     if (longitud !== null) {
@@ -69,10 +106,82 @@ export class CrearPacienteModalComponent implements OnInit {
     }
   }
 
+  consultarReniec(): void {
+    const dni = this.pacienteForm.numeroDocumento.trim();
+
+    if (!this.esDni || dni.length !== 8) {
+      this.toastService.warning('Ingrese un DNI válido de 8 dígitos para consultar.');
+      return;
+    }
+
+    this.consultandoReniec = true;
+
+    this.reniecService.consultarDni(dni).subscribe({
+      next: (datos) => {
+        this.consultandoReniec = false;
+        if (datos) {
+          this.pacienteForm.nombre = datos.nombre;
+          this.pacienteForm.apellidos = datos.apellidos;
+          this.toastService.success('Datos de RENIEC cargados correctamente.');
+        } else {
+          this.toastService.warning('No se encontraron datos para el DNI ingresado.');
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error(err);
+        this.consultandoReniec = false;
+        this.toastService.error('Ocurrió un error al consultar la RENIEC.');
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  async consultarSeguro(): Promise<void> {
+    if (!this.puedeConsultarSeguro) {
+      this.toastService.warning('Ingrese primero un DNI válido de 8 dígitos.');
+      return;
+    }
+
+    this.consultandoSeguro = true;
+    this.cdr.detectChanges();
+
+    await esperar(1400);
+
+    this.pacienteForm.entidadAsegurado = ENTIDAD_ASEGURADORA;
+    this.pacienteForm.codigoAsegurado = generarCodigoAsegurado();
+    this.consultandoSeguro = false;
+
+    this.toastService.success('Datos del seguro cargados.');
+    this.cdr.detectChanges();
+  }
+
   soloNumeros(event: KeyboardEvent): void {
     if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !/\d/.test(event.key)) {
       event.preventDefault();
     }
+  }
+
+  soloLetras(event: KeyboardEvent): void {
+    if (
+      event.key.length === 1 &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]$/.test(event.key)
+    ) {
+      event.preventDefault();
+    }
+  }
+
+  limpiarNombre(): void {
+    this.pacienteForm.nombre = this.pacienteForm.nombre.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+  }
+
+  limpiarApellidos(): void {
+    this.pacienteForm.apellidos = this.pacienteForm.apellidos.replace(
+      /[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g,
+      '',
+    );
   }
 
   handleClose(): void {
@@ -84,7 +193,7 @@ export class CrearPacienteModalComponent implements OnInit {
   onSubmit(): void {
     const f = this.pacienteForm;
 
-    if (this.guardando) {
+    if (this.guardando || this.consultandoSeguro) {
       return;
     }
 
@@ -93,6 +202,7 @@ export class CrearPacienteModalComponent implements OnInit {
       !f.numeroDocumento.trim() ||
       !f.nombre.trim() ||
       !f.apellidos.trim() ||
+      !f.nacionalidad.trim() ||
       !f.entidadAsegurado.trim() ||
       !f.codigoAsegurado.trim()
     ) {

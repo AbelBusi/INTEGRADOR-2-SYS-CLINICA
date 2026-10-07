@@ -11,10 +11,13 @@ public interface IPersonaRepositorio extends JpaRepository<Persona, Integer> {
 
     boolean existsByCorreo(String correo);
 
+    boolean existsByTelefono(String telefono);
+
     boolean existsByNumeroDocumentoAndIdNot(String numeroDocumento, Integer id);
 
     boolean existsByTelefonoAndIdNot(String telefono, Integer id);
 
     boolean existsByCorreoAndIdNot(String correo, Integer id);
+
 
 }

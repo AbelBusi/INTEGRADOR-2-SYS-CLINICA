@@ -41,6 +41,8 @@
               type="text"
               name="nombre"
               [(ngModel)]="especialidadForm.nombre"
+              (keydown)="soloLetras($event)"
+              (input)="limpiarNombre()"
               #nombreInput="ngModel"
               maxlength="40"
               class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"

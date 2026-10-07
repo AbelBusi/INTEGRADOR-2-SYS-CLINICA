@@ -12,6 +12,14 @@ public interface IPersonaServicio{
 
     boolean existePersonaNumeroDocumento(String dni);
 
+    boolean existePersonaTelefono(String dni);
+
     boolean existePersonaCorreo(String correo);
+
+    boolean existePersonaNumeroDocumentoExcepto(String numeroDocumento, Integer idPersona);
+
+    boolean existePersonaTelefonoExcepto(String telefono, Integer idPersona);
+
+    boolean existePersonaCorreoExcepto(String correo, Integer idPersona);
 
 }

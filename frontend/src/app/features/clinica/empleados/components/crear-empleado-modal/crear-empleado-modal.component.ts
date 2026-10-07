@@ -1,4 +1,12 @@
-import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  ChangeDetectorRef,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -8,11 +16,13 @@ import {
   GENEROS,
   TipoDocumentoResumen,
   formularioADto,
+  NACIONALIDADES,
   formularioVacio,
   fechaMaximaNacimiento,
 } from '../../interface/empleado.interface';
 import { EmpleadoService } from '../../services/empleado.service';
 import { ToastService } from '../../../../../core/services/toast.service';
+import { ReniecService } from '../../../../../core/services/reniec.service';
 
 @Component({
   selector: 'app-crear-empleado-modal',
@@ -29,17 +39,18 @@ export class CrearEmpleadoModalComponent implements OnInit {
   cargos: CargoResumen[] = [];
   tiposDocumento: TipoDocumentoResumen[] = [];
   generos = GENEROS;
+  nacionalidades = NACIONALIDADES;
   fechaMaxima = fechaMaximaNacimiento();
   imagen: File | null = null;
   previewUrl: string | null = null;
   cargandoCatalogos = false;
   guardando = false;
+  consultandoDni = false;
 
-  constructor(
-    private readonly empleadoService: EmpleadoService,
-    private readonly toastService: ToastService,
-    private readonly cdr: ChangeDetectorRef,
-  ) {}
+  private readonly empleadoService = inject(EmpleadoService);
+  private readonly toastService = inject(ToastService);
+  private readonly reniecService = inject(ReniecService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   ngOnInit(): void {
     this.cargandoCatalogos = true;
@@ -63,6 +74,35 @@ export class CrearEmpleadoModalComponent implements OnInit {
     });
   }
 
+  soloLetras(event: KeyboardEvent): void {
+    if (
+      event.key.length === 1 &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]$/.test(event.key)
+    ) {
+      event.preventDefault();
+    }
+  }
+
+  limpiarNombre(): void {
+    this.empleadoForm.nombre = this.empleadoForm.nombre.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+  }
+
+  limpiarApellidos(): void {
+    this.empleadoForm.apellidos = this.empleadoForm.apellidos.replace(
+      /[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g,
+      '',
+    );
+  }
+
+  get esDni(): boolean {
+    const tipo = this.tiposDocumento.find(
+      (t) => t.idTipoDocumento === this.empleadoForm.idTipoDocumento,
+    );
+    return tipo ? tipo.codigo.toUpperCase() === 'DNI' : false;
+  }
+
   get longitudDocumento(): number | null {
     const tipo = this.tiposDocumento.find(
       (t) => t.idTipoDocumento === this.empleadoForm.idTipoDocumento,
@@ -75,6 +115,36 @@ export class CrearEmpleadoModalComponent implements OnInit {
     if (longitud !== null) {
       this.empleadoForm.numeroDocumento = this.empleadoForm.numeroDocumento.slice(0, longitud);
     }
+  }
+
+  buscarPorDni(): void {
+    const dni = this.empleadoForm.numeroDocumento.trim();
+    if (dni.length !== 8) {
+      this.toastService.warning('El DNI debe tener 8 dígitos.');
+      return;
+    }
+
+    this.consultandoDni = true;
+
+    this.reniecService.consultarDni(dni).subscribe({
+      next: (persona) => {
+        this.consultandoDni = false;
+        if (persona) {
+          this.empleadoForm.nombre = persona.nombre;
+          this.empleadoForm.apellidos = persona.apellidos;
+          this.toastService.success('Datos obtenidos de RENIEC correctamente.');
+        } else {
+          this.toastService.warning('No se encontraron datos para el DNI ingresado.');
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.consultandoDni = false;
+        console.error('Error al consultar DNI:', err);
+        this.toastService.error('Ocurrió un error al consultar la RENIEC.');
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   onFileSelected(event: Event): void {
@@ -117,6 +187,7 @@ export class CrearEmpleadoModalComponent implements OnInit {
     this.empleadoForm = formularioVacio();
     this.imagen = null;
     this.previewUrl = null;
+    this.consultandoDni = false;
     this.onClose.emit();
     this.cdr.detectChanges();
   }
@@ -136,6 +207,16 @@ export class CrearEmpleadoModalComponent implements OnInit {
       !f.apellidos.trim()
     ) {
       this.toastService.warning('Por favor, complete todos los campos requeridos.');
+      return;
+    }
+
+    if (!f.fechaNacimiento) {
+      this.toastService.warning('La fecha de nacimiento es obligatoria.');
+      return;
+    }
+
+    if (f.fechaNacimiento > this.fechaMaxima) {
+      this.toastService.warning('El empleado debe tener al menos 18 años.');
       return;
     }
 

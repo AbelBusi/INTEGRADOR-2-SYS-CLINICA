@@ -24,7 +24,7 @@ public class Usuario {
     private Integer id;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_persona",nullable = false)
+    @JoinColumn(name = "id_persona",nullable = false, unique = true)
     private Persona persona;
 
     @ManyToOne(fetch = FetchType.EAGER)

@@ -1,6 +1,7 @@
 package com.salud.consultorio.service;
 
 import com.salud.consultorio.dto.paciente.*;
+import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.enums.EntidadEstado;
 
 import java.util.List;
@@ -21,4 +22,5 @@ public interface IPacienteServicio{
 
     void cambiarEstado(Integer id, EntidadEstado estado);
 
+    List<PersonaUsuarioDTO> listarPacientesSinUusario();
 }

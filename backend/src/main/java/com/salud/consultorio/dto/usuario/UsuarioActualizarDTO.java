@@ -1,7 +1,7 @@
 package com.salud.consultorio.dto.usuario;
 
 import com.salud.consultorio.dto.persona.PersonaRefDTO;
-import com.salud.consultorio.dto.rol.RolRefDTO;
+import com.salud.consultorio.auth.dto.rol.RolRefDTO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
