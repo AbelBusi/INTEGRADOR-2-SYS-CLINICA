@@ -16,6 +16,7 @@ import {
   EmpleadoDetalle,
   EmpleadoForm,
   GENEROS,
+  NACIONALIDADES,
   TipoDocumentoResumen,
   formularioADto,
   formularioVacio,
@@ -40,6 +41,7 @@ export class EditarEmpleadoModalComponent implements OnChanges {
   cargos: CargoResumen[] = [];
   tiposDocumento: TipoDocumentoResumen[] = [];
   generos = GENEROS;
+  nacionalidades = NACIONALIDADES;
   fechaMaxima = fechaMaximaNacimiento();
 
   fotoActual: string | null = null;
@@ -171,7 +173,8 @@ export class EditarEmpleadoModalComponent implements OnChanges {
       !f.idCargo ||
       !f.numeroDocumento.trim() ||
       !f.nombre.trim() ||
-      !f.apellidos.trim()
+      !f.apellidos.trim() ||
+      !f.nacionalidad.trim()
     ) {
       this.toastService.warning('Por favor, complete todos los campos requeridos.');
       return;

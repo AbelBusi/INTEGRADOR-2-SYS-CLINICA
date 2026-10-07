@@ -202,7 +202,7 @@
 
               <div class="space-y-1.5">
                 <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">
-                  Teléfono <span class="normal-case font-medium text-neutral-400">(opcional)</span>
+                  Teléfono <span class="normal-case font-medium text-neutral-400">(Requerido)</span>
                 </label>
                 <input
                   type="tel"
@@ -211,6 +211,7 @@
                   [(ngModel)]="empleadoForm.telefono"
                   (keypress)="soloNumeros($event)"
                   maxlength="9"
+                  required
                   pattern="^[0-9]{9}$"
                   inputmode="numeric"
                   class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
@@ -224,7 +225,7 @@
 
               <div class="space-y-1.5">
                 <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">
-                  Correo <span class="normal-case font-medium text-neutral-400">(opcional)</span>
+                  Correo <span class="normal-case font-medium text-neutral-400">(Requerido)</span>
                 </label>
                 <input
                   type="email"
@@ -232,6 +233,7 @@
                   #correoInput="ngModel"
                   [(ngModel)]="empleadoForm.correo"
                   maxlength="100"
+                  required
                   email
                   class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
                   [class.border-[#D9182A]]="correoInput.invalid && (correoInput.dirty || correoInput.touched)"
@@ -244,15 +246,20 @@
 
               <div class="space-y-1.5">
                 <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Nacionalidad</label>
-                <input
-                  type="text"
+                <select
                   name="nacionalidad"
                   [(ngModel)]="empleadoForm.nacionalidad"
-                  maxlength="50"
                   required
-                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
-                  placeholder="Ej. Peruana"
-                />
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                >
+                  <option value="" disabled>Seleccionar nacionalidad</option>
+
+                  @for (nacionalidad of nacionalidades; track nacionalidad) {
+                    <option [value]="nacionalidad">
+                      {{ nacionalidad }}
+                    </option>
+                  }
+                </select>
               </div>
 
               <div class="space-y-1.5">

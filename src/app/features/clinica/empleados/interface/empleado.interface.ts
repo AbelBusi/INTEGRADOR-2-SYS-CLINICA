@@ -110,10 +110,23 @@ export function formularioVacio(): EmpleadoForm {
     telefono: '',
     direccion: '',
     correo: '',
-    nacionalidad: '',
+    nacionalidad: 'Peruana',
     idCargo: null,
   };
 }
+
+export const NACIONALIDADES = [
+  'Peruana',
+  'Argentina',
+  'Boliviana',
+  'Brasileña',
+  'Chilena',
+  'Colombiana',
+  'Ecuatoriana',
+  'Mexicana',
+  'Venezolana',
+  'Otra',
+];
 
 export function fechaMaximaNacimiento(): string {
   const fecha = new Date();

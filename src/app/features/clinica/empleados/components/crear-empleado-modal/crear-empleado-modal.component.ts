@@ -16,12 +16,13 @@ import {
   GENEROS,
   TipoDocumentoResumen,
   formularioADto,
+  NACIONALIDADES,
   formularioVacio,
   fechaMaximaNacimiento,
 } from '../../interface/empleado.interface';
 import { EmpleadoService } from '../../services/empleado.service';
 import { ToastService } from '../../../../../core/services/toast.service';
-import { ReniecService } from '../../../../../core/services/reniec.service'; // Adjust path as needed
+import { ReniecService } from '../../../../../core/services/reniec.service';
 
 @Component({
   selector: 'app-crear-empleado-modal',
@@ -38,6 +39,7 @@ export class CrearEmpleadoModalComponent implements OnInit {
   cargos: CargoResumen[] = [];
   tiposDocumento: TipoDocumentoResumen[] = [];
   generos = GENEROS;
+  nacionalidades = NACIONALIDADES;
   fechaMaxima = fechaMaximaNacimiento();
   imagen: File | null = null;
   previewUrl: string | null = null;
