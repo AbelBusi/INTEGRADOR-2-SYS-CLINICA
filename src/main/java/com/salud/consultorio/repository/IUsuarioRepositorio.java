@@ -193,4 +193,6 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
             @Param("estado") Integer estado
     );
 
+    boolean existsByRolId(Integer idRol);
+
 }

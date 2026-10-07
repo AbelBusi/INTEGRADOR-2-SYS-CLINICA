@@ -36,5 +36,6 @@ public interface IUsuarioServicio {
 
     List<UsuarioListadoDTO> listaPacientes(EntidadEstado estado);
 
+    boolean existeUsuarioPorRol(Integer idRol);
 
 }

@@ -6,6 +6,7 @@ import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.mapper.IRolMapper;
 import com.salud.consultorio.repository.IRolRepositorio;
 import com.salud.consultorio.service.IRolServicio;
+import com.salud.consultorio.service.IUsuarioServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -20,6 +21,7 @@ public class RolServicioImpl implements IRolServicio {
 
     private final IRolRepositorio rolRepositorio;
     private final IRolMapper rolMapper;
+    private final IUsuarioServicio usuarioServicio;
 
     @Transactional(readOnly = true)
     @Override
@@ -76,6 +78,12 @@ public class RolServicioImpl implements IRolServicio {
 
         if (!existeRolId(id)){
             throw new EntityNotFoundException("El rol que desea eliminar no existe");
+        }
+
+        if (usuarioServicio.existeUsuarioPorRol(id)) {
+            throw new RuntimeException(
+                    "No se puede eliminar el rol porque está siendo utilizado por uno o más usuarios"
+            );
         }
 
         rolRepositorio.eliminarLogicamente(id);

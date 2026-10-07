@@ -122,6 +122,12 @@ public class UsuarioServicioImpl implements IUsuarioServicio {
     }
 
     @Transactional(readOnly = true)
+    @Override
+    public boolean existeUsuarioPorRol(Integer idRol) {
+        return usuarioRepositorio.existsByRolId(idRol);
+    }
+
+    @Transactional(readOnly = true)
     private Usuario validarCambiarEstado(Integer id, EntidadEstado estado) {
 
         if (id == null || estado == null) {
