@@ -18,6 +18,8 @@ import java.util.Optional;
 @Repository
 public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
 
+    boolean existsByCargoId(Integer idCargo);
+
     @Query("""
             SELECT new com.salud.consultorio.dto.empleado.EmpleadoLeerDTO(
                 em.id,

@@ -55,6 +55,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(respuesta);
     }
 
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException e) {
+        Map<String, Object> respuesta = new HashMap<>();
+        respuesta.put("mensaje", e.getMessage());
+        respuesta.put("object", null);
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(respuesta);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgumentException(IllegalArgumentException e) {
         Map<String, Object> respuesta = new HashMap<>();

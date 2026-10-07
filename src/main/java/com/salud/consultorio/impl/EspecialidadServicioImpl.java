@@ -6,6 +6,7 @@ import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.mapper.IEspecialidadMapper;
 import com.salud.consultorio.repository.IEspecialidadRepositorio;
 import com.salud.consultorio.service.IEspecialidadServicio;
+import com.salud.consultorio.service.IMedicoServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -20,6 +21,7 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
 
     private final IEspecialidadRepositorio especialidadRepositorio;
     private final IEspecialidadMapper especialidadMapper;
+    private final IMedicoServicio medicoServicio;
 
     @Transactional(readOnly = true)
     @Override
@@ -83,6 +85,12 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
 
         if (!especialidadRepositorio.existsById(id)) {
             throw new RuntimeException("Especialidad no encontrada en la entidad ");
+        }
+
+        if (medicoServicio.existeMedicoPorEspecialidad(id)) {
+            throw new RuntimeException(
+                    "No se puede eliminar la especialidad porque está siendo utilizada por un médico"
+            );
         }
 
         especialidadRepositorio.eliminarLogicamente(id);

@@ -9,6 +9,7 @@ import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.mapper.ICargoMapper;
 import com.salud.consultorio.repository.ICargoRepositorio;
 import com.salud.consultorio.service.ICargoServicio;
+import com.salud.consultorio.service.IEmpleadoServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,6 +24,7 @@ public class CargoServicioImpl implements ICargoServicio  {
 
     private final ICargoRepositorio cargoRepositorio;
     private final ICargoMapper cargoMapper;
+    private final IEmpleadoServicio empleadoServicio;
 
     @Transactional(readOnly = true)
     @Override
@@ -79,6 +81,12 @@ public class CargoServicioImpl implements ICargoServicio  {
 
             throw new EntityNotFoundException("El cargo que desea eliminar no existe.");
 
+        }
+
+        if (empleadoServicio.existeEmpleadoPorCargo(id)){
+            throw new RuntimeException(
+                    "No se puede eliminar el cargo porque está siendo utilizado por uno o más empleados"
+            );
         }
 
         cargoRepositorio.eliminarLogicamente(id);

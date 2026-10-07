@@ -33,4 +33,6 @@ public interface IEmpleadoServicio {
 
     List<PersonaUsuarioDTO> listarPacientesSinUusario();
 
+    boolean existeEmpleadoPorCargo(Integer idCargo);
+
 }

@@ -2,6 +2,7 @@ package com.salud.consultorio.repository;
 
 import com.salud.consultorio.dto.medico.MedicoDetalleDTO;
 import com.salud.consultorio.dto.medico.MedicoLeerDTO;
+import com.salud.consultorio.model.entity.Especialidad;
 import com.salud.consultorio.model.entity.Medico;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -14,6 +15,8 @@ import java.util.Optional;
 
 @Repository
 public interface IMedicoRepositorio extends JpaRepository<Medico, Integer> {
+
+    boolean existsByEspecialidadId(Integer idEspecialidad);
 
     @Query("""
             SELECT new com.salud.consultorio.dto.medico.MedicoLeerDTO(

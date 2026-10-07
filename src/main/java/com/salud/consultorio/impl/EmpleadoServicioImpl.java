@@ -238,6 +238,12 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
         return empleadoRepositorio.listarParaCrearUsuario();
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public boolean existeEmpleadoPorCargo(Integer idCargo) {
+        return empleadoRepositorio.existsByCargoId(idCargo);
+    }
+
     private void validarId(Integer id) {
 
         if (id == null || id <= 0) {

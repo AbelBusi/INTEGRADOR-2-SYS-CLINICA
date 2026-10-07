@@ -33,6 +33,12 @@ public class MedicoServicioImpl implements IMedicoServicio {
 
     @Transactional(readOnly = true)
     @Override
+    public boolean existeMedicoPorEspecialidad(Integer idEspecialidad) {
+        return medicoRepositorio.existsByEspecialidadId(idEspecialidad);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public MedicoDetalleDTO entidadPorID(Integer id) {
 
         validarId(id);
