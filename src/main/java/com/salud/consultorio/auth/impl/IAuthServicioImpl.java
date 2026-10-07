@@ -8,6 +8,7 @@ import com.salud.consultorio.auth.exception.UsuarioInactivoException;
 import com.salud.consultorio.auth.service.IAuthServicio;
 import com.salud.consultorio.auth.service.IJwtServicio;
 import com.salud.consultorio.dto.usuario.UsuarioAltaDTO;
+import com.salud.consultorio.dto.usuario.UsuarioCambiarRolDTO;
 import com.salud.consultorio.dto.usuario.UsuarioCreadoDTO;
 import com.salud.consultorio.model.entity.*;
 import com.salud.consultorio.model.enums.TipoUsuario;
@@ -222,6 +223,53 @@ public class IAuthServicioImpl implements IAuthServicio {
                 .orElseThrow(() -> new UsernameNotFoundException("No existe el usuario"));
 
         return new EstadoCuentaResponse(usuario.isRequiereCambioClave());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public void validarNoEsCuentaPropia(Integer idUsuario, String usuarioActual, String mensaje) {
+
+        boolean cuentaPropia = usuarioRepositorio.findByUsuario(usuarioActual)
+                .map(actual -> actual.getId().equals(idUsuario))
+                .orElse(false);
+
+        if (cuentaPropia) {
+            throw new IllegalArgumentException(mensaje);
+        }
+    }
+
+    @Transactional
+    @Override
+    public void cambiarRol(Integer idUsuario, UsuarioCambiarRolDTO dto, String usuarioActual) {
+
+        validarNoEsCuentaPropia(idUsuario, usuarioActual, "No puedes cambiar tu propio rol");
+
+        Usuario usuario = usuarioRepositorio.findById(idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("No existe el usuario indicado"));
+
+        if (ROL_PACIENTE.equalsIgnoreCase(usuario.getRol().getNombre())) {
+            throw new IllegalArgumentException("El rol de un paciente no se puede modificar");
+        }
+
+        Rol nuevoRol = rolRepositorio.findById(dto.idRol())
+                .orElseThrow(() -> new EntityNotFoundException("No existe el rol indicado"));
+
+        if (ROL_PACIENTE.equalsIgnoreCase(nuevoRol.getNombre())) {
+            throw new IllegalArgumentException("El rol " + ROL_PACIENTE + " no se puede asignar a un empleado");
+        }
+
+        if (!Integer.valueOf(1).equals(nuevoRol.getEstado())) {
+            throw new IllegalArgumentException("El rol seleccionado no está activo");
+        }
+
+        if (usuario.getRol().getId().equals(nuevoRol.getId())) {
+            throw new IllegalArgumentException("El usuario ya tiene ese rol");
+        }
+
+        usuario.setRol(nuevoRol);
+        usuarioRepositorio.save(usuario);
+
+        revokeAllUserToken(usuario);
     }
 
     private boolean esActivo(Usuario usuario) {

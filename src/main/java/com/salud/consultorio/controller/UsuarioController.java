@@ -2,6 +2,7 @@ package com.salud.consultorio.controller;
 
 import com.salud.consultorio.auth.service.IAuthServicio;
 import com.salud.consultorio.dto.usuario.UsuarioAltaDTO;
+import com.salud.consultorio.dto.usuario.UsuarioCambiarRolDTO;
 import com.salud.consultorio.dto.usuario.UsuarioCreadoDTO;
 import com.salud.consultorio.dto.usuario.UsuarioListadoDTO;
 import com.salud.consultorio.model.enums.EntidadEstado;
@@ -14,6 +15,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -37,11 +40,43 @@ public class UsuarioController {
                         .body(Map.of("mensaje", "Usuario no encontrado")));
     }
 
+    @Operation(
+            summary = "Cambiar el rol de un empleado",
+            description = "No permite cambiar el propio rol, ni el de pacientes, ni asignar el rol PACIENTE. Revoca las sesiones del usuario."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Rol actualizado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Operación no permitida o datos inválidos"),
+            @ApiResponse(responseCode = "404", description = "Usuario o rol no encontrado")
+    })
+    @PreAuthorize("hasAuthority('USUARIOS_GESTIONAR')")
+    @PatchMapping("/{id}/rol")
+    public ResponseEntity<MensajeResponse> cambiarRol(
+            @PathVariable Integer id,
+            @Valid @RequestBody UsuarioCambiarRolDTO dto,
+            Authentication authentication
+    ) {
+
+        authServicio.cambiarRol(id, dto, authentication.getName());
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("ROL DEL USUARIO ACTUALIZADO CORRECTAMENTE")
+                .build(), HttpStatus.OK);
+
+    }
+
     @PatchMapping("/{id}")
     public ResponseEntity<MensajeResponse> cambiarEstado(
             @PathVariable Integer id,
-            @RequestParam(name = "estado", required = true) EntidadEstado estado
+            @RequestParam(name = "estado", required = true) EntidadEstado estado,
+            Authentication authentication
     ) {
+
+        authServicio.validarNoEsCuentaPropia(
+                id,
+                authentication.getName(),
+                "No puedes cambiar el estado de tu propia cuenta"
+        );
 
         usuarioServicio.cambiarEstado(id, estado);
 
@@ -57,45 +92,45 @@ public class UsuarioController {
     })
     @GetMapping
     public ResponseEntity<MensajeResponse> listar(
-            @RequestParam(required = false,name = "estado") EntidadEstado estado){
+            @RequestParam(required = false, name = "estado") EntidadEstado estado) {
 
-        List<UsuarioListadoDTO> listaEntidades =usuarioServicio.lista(estado);
+        List<UsuarioListadoDTO> listaEntidades = usuarioServicio.lista(estado);
 
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("LISTA DE USUARIOS")
-                .object(listaEntidades).build(),HttpStatus.OK);
+                .object(listaEntidades).build(), HttpStatus.OK);
 
     }
 
-    @Operation(summary = "Listar usuarios por estado")
+    @Operation(summary = "Listar usuarios empleados por estado")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida correctamente")
     })
     @GetMapping("empleados")
     public ResponseEntity<MensajeResponse> listarEmpleados(
-            @RequestParam(required = false,name = "estado") EntidadEstado estado){
+            @RequestParam(required = false, name = "estado") EntidadEstado estado) {
 
-        List<UsuarioListadoDTO> listaEntidades =usuarioServicio.listaEmpleados(estado);
+        List<UsuarioListadoDTO> listaEntidades = usuarioServicio.listaEmpleados(estado);
 
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("LISTA DE USUARIOS")
-                .object(listaEntidades).build(),HttpStatus.OK);
+                .object(listaEntidades).build(), HttpStatus.OK);
 
     }
 
-    @Operation(summary = "Listar usuarios por estado")
+    @Operation(summary = "Listar usuarios pacientes por estado")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de usuarios obtenida correctamente")
     })
     @GetMapping("pacientes")
     public ResponseEntity<MensajeResponse> listarPacientes(
-            @RequestParam(required = false,name = "estado") EntidadEstado estado){
+            @RequestParam(required = false, name = "estado") EntidadEstado estado) {
 
-        List<UsuarioListadoDTO> listaEntidades =usuarioServicio.listaPacientes(estado);
+        List<UsuarioListadoDTO> listaEntidades = usuarioServicio.listaPacientes(estado);
 
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("LISTA DE USUARIOS")
-                .object(listaEntidades).build(),HttpStatus.OK);
+                .object(listaEntidades).build(), HttpStatus.OK);
 
     }
 
