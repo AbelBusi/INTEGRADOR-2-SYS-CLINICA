@@ -6,9 +6,11 @@ import { forkJoin } from 'rxjs';
 import { TipoUsuario, UsuarioFila } from '../../interface/usuario.interface';
 import { UsuarioService } from '../../services/usuario.service';
 import { FechaHoraApi, claveOrden, formatearFechaHora, normalizar } from '../../utils/formato.util';
+import { AuthService } from '../../../../auth/services/auth.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { CrearUsuarioPanelComponent } from '../../components/crear-usuario-panel/crear-usuario-panel.component';
 import { VerUsuarioModalComponent } from '../../components/ver-usuario-modal/ver-usuario-modal.component';
+import { CambiarRolModalComponent } from '../../components/cambiar-rol-modal/cambiar-rol-modal.component';
 
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
@@ -25,6 +27,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     CustomTableComponent,
     CrearUsuarioPanelComponent,
     VerUsuarioModalComponent,
+    CambiarRolModalComponent,
   ],
   templateUrl: './gestion-usuarios.component.html',
 })
@@ -39,6 +42,9 @@ export class GestionUsuariosComponent implements OnInit {
   sortField = signal('');
 
   usuarioVer = signal<UsuarioFila | null>(null);
+  usuarioRol = signal<UsuarioFila | null>(null);
+
+  private idActual = '';
 
   columns: TableColumn<UsuarioFila>[] = [
     { header: 'Persona', field: 'persona', sortable: true, type: 'custom' },
@@ -95,10 +101,12 @@ export class GestionUsuariosComponent implements OnInit {
 
   constructor(
     private readonly usuarioService: UsuarioService,
+    private readonly authService: AuthService,
     private readonly toastService: ToastService,
   ) {}
 
   ngOnInit(): void {
+    this.idActual = String(this.authService.getUserId());
     this.cargar(false);
   }
 
@@ -128,6 +136,10 @@ export class GestionUsuariosComponent implements OnInit {
     });
   }
 
+  esCuentaPropia(fila: UsuarioFila): boolean {
+    return String(fila.id) === this.idActual;
+  }
+
   fecha(valor: FechaHoraApi): string {
     return formatearFechaHora(valor);
   }
@@ -146,8 +158,26 @@ export class GestionUsuariosComponent implements OnInit {
     this.usuarioVer.set(fila);
   }
 
+  setUsuarioRol(fila: UsuarioFila): void {
+    if (this.esCuentaPropia(fila)) {
+      this.toastService.warning('No puedes cambiar tu propio rol.');
+      return;
+    }
+    this.usuarioRol.set(fila);
+  }
+
+  handleRolCambiado(): void {
+    this.usuarioRol.set(null);
+    this.cargar(true);
+  }
+
   cambiarEstado(fila: UsuarioFila, estado: 'ACTIVO' | 'INACTIVO'): void {
     if (this.procesando()) {
+      return;
+    }
+
+    if (this.esCuentaPropia(fila)) {
+      this.toastService.warning('No puedes cambiar el estado de tu propia cuenta.');
       return;
     }
 

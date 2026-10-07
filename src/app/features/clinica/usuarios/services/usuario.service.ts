@@ -54,6 +54,10 @@ export class UsuarioService {
     return this.http.get<MensajeResponse<RolResumen[]>>(`${environment.apiUrl}/auth/roles/resumen`);
   }
 
+  cambiarRol(id: number, idRol: number): Observable<MensajeResponse<null>> {
+    return this.http.patch<MensajeResponse<null>>(`${this.baseUrl}/${id}/rol`, { idRol });
+  }
+
   obtenerPaciente(id: number): Observable<MensajeResponse<PacienteDetalle>> {
     return this.http.get<MensajeResponse<PacienteDetalle>>(`${environment.apiUrl}/pacientes/${id}`);
   }
