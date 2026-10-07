@@ -17,18 +17,6 @@ public class AuthController {
     private final IAuthServicio authServicio;
     private final IRecuperacionClaveServicio recuperacionServicio;
 
-
-    @PostMapping("/register")
-    public ResponseEntity<TokenResponse> registrar(
-            @RequestBody UsuarioCrearDTO dto
-            ){
-
-        final TokenResponse token = authServicio.registrar(dto);
-
-        return ResponseEntity.ok(token);
-
-    }
-
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> autenticar(
             @RequestBody final InicioSolicitud dto

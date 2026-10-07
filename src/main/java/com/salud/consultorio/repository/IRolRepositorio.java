@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface IRolRepositorio extends JpaRepository<Rol, Integer> {
@@ -64,6 +65,9 @@ public interface IRolRepositorio extends JpaRepository<Rol, Integer> {
             WHERE r.estado=1
             """)
     List<RolResumenDTO> listaPorNombreResumen();
+
+    Optional<Rol> findByNombreIgnoreCase(String nombre);
+
 
 
 }
