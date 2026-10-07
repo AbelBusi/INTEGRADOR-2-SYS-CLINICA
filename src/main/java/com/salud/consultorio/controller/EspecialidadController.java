@@ -60,8 +60,6 @@ public class EspecialidadController {
 
     }
 
-
-
     @Operation(summary = "Obtener especialidad por ID")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Especialidad encontrada"),

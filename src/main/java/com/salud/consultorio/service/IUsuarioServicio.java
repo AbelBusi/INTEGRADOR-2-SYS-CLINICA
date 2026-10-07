@@ -32,5 +32,9 @@ public interface IUsuarioServicio {
 
     List<UsuarioListadoDTO> lista(EntidadEstado estado);
 
+    List<UsuarioListadoDTO> listaEmpleados(EntidadEstado estado);
+
+    List<UsuarioListadoDTO> listaPacientes(EntidadEstado estado);
+
 
 }
