@@ -44,7 +44,7 @@ export class ListaCargoComponent implements OnInit {
     { header: 'Descripción', field: 'descripcion', type: 'text' },
     { header: '¿ES PERSONAL MEDICO?', field: 'esPersonalMedico', type: 'custom' },
     { header: 'Estado', field: 'estado', type: 'custom' },
-    { header: 'Acciones', field: 'id', type: 'custom' , align:'center' },
+    { header: 'Acciones', field: 'id', type: 'custom', align: 'center' },
   ];
 
   constructor(
@@ -54,6 +54,7 @@ export class ListaCargoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+
     this.cargarCargos();
   }
 

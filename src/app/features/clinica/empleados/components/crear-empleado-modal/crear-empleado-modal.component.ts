@@ -50,6 +50,7 @@ export class CrearEmpleadoModalComponent implements OnInit {
   private readonly reniecService = inject(ReniecService);
   private readonly cdr = inject(ChangeDetectorRef);
 
+
   ngOnInit(): void {
     this.cargandoCatalogos = true;
 
@@ -183,6 +184,16 @@ export class CrearEmpleadoModalComponent implements OnInit {
       !f.apellidos.trim()
     ) {
       this.toastService.warning('Por favor, complete todos los campos requeridos.');
+      return;
+    }
+
+    if (!f.fechaNacimiento) {
+      this.toastService.warning('La fecha de nacimiento es obligatoria.');
+      return;
+    }
+
+    if (f.fechaNacimiento > this.fechaMaxima) {
+      this.toastService.warning('El empleado debe tener al menos 18 años.');
       return;
     }
 
