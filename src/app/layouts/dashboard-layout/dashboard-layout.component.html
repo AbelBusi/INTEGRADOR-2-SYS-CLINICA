@@ -405,3 +405,10 @@
   </div>
 
 </div>
+
+@if (cambioClave.requerido()) {
+  <app-cambiar-clave-modal
+    (cambiado)="finalizarCambioClave()"
+    (salir)="logout()"
+  ></app-cambiar-clave-modal>
+}

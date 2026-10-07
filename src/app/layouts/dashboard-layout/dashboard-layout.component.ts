@@ -5,6 +5,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
 import { AuthService } from '../../features/auth/services/auth.service';
+import { CambioClaveService } from '../../features/auth/services/cambio-clave.services';
+import { CambiarClaveModalComponent } from '../../features/auth/components/cambiar-clave-modal/cambiar-clave-modal.component';
 import { environment } from '../../../environments/environment';
 import { MENU_BASE, PAGE_TITLES } from './dashboard-menu.config';
 
@@ -21,13 +23,15 @@ interface MensajeResponse {
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, CambiarClaveModalComponent],
   templateUrl: './dashboard-layout.component.html',
 })
 export class DashboardLayoutComponent implements OnInit {
   private http = inject(HttpClient);
   private router = inject(Router);
   private authService = inject(AuthService);
+
+  readonly cambioClave = inject(CambioClaveService);
 
   open = true;
   expandedItem: string | null = 'Inicio';
@@ -77,9 +81,17 @@ export class DashboardLayoutComponent implements OnInit {
     });
   });
 
-
   ngOnInit(): void {
-    this.obtenerPerfilUsuario();
+    this.cambioClave.verificarEstado().subscribe({
+      next: (estado) => {
+        if (estado.requiere_cambio_clave) {
+          this.cargandoPerfil.set(false);
+          return;
+        }
+        this.obtenerPerfilUsuario();
+      },
+      error: () => this.obtenerPerfilUsuario(),
+    });
   }
 
   private obtenerPerfilUsuario() {
@@ -112,6 +124,11 @@ export class DashboardLayoutComponent implements OnInit {
   toggleMenu(label: string) {
     if (!this.open) this.open = true;
     this.expandedItem = this.expandedItem === label ? null : label;
+  }
+
+  finalizarCambioClave() {
+    this.cambioClave.requerido.set(false);
+    this.limpiarSesionLocal();
   }
 
   logout() {

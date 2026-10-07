@@ -1,0 +1,133 @@
+<div class="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="titulo-cambio-clave">
+  <div class="fixed inset-0 bg-neutral-900/70"></div>
+
+  <div class="relative flex min-h-full items-center justify-center p-4">
+    <div class="w-full max-w-md overflow-hidden rounded border border-neutral-300 bg-white">
+
+      <div class="flex items-center gap-3 px-6 py-4 bg-[#58595B]">
+        <div class="w-9 h-9 rounded bg-[#D9182A] flex items-center justify-center shrink-0">
+          <span class="material-icons text-white text-[20px]">lock_reset</span>
+        </div>
+        <h2 id="titulo-cambio-clave" class="text-base font-bold text-white">Crea tu nueva contraseña</h2>
+      </div>
+
+      <div class="flex h-1">
+        <div class="w-1/2 bg-[#58595B]"></div>
+        <div class="w-1/2 bg-[#D9182A]"></div>
+      </div>
+
+      <form (ngSubmit)="guardar()" class="space-y-4 p-6">
+
+        <div class="flex items-start gap-2 rounded border border-amber-300 bg-amber-50 px-3 py-2.5">
+          <span class="material-icons text-[18px] text-amber-700 mt-px">info</span>
+          <p class="text-sm leading-5 text-amber-800">
+            Ingresaste con una contraseña temporal. Debes crear tu propia contraseña para poder usar el sistema.
+          </p>
+        </div>
+
+        @if (error(); as mensaje) {
+          <div class="flex items-start gap-2 rounded border border-[#D9182A]/30 bg-[#D9182A]/5 px-3 py-2.5">
+            <span class="material-icons text-[18px] text-[#D9182A] mt-px">error_outline</span>
+            <p class="text-sm font-medium text-[#D9182A]">{{ mensaje }}</p>
+          </div>
+        }
+
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Contraseña temporal</label>
+          <div class="relative">
+            <input
+              #primerCampo
+              [type]="verActual() ? 'text' : 'password'"
+              name="claveActual"
+              [ngModel]="claveActual()"
+              (ngModelChange)="claveActual.set($event)"
+              autocomplete="current-password"
+              required
+              class="w-full bg-white border border-neutral-300 rounded px-3 py-2 pr-10 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+            />
+            <button
+              type="button"
+              (click)="verActual.set(!verActual())"
+              [attr.aria-label]="verActual() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              class="absolute inset-y-0 right-0 w-10 flex items-center justify-center text-neutral-400 hover:text-neutral-700">
+              <span class="material-icons text-[20px]">{{ verActual() ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Nueva contraseña</label>
+          <div class="relative">
+            <input
+              [type]="verNueva() ? 'text' : 'password'"
+              name="nuevaClave"
+              [ngModel]="nuevaClave()"
+              (ngModelChange)="nuevaClave.set($event)"
+              autocomplete="new-password"
+              maxlength="100"
+              required
+              class="w-full bg-white border border-neutral-300 rounded px-3 py-2 pr-10 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+            />
+            <button
+              type="button"
+              (click)="verNueva.set(!verNueva())"
+              [attr.aria-label]="verNueva() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              class="absolute inset-y-0 right-0 w-10 flex items-center justify-center text-neutral-400 hover:text-neutral-700">
+              <span class="material-icons text-[20px]">{{ verNueva() ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+
+          <ul class="grid grid-cols-1 gap-1 pt-1">
+            @for (requisito of requisitos(); track requisito.texto) {
+              <li
+                class="flex items-center gap-2 text-xs font-medium"
+                [ngClass]="requisito.cumple ? 'text-[#0d6b68]' : 'text-neutral-400'">
+                <span class="material-icons text-[16px]">{{ requisito.cumple ? 'check_circle' : 'radio_button_unchecked' }}</span>
+                {{ requisito.texto }}
+              </li>
+            }
+          </ul>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">Confirmar nueva contraseña</label>
+          <input
+            [type]="verNueva() ? 'text' : 'password'"
+            name="confirmacion"
+            [ngModel]="confirmacion()"
+            (ngModelChange)="confirmacion.set($event)"
+            autocomplete="new-password"
+            maxlength="100"
+            required
+            class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+            [ngClass]="confirmacion() !== '' && !coincide() ? 'border-[#D9182A]' : ''"
+          />
+          @if (confirmacion() !== '' && !coincide()) {
+            <p class="text-xs font-medium text-[#D9182A]">Las contraseñas no coinciden.</p>
+          }
+        </div>
+
+        <div class="flex flex-col-reverse sm:flex-row gap-3 pt-2">
+          <button
+            type="button"
+            (click)="cerrarSesion()"
+            [disabled]="guardando()"
+            class="flex-1 px-4 py-2 text-sm font-medium text-neutral-600 bg-white hover:bg-neutral-100 hover:text-neutral-900 rounded border border-neutral-300 transition-colors disabled:opacity-50">
+            Cerrar sesión
+          </button>
+          <button
+            type="submit"
+            [disabled]="!puedeGuardar()"
+            class="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-[#D9182A] hover:bg-[#B81424] rounded transition-colors disabled:opacity-50">
+            @if (guardando()) {
+              <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            }
+            Guardar contraseña
+          </button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
