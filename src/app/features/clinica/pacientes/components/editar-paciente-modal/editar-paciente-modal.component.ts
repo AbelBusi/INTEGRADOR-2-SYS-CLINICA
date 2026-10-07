@@ -86,6 +86,28 @@ export class EditarPacienteModalComponent implements OnChanges {
     });
   }
 
+  soloLetras(event: KeyboardEvent): void {
+    if (
+      event.key.length === 1 &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]$/.test(event.key)
+    ) {
+      event.preventDefault();
+    }
+  }
+
+  limpiarNombre(): void {
+    this.pacienteForm.nombre = this.pacienteForm.nombre.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+  }
+
+  limpiarApellidos(): void {
+    this.pacienteForm.apellidos = this.pacienteForm.apellidos.replace(
+      /[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g,
+      '',
+    );
+  }
+
   private llenarFormulario(detalle: PacienteDetalle): void {
     this.pacienteForm = {
       idTipoDocumento: detalle.idTipoDocumento,

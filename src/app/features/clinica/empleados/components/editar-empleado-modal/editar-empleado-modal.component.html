@@ -117,6 +117,8 @@
                   type="text"
                   name="nombre"
                   [(ngModel)]="empleadoForm.nombre"
+                  (keydown)="soloLetras($event)"
+                  (input)="limpiarNombre()"
                   maxlength="60"
                   required
                   class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
@@ -130,6 +132,8 @@
                   type="text"
                   name="apellidos"
                   [(ngModel)]="empleadoForm.apellidos"
+                  (keydown)="soloLetras($event)"
+                  (input)="limpiarApellidos()"
                   maxlength="100"
                   required
                   class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"

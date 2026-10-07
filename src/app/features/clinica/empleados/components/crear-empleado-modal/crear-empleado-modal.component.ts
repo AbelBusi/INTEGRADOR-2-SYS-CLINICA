@@ -52,7 +52,6 @@ export class CrearEmpleadoModalComponent implements OnInit {
   private readonly reniecService = inject(ReniecService);
   private readonly cdr = inject(ChangeDetectorRef);
 
-
   ngOnInit(): void {
     this.cargandoCatalogos = true;
 
@@ -73,6 +72,28 @@ export class CrearEmpleadoModalComponent implements OnInit {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  soloLetras(event: KeyboardEvent): void {
+    if (
+      event.key.length === 1 &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]$/.test(event.key)
+    ) {
+      event.preventDefault();
+    }
+  }
+
+  limpiarNombre(): void {
+    this.empleadoForm.nombre = this.empleadoForm.nombre.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+  }
+
+  limpiarApellidos(): void {
+    this.empleadoForm.apellidos = this.empleadoForm.apellidos.replace(
+      /[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g,
+      '',
+    );
   }
 
   get esDni(): boolean {

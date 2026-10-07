@@ -62,6 +62,28 @@ export class EditarEmpleadoModalComponent implements OnChanges {
     }
   }
 
+  soloLetras(event: KeyboardEvent): void {
+    if (
+      event.key.length === 1 &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]$/.test(event.key)
+    ) {
+      event.preventDefault();
+    }
+  }
+
+  limpiarNombre(): void {
+    this.empleadoForm.nombre = this.empleadoForm.nombre.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, '');
+  }
+
+  limpiarApellidos(): void {
+    this.empleadoForm.apellidos = this.empleadoForm.apellidos.replace(
+      /[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g,
+      '',
+    );
+  }
+
   get fotoMostrada(): string | null {
     return this.previewUrl ?? this.empleadoService.obtenerUrlFoto(this.fotoActual);
   }
