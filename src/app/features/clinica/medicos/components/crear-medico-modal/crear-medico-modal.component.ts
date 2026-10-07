@@ -1,8 +1,18 @@
-import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  OnChanges,
+  SimpleChanges,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  inject,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom, forkJoin } from 'rxjs';
-import { environment } from '../../../../../../environments/environment';
 import {
   CONSEJOS_REGIONALES,
   EmpleadoMedicoResumen,
@@ -25,11 +35,17 @@ const MAX_INTENTOS = 5;
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './crear-medico-modal.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CrearMedicoModalComponent implements OnInit {
+export class CrearMedicoModalComponent implements OnInit, OnChanges {
   @Input() isOpen = false;
   @Output() onClose = new EventEmitter<void>();
   @Output() onMedicoCreado = new EventEmitter<void>();
+
+  // Inyección moderna de servicios
+  private readonly medicoService = inject(MedicoService);
+  private readonly toastService = inject(ToastService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   medicoForm: MedicoForm = formularioVacio();
   empleados: EmpleadoMedicoResumen[] = [];
@@ -41,13 +57,18 @@ export class CrearMedicoModalComponent implements OnInit {
   generando = false;
   guardando = false;
 
-  constructor(
-    private readonly medicoService: MedicoService,
-    private readonly toastService: ToastService,
-    private readonly cdr: ChangeDetectorRef,
-  ) {}
-
   ngOnInit(): void {
+    this.cargarCatalogos();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Si el modal se acaba de abrir, reiniciamos el formulario
+    if (changes['isOpen'] && changes['isOpen'].currentValue === true) {
+      this.medicoForm = formularioVacio();
+    }
+  }
+
+  private cargarCatalogos(): void {
     this.cargandoCatalogos = true;
 
     forkJoin({
@@ -58,24 +79,22 @@ export class CrearMedicoModalComponent implements OnInit {
         this.empleados = empleados.object || [];
         this.especialidades = especialidades.object || [];
         this.cargandoCatalogos = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
       error: (error) => {
-        console.error(error);
+        console.error('Error al cargar catálogos:', error);
         this.toastService.error('No se pudieron cargar los empleados y especialidades.');
         this.cargandoCatalogos = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
     });
   }
 
   async generarCodigosUnicos(): Promise<void> {
-    if (this.generando) {
-      return;
-    }
+    if (this.generando) return;
 
     this.generando = true;
-    this.cdr.detectChanges();
+    this.cdr.markForCheck();
 
     try {
       let colegiatura = generarNumeroColegiatura();
@@ -99,36 +118,30 @@ export class CrearMedicoModalComponent implements OnInit {
           return;
         }
 
-        if (!colegiaturaDisponible) {
-          colegiatura = generarNumeroColegiatura();
-        }
-        if (!especialidadDisponible) {
-          especialidad = generarNumeroEspecialidad();
-        }
+        if (!colegiaturaDisponible) colegiatura = generarNumeroColegiatura();
+        if (!especialidadDisponible) especialidad = generarNumeroEspecialidad();
       }
 
       this.toastService.warning('No se pudo generar un código disponible. Inténtalo de nuevo.');
     } catch (error) {
-      console.error(error);
+      console.error('Error al verificar disponiblidad:', error);
       this.toastService.error('No se pudo consultar la disponibilidad de los códigos.');
     } finally {
       this.generando = false;
-      this.cdr.detectChanges();
+      this.cdr.markForCheck();
     }
   }
 
   handleClose(): void {
+    if (this.guardando) return;
     this.medicoForm = formularioVacio();
     this.onClose.emit();
-    this.cdr.detectChanges();
   }
 
   onSubmit(): void {
     const f = this.medicoForm;
 
-    if (this.guardando || this.generando) {
-      return;
-    }
+    if (this.guardando || this.generando) return;
 
     if (!f.idEmpleado || !f.idEspecialidad || !f.numeroColegiatura.trim()) {
       this.toastService.warning('Por favor, complete todos los campos requeridos.');
@@ -148,7 +161,7 @@ export class CrearMedicoModalComponent implements OnInit {
         console.error('Error al guardar el médico:', err);
         this.toastService.error(err.error?.mensaje || 'No se pudo registrar el médico.');
         this.guardando = false;
-        this.cdr.detectChanges();
+        this.cdr.markForCheck();
       },
     });
   }
