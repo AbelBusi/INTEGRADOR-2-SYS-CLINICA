@@ -198,7 +198,11 @@ export class ListaRolComponent implements OnInit {
           },
           error: (error) => {
             console.error(error);
-            this.toastService.error('Hubo un error al eliminar el rol');
+
+            this.toastService.error(
+              error?.error?.mensaje || 'Hubo un error al eliminar la especialidad',
+            );
+
             this.cargando = false;
             this.cdr.detectChanges();
           },
