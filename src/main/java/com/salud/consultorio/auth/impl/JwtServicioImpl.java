@@ -56,7 +56,7 @@ public class JwtServicioImpl implements IJwtServicio {
         List<String> permisos = usuario.getRol()
                 .getRolPermisos()
                 .stream()
-                .map(rolPermiso -> rolPermiso.getPermiso().getNombre())
+                .map(rolPermiso -> rolPermiso.getPermiso().getCodigo())
                 .toList();
 
         String rolNombre = usuario.getRol() != null && usuario.getRol().getNombre() != null

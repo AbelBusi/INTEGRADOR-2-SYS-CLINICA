@@ -171,7 +171,7 @@ public class IAuthServicioImpl implements IAuthServicio {
         List<SimpleGrantedAuthority> authorities = usuario.getRol()
                 .getRolPermisos()
                 .stream()
-                .map(rolPermiso -> new SimpleGrantedAuthority(rolPermiso.getPermiso().getNombre()))
+                .map(rolPermiso -> new SimpleGrantedAuthority(rolPermiso.getPermiso().getCodigo()))
                 .toList();
 
         UserDetails userDetails = new User(usuario.getUsuario(), usuario.getClaveAcceso(), authorities);

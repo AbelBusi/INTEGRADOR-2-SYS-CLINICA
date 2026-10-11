@@ -38,7 +38,7 @@ public class SecurityConfig {
                             .stream()
                             .map(rolPermiso ->
                                     new SimpleGrantedAuthority(
-                                            rolPermiso.getPermiso().getNombre()
+                                            rolPermiso.getPermiso().getCodigo()
                                     )
                             )
                             .toList();
