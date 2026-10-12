@@ -167,14 +167,13 @@ export const MENU_BASE: NavItem[] = [
   {
     grupo: 'ADMINISTRACION',
     label: 'Roles',
-    roles: ['ADMINISTRADOR'],
+    permisos: ['ROL_VER'],
     icon: 'local_hospital',
     sub: [
       {
         label: 'Ver Roles',
         route: '/dashboard/roles',
-        roles: ['ADMINISTRADOR'],
-        permisos: [PERMISOS.ROLES_ASIGNAR],
+        permisos: ['ROL_VER'],
       },
     ],
   },
@@ -183,18 +182,14 @@ export const MENU_BASE: NavItem[] = [
     label: 'Horarios',
     icon: 'local_hospital',
     permisos: ['HORARIO_VER'],
-    sub: [
-      { label: 'Ver Horarios',
-        route: '/dashboard/horarios',
-        permisos: ['HORARIO_VER']
-      }],
+    sub: [{ label: 'Ver Horarios', route: '/dashboard/horarios', permisos: ['HORARIO_VER'] }],
   },
   {
     grupo: 'ADMINISTRACION',
     label: 'Usuarios',
-    roles: ['ADMINISTRADOR'],
     icon: 'local_hospital',
-    sub: [{ label: 'Ver Usuarios', route: '/dashboard/usuarios', roles: ['ADMINISTRADOR'] }],
+    permisos: ['USUARIO_VER'],
+    sub: [{ label: 'Ver Usuarios', route: '/dashboard/usuarios', permisos: ['USUARIO_VER'] }],
   },
   {
     label: 'Recepcionistas',

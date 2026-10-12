@@ -10,6 +10,7 @@ import {
 } from '../../interface/usuario.interface';
 import { UsuarioService } from '../../services/usuario.service';
 import { ToastService } from '../../../../../core/services/toast.service';
+import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
 
 type Fase = 'formulario' | 'generando' | 'listo';
 
@@ -18,7 +19,7 @@ const DURACION_MINIMA_MS = 1800;
 @Component({
   selector: 'app-crear-usuario-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TienePermisoDirective],
   templateUrl: './crear-usuario-panel.component.html',
   styles: [
     `

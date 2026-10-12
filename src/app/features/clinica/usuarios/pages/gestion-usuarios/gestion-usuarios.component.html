@@ -185,8 +185,10 @@
               type="button"
               title="Ver información"
               (click)="setUsuarioVer(row)"
-              class="w-9 h-9 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
+              class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+
               <span class="material-icons text-[18px]">visibility</span>
+              <span>Ver información</span>
             </button>
           }
 
@@ -204,6 +206,7 @@
             @if (row.tipo === 'EMPLEADO') {
               <button
                 type="button"
+                *appTienePermiso="'USUARIO_CAMBIAR_ROL'"
                 title="Cambiar rol"
                 (click)="setUsuarioRol(row)"
                 [disabled]="procesando()"
@@ -216,6 +219,7 @@
             @if (row.estado === 1) {
               <button
                 type="button"
+                *appTienePermiso="'USUARIO_CAMBIAR_ESTADO'"
                 title="Desactivar"
                 (click)="cambiarEstado(row, 'INACTIVO')"
                 [disabled]="procesando()"
@@ -226,6 +230,7 @@
             } @else {
               <button
                 type="button"
+                *appTienePermiso="'USUARIO_CAMBIAR_ESTADO'"
                 title="Activar"
                 (click)="cambiarEstado(row, 'ACTIVO')"
                 [disabled]="procesando()"

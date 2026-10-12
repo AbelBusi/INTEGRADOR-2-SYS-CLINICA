@@ -14,6 +14,7 @@ import { CambiarRolModalComponent } from '../../components/cambiar-rol-modal/cam
 
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
+import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
 
 type FiltroTipo = 'todos' | TipoUsuario;
 type FiltroEstado = 'todos' | 'activo' | 'inactivo';
@@ -28,6 +29,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     CrearUsuarioPanelComponent,
     VerUsuarioModalComponent,
     CambiarRolModalComponent,
+    TienePermisoDirective,
   ],
   templateUrl: './gestion-usuarios.component.html',
 })

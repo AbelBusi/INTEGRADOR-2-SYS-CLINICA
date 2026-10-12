@@ -89,14 +89,18 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
+        canActivate: [permisoGuard],
         path: 'usuarios',
+        data: { permisos: ['USUARIO_VER'] },
         loadComponent: () =>
           import('../features/clinica/usuarios/pages/gestion-usuarios/gestion-usuarios.component').then(
             (m) => m.GestionUsuariosComponent,
           ),
       },
       {
+        canActivate: [permisoGuard],
         path: 'roles',
+        data: { permisos: ['ROL_VER'] },
         loadComponent: () =>
           import('../features/admin/roles/pages/lista-roles/lista-roles.component').then(
             (m) => m.ListaRolesComponent,
