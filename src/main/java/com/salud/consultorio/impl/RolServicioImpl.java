@@ -129,6 +129,14 @@ public class RolServicioImpl implements IRolServicio {
 
     @Transactional(readOnly = true)
     @Override
+    public Rol entidadPorIDTransaccion(Integer id) {
+        return rolRepositorio.findById(id).orElseThrow(
+                ()-> new EntityNotFoundException("No existe el rol")
+        );
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public IRolRespuestaDTO entidadPorID(Integer id) {
         return rolRepositorio.findById(id).map(
                 rolMapper::toDtoRol

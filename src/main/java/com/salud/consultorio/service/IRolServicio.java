@@ -1,6 +1,7 @@
 package com.salud.consultorio.service;
 
 import com.salud.consultorio.auth.dto.rol.*;
+import com.salud.consultorio.model.entity.Rol;
 import com.salud.consultorio.model.enums.EntidadEstado;
 
 import java.util.List;
@@ -22,6 +23,8 @@ public interface IRolServicio {
     void cambiarEstado(Integer id, EntidadEstado estado);
 
     boolean existeRolNombre(String nombre);
+
+    Rol entidadPorIDTransaccion(Integer id);
 
     IRolRespuestaDTO entidadPorID(Integer id);
 
