@@ -43,6 +43,7 @@
 
     <button
       type="button"
+      *appTienePermiso="'MEDICO_CREAR'"
       (click)="isCrearOpen = true"
       class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 h-10 rounded-md bg-[#D9182A] hover:bg-[#B81424] text-white text-sm font-semibold transition-colors">
       <span class="material-icons text-[20px]">add</span>
@@ -121,6 +122,7 @@
 
           <button
             type="button"
+            *appTienePermiso="'MEDICO_VER'"
             title="Ver detalle"
             (click)="setMedicoVer(row)"
             class="w-9 h-9 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
@@ -129,6 +131,7 @@
 
           <button
             type="button"
+            *appTienePermiso="'MEDICO_EDITAR'"
             title="Editar"
             (click)="setMedicoEditar(row)"
             class="w-9 h-9 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
@@ -138,6 +141,7 @@
           @if (row.estado === 1) {
             <button
               type="button"
+              *appTienePermiso="'MEDICO_CAMBIAR_ESTADO'"
               title="Desactivar"
               (click)="cambiarEstado(row, 'INACTIVO')"
               class="w-9 h-9 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 transition-colors">
@@ -146,6 +150,7 @@
           } @else {
             <button
               type="button"
+              *appTienePermiso="'MEDICO_CAMBIAR_ESTADO'"
               title="Activar"
               (click)="cambiarEstado(row, 'ACTIVO')"
               class="w-9 h-9 inline-flex items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68] transition-colors">

@@ -34,7 +34,9 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
+        canActivate: [permisoGuard],
         path: 'medicos',
+        data: { permisos: ['MEDICO_VER'] },
         loadComponent: () =>
           import('../features/clinica/medicos/pages/lista-medico/lista-medico.component').then(
             (m) => m.ListaMedicoComponent,
@@ -48,7 +50,7 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
-        canActivate:[permisoGuard],
+        canActivate: [permisoGuard],
         path: 'roles',
         loadComponent: () =>
           import('../features/clinica/roles/pages/lista-roles/lista-rol.component').then(
@@ -63,7 +65,7 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
-        canActivate:[permisoGuard],
+        canActivate: [permisoGuard],
         path: 'empleados',
         data: { permisos: ['EMPLEADO_VER'] },
         loadComponent: () =>
@@ -72,9 +74,9 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
-        canActivate:[permisoGuard],
+        canActivate: [permisoGuard],
         path: 'pacientes',
-        data: { permisos : ['PACIENTE_VER']},
+        data: { permisos: ['PACIENTE_VER'] },
         loadComponent: () =>
           import('../features/clinica/pacientes/pages/lista-paciente/lista-paciente.component').then(
             (m) => m.ListaPacienteComponent,
