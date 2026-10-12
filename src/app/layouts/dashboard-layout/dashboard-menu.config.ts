@@ -1,13 +1,18 @@
+import { PERMISOS } from '../../core/constants/permisos.constants';
+import { permisoGuard } from '../../core/guards/permission.guard';
+
 export interface SubNavItem {
   label: string;
   route: string;
   roles?: string[];
+  permisos?: string[];
 }
 
 export interface NavItem {
   label: string;
   icon: string;
   roles?: string[];
+  permisos?: string[];
   sub?: SubNavItem[];
   route?: string;
   grupo?: string;
@@ -161,7 +166,12 @@ export const MENU_BASE: NavItem[] = [
     label: 'Roles',
     roles: ['ADMINISTRADOR'],
     icon: 'local_hospital',
-    sub: [{ label: 'Ver Roles', route: '/dashboard/roles', roles: ['ADMINISTRADOR'] }],
+    sub: [
+      { label: 'Ver Roles',
+        route: '/dashboard/roles',
+        roles: ['ADMINISTRADOR'],
+        permisos: [PERMISOS.ROLES_ASIGNAR]
+      }],
   },
   {
     grupo: 'ADMINISTRACION',

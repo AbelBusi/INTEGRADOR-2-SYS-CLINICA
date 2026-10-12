@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from '../core/guards/auth.guard';
+import { permisoGuard } from '../core/guards/permission.guard';
+import { PERMISOS } from '../core/constants/permisos.constants';
 
 export const ADMIN_ROUTES: Routes = [
   {
@@ -48,6 +50,7 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
+        canActivate:[permisoGuard],
         path: 'roles',
         loadComponent: () =>
           import('../features/clinica/roles/pages/lista-roles/lista-rol.component').then(

@@ -139,6 +139,15 @@
             Editar
           </button>
 
+          <button
+            *appTienePermiso="PERMISOS.ROLES_ASIGNAR"
+            type="button"
+            (click)="setRolPermisos(row)"
+            class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
+            <span class="material-icons text-[18px]">vpn_key</span>
+            Permisos
+          </button>
+
           @if (row.estado === 1) {
             <button
               type="button"
@@ -205,4 +214,12 @@
     (close)="rolVer = null"
   ></app-ver-detalle-rol-modal>
 
+}
+
+@if (rolPermisos) {
+  <app-permisos-rol-modal
+    [rol]="rolPermisos"
+    (close)="rolPermisos = null"
+    (guardado)="handlePermisosGuardados()"
+  ></app-permisos-rol-modal>
 }

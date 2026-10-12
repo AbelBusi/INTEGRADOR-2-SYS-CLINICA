@@ -10,6 +10,9 @@ import { CrearRolModalComponent } from '../../components/crear-rol-modal/crear-r
 import { EditarRolModalComponent } from '../../components/editar-rol-modal/editar-rol-modal.component';
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
+import { PermisosRolModalComponent } from '../../components/permisos-rol-modal/permisos-rol-modal.component';
+import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
+import { PERMISOS } from '../../../../../core/constants/permisos.constants';
 
 type FiltroEstado = 'todos' | 'activo' | 'inactivo';
 
@@ -22,6 +25,8 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     CustomTableComponent,
     VerDetalleRolModalComponent,
     CrearRolModalComponent,
+    PermisosRolModalComponent,
+    TienePermisoDirective,
     EditarRolModalComponent,
   ],
   templateUrl: './lista-rol.component.html',
@@ -36,6 +41,8 @@ export class ListaRolComponent implements OnInit {
   rolSeleccionado: Rol | null = null;
   sortField = 'nombre';
   filtroEstado: FiltroEstado = 'todos';
+  readonly PERMISOS = PERMISOS;
+  rolPermisos: Rol | null = null;
 
   columns: TableColumn<Rol>[] = [
     { header: 'Rol', field: 'nombre', sortable: true, type: 'custom' },
@@ -52,6 +59,15 @@ export class ListaRolComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarRoles();
+  }
+
+  setRolPermisos(rol: Rol): void {
+    this.rolPermisos = rol;
+  }
+
+  handlePermisosGuardados(): void {
+    this.rolPermisos = null;
+    this.cdr.detectChanges();
   }
 
   cargarRoles(): void {
@@ -83,8 +99,7 @@ export class ListaRolComponent implements OnInit {
 
     return this.roles.filter(
       (rol) =>
-        rol.nombre?.toLowerCase().includes(term) ||
-        rol.descripcion?.toLowerCase().includes(term),
+        rol.nombre?.toLowerCase().includes(term) || rol.descripcion?.toLowerCase().includes(term),
     );
   }
 
@@ -102,8 +117,7 @@ export class ListaRolComponent implements OnInit {
   }
 
   seleccionarRoles(rol: Rol): void {
-    this.rolSeleccionado =
-      this.rolSeleccionado?.id === rol.id ? null : rol;
+    this.rolSeleccionado = this.rolSeleccionado?.id === rol.id ? null : rol;
   }
 
   setRolVer(rol: Rol): void {
@@ -176,10 +190,7 @@ export class ListaRolComponent implements OnInit {
     }
 
     this.toastService
-      .confirmar(
-        'Eliminar Rol',
-        `¿Estás seguro de que deseas eliminar el rol "${rol.nombre}"?`,
-      )
+      .confirmar('Eliminar Rol', `¿Estás seguro de que deseas eliminar el rol "${rol.nombre}"?`)
       .then((confirmar) => {
         if (!confirmar) {
           return;

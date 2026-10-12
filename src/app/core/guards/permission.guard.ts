@@ -1,21 +1,22 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { AuthService } from '../../features/auth/services/auth.service';
+import { ModoPermisos, PermisosService } from '../services/permisos.service';
+import { ToastService } from '../services/toast.service';
 
-export const permissionGuard: CanActivateFn = (route, state) => {
-  const authService = inject(AuthService);
+export const permisoGuard: CanActivateFn = (route) => {
+  const permisos = inject(PermisosService);
   const router = inject(Router);
+  const toastService = inject(ToastService);
 
-  const requiredPermission = route.data['permiso'] as string;
+  const requeridos = (route.data['permisos'] as string[] | undefined) ?? [];
+  const modo = (route.data['permisosModo'] as ModoPermisos | undefined) ?? 'alguno';
+  const destino = (route.data['sinPermisoRedirect'] as string | undefined) ?? '/dashboard';
 
-  if (!requiredPermission) return true;
-
-  const userPermissions = authService.getAuthorities();
-
-  if (userPermissions.includes(requiredPermission)) {
+  if (permisos.evaluar(requeridos, modo)) {
     return true;
   }
 
-  router.navigate(['/dashboard/inicio']);
-  return false;
+  toastService.warning('No tienes permiso para acceder a esta sección.');
+
+  return router.createUrlTree([destino]);
 };
