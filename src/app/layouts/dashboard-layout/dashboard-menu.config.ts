@@ -147,10 +147,14 @@ export const MENU_BASE: NavItem[] = [
   {
     grupo: 'ATENCION MEDICA',
     label: 'Especialidades',
-    roles: ['ADMINISTRADOR'],
+    permisos: ['ESPECIALIDAD_VER'],
     icon: 'local_hospital',
     sub: [
-      { label: 'Ver especialidades', route: '/dashboard/especialidades', roles: ['ADMINISTRADOR'] },
+      {
+        label: 'Ver especialidades',
+        route: '/dashboard/especialidades',
+        permisos: ['ESPECIALIDAD_VER'],
+      },
     ],
   },
   {

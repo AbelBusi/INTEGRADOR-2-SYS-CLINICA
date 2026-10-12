@@ -10,6 +10,7 @@ import { CrearEspecialidadModalComponent } from '../../components/crear-especial
 import { EditarEspecialidadModalComponent } from '../../components/editar-especialidad-modal/editar-especialidad-modal.component';
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
+import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
 
 type FiltroEstado = 'todos' | 'activo' | 'inactivo';
 
@@ -23,6 +24,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     VerDetalleEspecialidadModalComponent,
     CrearEspecialidadModalComponent,
     EditarEspecialidadModalComponent,
+    TienePermisoDirective,
   ],
   templateUrl: './lista-especialidad.component.html',
 })

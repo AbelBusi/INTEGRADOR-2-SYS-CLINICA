@@ -27,7 +27,9 @@ export const ADMIN_ROUTES: Routes = [
         ],
       },
       {
+        canActivate: [permisoGuard],
         path: 'especialidades',
+        data: { permisos: ['ESPECIALIDAD_VER'] },
         loadComponent: () =>
           import('../features/clinica/especialidad/pages/lista-especialidad/lista-especialidad.component').then(
             (m) => m.ListaEspecialidadComponent,

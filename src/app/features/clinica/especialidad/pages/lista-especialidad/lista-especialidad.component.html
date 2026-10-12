@@ -51,6 +51,7 @@
 
     <button
       type="button"
+      *appTienePermiso="'ESPECIALIDAD_CREAR'"
       (click)="isCrearOpen = true"
       class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 h-10 rounded-md bg-[#D9182A] hover:bg-[#B81424] text-white text-sm font-semibold transition-colors">
       <span class="material-icons text-[20px]">
@@ -125,6 +126,7 @@
 
           <button
             type="button"
+            *appTienePermiso="'ESPECIALIDAD_VER'"
             (click)="setEspecialidadVer(row)"
             class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
             <span class="material-icons text-[18px]">visibility</span>
@@ -133,6 +135,7 @@
 
           <button
             type="button"
+            *appTienePermiso="'ESPECIALIDAD_EDITAR'"
             (click)="setEspecialidadEditar(row)"
             class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
             <span class="material-icons text-[18px]">edit</span>
@@ -142,6 +145,7 @@
           @if (row.estado === 1) {
             <button
               type="button"
+              *appTienePermiso="'ESPECIALIDAD_CAMBIAR_ESTADO'"
               (click)="cambiarEstado(row, 'INACTIVO')"
               class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 transition-colors">
               <span class="material-icons text-[18px]">toggle_off</span>
@@ -150,6 +154,7 @@
           } @else {
             <button
               type="button"
+              *appTienePermiso="'ESPECIALIDAD_CAMBIAR_ESTADO'"
               (click)="cambiarEstado(row, 'ACTIVO')"
               class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68] transition-colors">
               <span class="material-icons text-[18px]">toggle_on</span>
@@ -159,6 +164,7 @@
 
           <button
             type="button"
+            *appTienePermiso="'ESPECIALIDAD_ELIMINAR'"
             (click)="eliminarEspecialidad(row)"
             class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] transition-colors">
             <span class="material-icons text-[18px]">delete</span>
