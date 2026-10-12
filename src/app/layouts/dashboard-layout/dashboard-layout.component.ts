@@ -5,7 +5,10 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map, startWith } from 'rxjs/operators';
 import { AuthService } from '../../features/auth/services/auth.service';
-import { CambioClaveService, esCambioClaveRequerido } from '../../features/auth/services/cambio-clave.services';
+import {
+  CambioClaveService,
+  esCambioClaveRequerido,
+} from '../../features/auth/services/cambio-clave.services';
 import { CambiarClaveModalComponent } from '../../features/auth/components/cambiar-clave-modal/cambiar-clave-modal.component';
 import { environment } from '../../../environments/environment';
 import { MENU_BASE, PAGE_TITLES } from './dashboard-menu.config';
@@ -62,12 +65,21 @@ export class DashboardLayoutComponent implements OnInit {
 
   navItems = computed(() => {
     const rol = this.authService.getRole();
+    const permisos = this.authService.getAuthorities();
+
+    const tieneAcceso = (item: { roles?: string[]; permisos?: string[] }): boolean => {
+      const cumpleRol = !item.roles || item.roles.includes(rol);
+      const cumplePermisos =
+        !item.permisos || item.permisos.every((permiso) => permisos.includes(permiso));
+
+      return cumpleRol && cumplePermisos;
+    };
 
     const visibles = MENU_BASE.map((item) => ({
       ...item,
-      sub: item.sub?.filter((subItem) => !subItem.roles || subItem.roles.includes(rol)),
+      sub: item.sub?.filter((subItem) => tieneAcceso(subItem)),
     })).filter((item) => {
-      if (item.roles && !item.roles.includes(rol)) return false;
+      if (!tieneAcceso(item)) return false;
       if (item.sub && item.sub.length === 0) return false;
       return true;
     });
@@ -77,6 +89,7 @@ export class DashboardLayoutComponent implements OnInit {
     return visibles.map((item) => {
       const encabezado = item.grupo && item.grupo !== grupoAnterior ? item.grupo : null;
       grupoAnterior = item.grupo;
+
       return { ...item, encabezado };
     });
   });

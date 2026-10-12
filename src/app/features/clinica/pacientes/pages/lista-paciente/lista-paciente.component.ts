@@ -12,6 +12,8 @@ import { EditarPacienteModalComponent } from '../../components/editar-paciente-m
 
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
+import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
+import { PERMISOS } from '../../../../../core/constants/permisos.constants';
 
 type FiltroEstado = 'todos' | 'activo' | 'inactivo';
 
@@ -25,6 +27,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     VerDetallePacienteModalComponent,
     CrearPacienteModalComponent,
     EditarPacienteModalComponent,
+    TienePermisoDirective,
   ],
   templateUrl: './lista-paciente.component.html',
 })
@@ -208,4 +211,6 @@ export class ListaPacienteComponent implements OnInit {
         });
       });
   }
+
+  protected readonly PERMISOS = PERMISOS;
 }

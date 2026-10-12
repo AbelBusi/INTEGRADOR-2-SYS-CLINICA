@@ -1,5 +1,4 @@
 import { PERMISOS } from '../../core/constants/permisos.constants';
-import { permisoGuard } from '../../core/guards/permission.guard';
 
 export interface SubNavItem {
   label: string;
@@ -118,9 +117,13 @@ export const MENU_BASE: NavItem[] = [
   {
     grupo: 'PERSONAL Y PACIENTES',
     label: 'Pacientes',
-    roles: ['ADMINISTRADOR', 'RECEPCIONISTA'],
     icon: 'groups',
-    sub: [{ label: 'Ver pacientes', route: '/dashboard/pacientes', roles: ['ADMINISTRADOR'] }],
+    permisos: ['PACIENTE_VER'],
+    sub: [
+      { label: 'Ver pacientes',
+        route: '/dashboard/pacientes',
+        permisos: ['PACIENTE_VER']
+      }],
   },
   {
     grupo: 'PERSONAL Y PACIENTES',
@@ -167,11 +170,13 @@ export const MENU_BASE: NavItem[] = [
     roles: ['ADMINISTRADOR'],
     icon: 'local_hospital',
     sub: [
-      { label: 'Ver Roles',
+      {
+        label: 'Ver Roles',
         route: '/dashboard/roles',
         roles: ['ADMINISTRADOR'],
-        permisos: [PERMISOS.ROLES_ASIGNAR]
-      }],
+        permisos: [PERMISOS.ROLES_ASIGNAR],
+      },
+    ],
   },
   {
     grupo: 'ADMINISTRACION',
