@@ -180,6 +180,28 @@ export class PermisosRolModalComponent implements OnInit {
         nuevo.delete(id);
       } else {
         nuevo.add(id);
+
+        const modulos = this.catalogo();
+        for (const modulo of modulos) {
+          const permisoActual = modulo.permisos.find((p) => p.id === id);
+
+          if (permisoActual) {
+            const esVerOListar = /listar|ver|read|get/i.test(
+              permisoActual.codigo || permisoActual.nombre,
+            );
+
+            if (!esVerOListar) {
+              const permisoListar = modulo.permisos.find((p) =>
+                /listar|ver|read|get/i.test(p.codigo || p.nombre),
+              );
+
+              if (permisoListar) {
+                nuevo.add(permisoListar.id);
+              }
+            }
+            break;
+          }
+        }
       }
       return nuevo;
     });
