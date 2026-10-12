@@ -24,6 +24,7 @@ import {
 import { HorarioService } from '../../services/horario.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { EditarHorarioModalComponent } from '../editar-horario-modal/editar-horario-modal.component';
+import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
 
 interface DiaDetalle {
   numero: number;
@@ -35,7 +36,7 @@ interface DiaDetalle {
 @Component({
   selector: 'app-ver-horario-empleado-modal',
   standalone: true,
-  imports: [CommonModule, EditarHorarioModalComponent],
+  imports: [CommonModule, EditarHorarioModalComponent, TienePermisoDirective],
   templateUrl: './ver-horario-empleado-modal.component.html',
 })
 export class VerHorarioEmpleadoModalComponent implements OnChanges {

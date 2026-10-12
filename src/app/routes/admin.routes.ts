@@ -62,7 +62,9 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
+        canActivate: [permisoGuard],
         path: 'horarios',
+        data: { permisos: ['HORARIO_VER'] },
         loadComponent: () =>
           import('../features/clinica/horarios/pages/agenda-horarios/agenda-horarios.component').then(
             (m) => m.AgendaHorariosComponent,

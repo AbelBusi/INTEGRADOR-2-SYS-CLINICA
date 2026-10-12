@@ -36,6 +36,7 @@ import { HorarioService } from '../../services/horario.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { CrearHorarioModalComponent } from '../../components/crear-horario-modal/crear-horario-modal.component';
 import { VerHorarioEmpleadoModalComponent } from '../../components/ver-horario-empleado-modal/ver-horario-empleado-modal.component';
+import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
 
 interface HorarioVista {
   horario: HorarioResumen;
@@ -88,6 +89,7 @@ interface CeldaMes {
     FormsModule,
     CrearHorarioModalComponent,
     VerHorarioEmpleadoModalComponent,
+    TienePermisoDirective,
   ],
   templateUrl: './agenda-horarios.component.html',
 })
