@@ -11,9 +11,18 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const accessToken = authService.getAccessToken();
 
+  let url = req.url;
+
+  if (url.startsWith('/')) {
+    const baseUrl = environment.apiUrl.replace(/\/+$/, '');
+    const path = url.startsWith(`${baseUrl}/`) || url === baseUrl ? url : `${baseUrl}${url}`;
+
+    url = path;
+  }
+
   const clonReq = req.clone({
-    url: req.url.startsWith('/') ? `${environment.apiUrl}${req.url}` : req.url,
-    ...(accessToken && !req.url.includes('/auth/')
+    url,
+    ...(accessToken && !url.includes('/auth/')
       ? {
           setHeaders: {
             Authorization: `Bearer ${accessToken}`,
