@@ -45,7 +45,9 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
+        canActivate: [permisoGuard],
         path: 'cargos',
+        data: { permisos: ['CARGO_VER'] },
         loadComponent: () =>
           import('../features/clinica/cargos/pages/lista-cargos/lista-cargo.component').then(
             (m) => m.ListaCargoComponent,

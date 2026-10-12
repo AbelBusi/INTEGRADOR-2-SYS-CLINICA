@@ -12,6 +12,7 @@ import { EditarCargoModalComponent } from '../../components/editar-cargo-modal/e
 
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
+import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
 
 type FiltroEstado = 'todos' | 'activo' | 'inactivo';
 
@@ -25,6 +26,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     VerDetalleCargoModalComponent,
     CrearCargoModalComponent,
     EditarCargoModalComponent,
+    TienePermisoDirective,
   ],
   templateUrl: './lista-cargo.component.html',
 })
@@ -54,7 +56,6 @@ export class ListaCargoComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-
     this.cargarCargos();
   }
 

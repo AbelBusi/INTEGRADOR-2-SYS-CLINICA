@@ -160,9 +160,10 @@ export const MENU_BASE: NavItem[] = [
   {
     grupo: 'ADMINISTRACION',
     label: 'Cargos',
-    roles: ['ADMINISTRADOR'],
     icon: 'local_hospital',
-    sub: [{ label: 'Ver Cargos', route: '/dashboard/cargos', roles: ['ADMINISTRADOR'] }],
+    permisos: ['CARGO_VER'],
+    sub: [{ label: 'Ver Cargos', route: '/dashboard/cargos', permisos: ['CARGO_VER'],
+    }],
   },
   {
     grupo: 'ADMINISTRACION',
