@@ -13,7 +13,7 @@ import { TableColumn } from '../../../../../shared/components/custom-table/table
 import { PermisosRolModalComponent } from '../../components/permisos-rol-modal/permisos-rol-modal.component';
 import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
 import { PERMISOS } from '../../../../../core/constants/permisos.constants';
-import { VerPermisosRolModalComponent} from '../../components/ver-permisos-rol-modal/ver-permisos-rol-modal.component';
+import { VerPermisosRolModalComponent } from '../../components/ver-permisos-rol-modal/ver-permisos-rol-modal.component';
 
 type FiltroEstado = 'todos' | 'activo' | 'inactivo';
 
@@ -65,7 +65,15 @@ export class ListaRolComponent implements OnInit {
     this.cargarRoles();
   }
 
+  esRolBase(id: number): boolean {
+    return [1, 2, 3, 4].includes(id);
+  }
+
   setRolPermisos(rol: Rol): void {
+    if (this.esRolBase(rol.id)) {
+      this.toastService.warning('No se pueden modificar los permisos de un rol base del sistema.');
+      return;
+    }
     this.rolPermisos = rol;
   }
 
@@ -133,6 +141,10 @@ export class ListaRolComponent implements OnInit {
   }
 
   setRolEditar(rol: Rol): void {
+    if (this.esRolBase(rol.id)) {
+      this.toastService.warning('No se puede editar un rol base del sistema.');
+      return;
+    }
     this.rolEditar = rol;
   }
 
@@ -155,6 +167,11 @@ export class ListaRolComponent implements OnInit {
   }
 
   cambiarEstado(rol: Rol, estado: 'ACTIVO' | 'INACTIVO'): void {
+    if (this.esRolBase(rol.id)) {
+      this.toastService.warning('No se puede cambiar el estado de un rol base del sistema.');
+      return;
+    }
+
     if (this.cargando) {
       return;
     }
@@ -165,7 +182,7 @@ export class ListaRolComponent implements OnInit {
     this.toastService
       .confirmar(
         `${activar ? 'Activar' : 'Desactivar'} Rol`,
-        `¿Estás seguro de que deseas ${accion} la especialidad "${rol.nombre}"?`,
+        `¿Estás seguro de que deseas ${accion} el rol "${rol.nombre}"?`,
       )
       .then((confirmar) => {
         if (!confirmar) {
@@ -177,7 +194,7 @@ export class ListaRolComponent implements OnInit {
         this.rolService.cambiarEstado(rol.id, estado).subscribe({
           next: (response) => {
             this.toastService.success(
-              response?.mensaje || `Rol ${activar ? 'activada' : 'desactivada'} con éxito`,
+              response?.mensaje || `Rol ${activar ? 'activado' : 'desactivado'} con éxito`,
             );
             this.rolSeleccionado = null;
             this.cargarRoles();
@@ -193,6 +210,11 @@ export class ListaRolComponent implements OnInit {
   }
 
   eliminarRol(rol: Rol): void {
+    if (this.esRolBase(rol.id)) {
+      this.toastService.warning('No se puede eliminar un rol base del sistema.');
+      return;
+    }
+
     if (this.cargando) {
       return;
     }
@@ -218,9 +240,7 @@ export class ListaRolComponent implements OnInit {
           error: (error) => {
             console.error(error);
 
-            this.toastService.error(
-              error?.error?.mensaje || 'Hubo un error al eliminar la especialidad',
-            );
+            this.toastService.error(error?.error?.mensaje || 'Hubo un error al eliminar el rol');
 
             this.cargando = false;
             this.cdr.detectChanges();

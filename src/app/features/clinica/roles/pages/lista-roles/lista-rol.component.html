@@ -85,10 +85,15 @@
             </span>
           </div>
 
-          <span
-            class="font-semibold text-gray-800 group-hover:text-[#D9182A] transition-colors">
-            {{ row.nombre }}
-          </span>
+          <div class="flex flex-col">
+            <span
+              class="font-semibold text-gray-800 group-hover:text-[#D9182A] transition-colors">
+              {{ row.nombre }}
+            </span>
+            @if ([1, 2, 3, 4].includes(row.id)) {
+              <span class="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Rol Base</span>
+            }
+          </div>
 
         </div>
 
@@ -121,7 +126,7 @@
 
 
       @if (field === 'permisos') {
-        <div class="flex justify-center" (click)="$event.stopPropagation()">
+        <div class="flex justify-center gap-2" (click)="$event.stopPropagation()">
 
           <button
             type="button"
@@ -131,21 +136,23 @@
             Ver permisos
           </button>
 
-          <button
-            *appTienePermiso="PERMISOS.ROLES_ASIGNAR"
-            type="button"
-            (click)="setRolPermisos(row)"
-            class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[#D9182A]/30 bg-red-50 px-3 text-sm font-semibold text-[#D9182A] transition-colors hover:border-[#D9182A] hover:bg-red-100">
-            <span class="material-icons text-[18px]">vpn_key</span>
-            Editar permisos
-          </button>
+          @if (![1, 2, 3, 4].includes(row.id)) {
+            <button
+              *appTienePermiso="PERMISOS.ROLES_ASIGNAR"
+              type="button"
+              (click)="setRolPermisos(row)"
+              class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[#D9182A]/30 bg-red-50 px-3 text-sm font-semibold text-[#D9182A] transition-colors hover:border-[#D9182A] hover:bg-red-100">
+              <span class="material-icons text-[18px]">vpn_key</span>
+              Editar permisos
+            </button>
+          }
+
         </div>
       }
 
 
       @if (field === 'id') {
-
-        <div class="flex items-center justify-end gap-2" (click)="$event.stopPropagation()">
+        <div class="flex items-center justify-center gap-2" (click)="$event.stopPropagation()">
 
           <button
             type="button"
@@ -155,44 +162,50 @@
             Ver
           </button>
 
-          <button
-            type="button"
-            (click)="setRolEditar(row)"
-            class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
-            <span class="material-icons text-[18px]">edit</span>
-            Editar
-          </button>
-
-          @if (row.estado === 1) {
+          @if (![1, 2, 3, 4].includes(row.id)) {
             <button
               type="button"
-              (click)="cambiarEstado(row, 'INACTIVO')"
-              class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 transition-colors">
-              <span class="material-icons text-[18px]">toggle_off</span>
-              Desactivar
+              (click)="setRolEditar(row)"
+              class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
+              <span class="material-icons text-[18px]">edit</span>
+              Editar
+            </button>
+
+            @if (row.estado === 1) {
+              <button
+                type="button"
+                (click)="cambiarEstado(row, 'INACTIVO')"
+                class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 transition-colors">
+                <span class="material-icons text-[18px]">toggle_off</span>
+                Desactivar
+              </button>
+            } @else {
+              <button
+                type="button"
+                (click)="cambiarEstado(row, 'ACTIVO')"
+                class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68] transition-colors">
+                <span class="material-icons text-[18px]">toggle_on</span>
+                Activar
+              </button>
+            }
+
+            <button
+              type="button"
+              (click)="eliminarRol(row)"
+              class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] transition-colors">
+              <span class="material-icons text-[18px]">delete</span>
+              Eliminar
             </button>
           } @else {
-            <button
-              type="button"
-              (click)="cambiarEstado(row, 'ACTIVO')"
-              class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68] transition-colors">
-              <span class="material-icons text-[18px]">toggle_on</span>
-              Activar
-            </button>
+            <span class="inline-flex items-center gap-1 text-xs font-medium text-gray-400 px-2 py-1 select-none">
+              <span class="material-icons text-gray-400 text-[15px]">lock</span>
+              Sistema
+            </span>
           }
-
-          <button
-            type="button"
-            (click)="eliminarRol(row)"
-            class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] transition-colors">
-            <span class="material-icons text-[18px]">delete</span>
-            Eliminar
-          </button>
 
         </div>
 
       }
-
     </ng-template>
 
   </app-custom-table>
