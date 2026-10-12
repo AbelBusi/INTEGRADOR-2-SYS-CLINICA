@@ -12,6 +12,7 @@ import { EditarEmpleadoModalComponent } from '../../components/editar-empleado-m
 
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
+import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
 
 type FiltroEstado = 'todos' | 'activo' | 'inactivo';
 
@@ -25,6 +26,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     VerDetalleEmpleadoModalComponent,
     CrearEmpleadoModalComponent,
     EditarEmpleadoModalComponent,
+    TienePermisoDirective,
   ],
   templateUrl: './lista-empleado.component.html',
 })
@@ -46,7 +48,7 @@ export class ListaEmpleadoComponent implements OnInit {
     { header: 'Cargo', field: 'cargo', type: 'text' },
     { header: 'Ingreso', field: 'fechaIngreso', type: 'custom' },
     { header: 'Estado', field: 'estado', type: 'custom' },
-    { header: 'Acciones', field: 'id', type: 'custom', align:'center' },
+    { header: 'Acciones', field: 'id', type: 'custom', align: 'center' },
   ];
 
   constructor(

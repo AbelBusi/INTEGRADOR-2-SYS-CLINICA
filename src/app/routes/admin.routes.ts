@@ -49,7 +49,6 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         canActivate:[permisoGuard],
-        data: { permiso: ['PACIENTE_VER'] },
         path: 'roles',
         loadComponent: () =>
           import('../features/clinica/roles/pages/lista-roles/lista-rol.component').then(
@@ -64,7 +63,9 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
+        canActivate:[permisoGuard],
         path: 'empleados',
+        data: { permisos: ['EMPLEADO_VER'] },
         loadComponent: () =>
           import('../features/clinica/empleados/pages/lista-empleado/lista-empleado.component').then(
             (m) => m.ListaEmpleadoComponent,

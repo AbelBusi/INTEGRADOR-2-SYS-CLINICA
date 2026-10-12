@@ -43,6 +43,7 @@
 
     <button
       type="button"
+      *appTienePermiso="'EMPLEADO_CREAR'"
       (click)="isCrearOpen = true"
       class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 h-10 rounded-md bg-[#D9182A] hover:bg-[#B81424] text-white text-sm font-semibold transition-colors">
       <span class="material-icons text-[20px]">add</span>
@@ -124,6 +125,7 @@
           <!-- Ver -->
           <button
             type="button"
+            *appTienePermiso="'EMPLEADO_VER'"
             title="Ver detalle"
             (click)="setEmpleadoVer(row)"
             class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 sm:px-2 lg:px-2.5">
@@ -134,6 +136,7 @@
           <!-- Editar -->
           <button
             type="button"
+            *appTienePermiso="'EMPLEADO_EDITAR'"
             title="Editar"
             (click)="setEmpleadoEditar(row)"
             class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 sm:px-2 lg:px-2.5">
@@ -146,6 +149,7 @@
 
             <button
               type="button"
+              *appTienePermiso="'EMPLEADO_CAMBIAR_ESTADO'"
               title="Desactivar"
               (click)="cambiarEstado(row, 'INACTIVO')"
               class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 sm:px-2 lg:px-2.5">
@@ -157,6 +161,7 @@
 
             <button
               type="button"
+              *appTienePermiso="'EMPLEADO_CAMBIAR_ESTADO'"
               title="Activar"
               (click)="cambiarEstado(row, 'ACTIVO')"
               class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68] sm:px-2 lg:px-2.5">
@@ -169,6 +174,7 @@
           <!-- Eliminar -->
           <button
             type="button"
+            *appTienePermiso="'EMPLEADO_ELIMINAR'"
             title="Eliminar"
             (click)="eliminarEmpleado(row)"
             class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] sm:px-2 lg:px-2.5">

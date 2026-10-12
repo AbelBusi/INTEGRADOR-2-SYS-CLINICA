@@ -119,18 +119,18 @@ export const MENU_BASE: NavItem[] = [
     label: 'Pacientes',
     icon: 'groups',
     permisos: ['PACIENTE_VER'],
-    sub: [
-      { label: 'Ver pacientes',
-        route: '/dashboard/pacientes',
-        permisos: ['PACIENTE_VER']
-      }],
+    sub: [{ label: 'Ver pacientes', route: '/dashboard/pacientes', permisos: ['PACIENTE_VER'] }],
   },
   {
     grupo: 'PERSONAL Y PACIENTES',
     label: 'Empleados',
-    roles: ['ADMINISTRADOR', 'RECEPCIONISTA'],
     icon: 'groups',
-    sub: [{ label: 'Ver Empleados', route: '/dashboard/empleados', roles: ['ADMINISTRADOR'] }],
+    permisos: ['EMPLEADO_VER'],
+    sub: [
+      { label: 'Ver Empleados',
+        route: '/dashboard/empleados',
+        permisos: ['EMPLEADO_VER'],
+      }],
   },
   {
     grupo: 'PERSONAL Y PACIENTES',
