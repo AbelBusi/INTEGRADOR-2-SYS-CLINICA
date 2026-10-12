@@ -37,7 +37,7 @@
                 {{ cargandoPersonas() ? 'Cargando...' : 'Seleccionar ' + etiquetaPersona().toLowerCase() }}
               </option>
               @for (persona of personas(); track persona.idPersona) {
-                <option [ngValue]="persona.idPersona">{{ persona.nombreCompleto }}</option>
+                <option [ngValue]="persona.idPersona">DNI: {{ persona.numeroDocumento }} / {{ persona.nombreCompleto }} </option>
               }
             </select>
           </div>

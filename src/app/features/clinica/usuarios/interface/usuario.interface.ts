@@ -26,6 +26,7 @@ export interface UsuarioFila extends UsuarioListado {
 export interface PersonaUsuario {
   idPersona: number;
   nombreCompleto: string;
+  numeroDocumento: String;
 }
 
 export interface RolResumen {
