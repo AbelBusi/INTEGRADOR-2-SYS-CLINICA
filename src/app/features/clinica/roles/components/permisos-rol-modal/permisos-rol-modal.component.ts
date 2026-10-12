@@ -173,40 +173,83 @@ export class PermisosRolModalComponent implements OnInit {
     return texto.charAt(0).toUpperCase() + texto.slice(1);
   }
 
+  esPermisoVerObligatorio(permiso: PermisoItem, grupo: GrupoVista): boolean {
+    const esVer = /listar|ver|read|get/i.test(permiso.codigo || permiso.nombre);
+    if (!esVer) {
+      return false;
+    }
+
+    const moduloOriginal = this.catalogo().find((m) => m.modulo === grupo.modulo);
+    if (!moduloOriginal) {
+      return false;
+    }
+
+    return moduloOriginal.permisos
+      .filter((p) => p.id !== permiso.id)
+      .some((p) => this.seleccion().has(p.id));
+  }
+
   alternar(id: number): void {
+    const modulos = this.catalogo();
+    let permisoEncontrado: PermisoItem | undefined;
+    let moduloEncontrado: PermisoModulo | undefined;
+
+    for (const modulo of modulos) {
+      const p = modulo.permisos.find((item) => item.id === id);
+      if (p) {
+        permisoEncontrado = p;
+        moduloEncontrado = modulo;
+        break;
+      }
+    }
+
+    if (!permisoEncontrado || !moduloEncontrado) {
+      return;
+    }
+
+    const esVerOListar = /listar|ver|read|get/i.test(
+      permisoEncontrado.codigo || permisoEncontrado.nombre,
+    );
+    const estaSeleccionado = this.seleccion().has(id);
+
+    const grupoTemp: GrupoVista = {
+      modulo: moduloEncontrado.modulo,
+      titulo: '',
+      visibles: moduloEncontrado.permisos,
+      seleccionados: 0,
+      total: moduloEncontrado.permisos.length,
+      estado: 'ninguno',
+    };
+
+    if (
+      estaSeleccionado &&
+      esVerOListar &&
+      this.esPermisoVerObligatorio(permisoEncontrado, grupoTemp)
+    ) {
+      return;
+    }
+
     this.seleccion.update((actual) => {
       const nuevo = new Set(actual);
-      if (nuevo.has(id)) {
+
+      if (estaSeleccionado) {
         nuevo.delete(id);
       } else {
         nuevo.add(id);
 
-        const modulos = this.catalogo();
-        for (const modulo of modulos) {
-          const permisoActual = modulo.permisos.find((p) => p.id === id);
-
-          if (permisoActual) {
-            const esVerOListar = /listar|ver|read|get/i.test(
-              permisoActual.codigo || permisoActual.nombre,
-            );
-
-            if (!esVerOListar) {
-              const permisoListar = modulo.permisos.find((p) =>
-                /listar|ver|read|get/i.test(p.codigo || p.nombre),
-              );
-
-              if (permisoListar) {
-                nuevo.add(permisoListar.id);
-              }
-            }
-            break;
+        if (!esVerOListar) {
+          const permisoListar = moduloEncontrado!.permisos.find((p) =>
+            /listar|ver|read|get/i.test(p.codigo || p.nombre),
+          );
+          if (permisoListar) {
+            nuevo.add(permisoListar.id);
           }
         }
       }
+
       return nuevo;
     });
   }
-
   alternarGrupo(grupo: GrupoVista): void {
     const ids = grupo.visibles.map((p) => p.id);
     const todosMarcados = ids.every((id) => this.seleccion().has(id));
