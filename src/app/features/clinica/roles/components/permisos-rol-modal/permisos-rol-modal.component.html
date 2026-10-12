@@ -1,26 +1,72 @@
+
+<style>
+  @keyframes modal-entrada {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.99);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes candado-abrir {
+    0% {
+      transform: rotate(0deg);
+    }
+    35% {
+      transform: rotate(-12deg);
+    }
+    70% {
+      transform: rotate(8deg);
+    }
+    100% {
+      transform: rotate(0deg);
+    }
+  }
+
+  .modal-permisos-entrada {
+    animation: modal-entrada 180ms ease-out both;
+  }
+
+  .candado-animado {
+    animation: candado-abrir 450ms ease-out both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .modal-permisos-entrada,
+    .candado-animado {
+      animation: none;
+    }
+  }
+</style>
+
 <div *ngIf="rol" class="relative z-50">
   <div class="fixed inset-0 bg-neutral-900/50"></div>
 
   <div class="fixed inset-0 overflow-y-auto">
     <div class="flex min-h-full items-center justify-center p-4">
-      <div class="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded border border-neutral-300 bg-white">
+      <div class="modal-permisos-entrada flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-lg border border-neutral-300 bg-white">
 
         <div class="flex shrink-0 items-start justify-between bg-[#58595B] px-6 py-4">
           <div class="flex items-center gap-3">
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded bg-[#D9182A]">
-              <span class="material-icons text-[20px] text-white">vpn_key</span>
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#D9182A]">
+              <span class="material-icons candado-animado text-[22px] text-white">lock_open</span>
             </div>
             <div>
               <h3 class="text-base font-bold text-white">Permisos del rol</h3>
-              <p class="text-xs font-medium text-neutral-300">{{ rol.nombre }}</p>
+              <p class="mt-1 text-xs text-neutral-300">Configura los accesos de {{ rol.nombre }}</p>
             </div>
           </div>
+
           <button
             type="button"
             (click)="cerrar()"
             [disabled]="guardando()"
-            class="rounded p-1.5 text-neutral-300 transition-colors hover:bg-neutral-700 hover:text-white disabled:opacity-50">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            aria-label="Cerrar ventana de permisos"
+            class="rounded-md p-1.5 text-neutral-300 transition-colors hover:bg-neutral-700 hover:text-white disabled:opacity-50">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -32,19 +78,21 @@
         </div>
 
         @if (cargando()) {
-
-          <div class="flex items-center justify-center py-20">
-            <div class="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#0d6b68]"></div>
-          </div>
-
-        } @else if (errorCarga()) {
-
           <div class="flex flex-col items-center justify-center px-6 py-16 text-center">
-            <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-              <span class="material-icons text-2xl text-gray-400">cloud_off</span>
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-red-50">
+              <span class="material-icons text-2xl text-[#D9182A]">lock</span>
             </div>
-            <p class="text-sm font-semibold text-gray-700">No se pudieron cargar los permisos</p>
-            <p class="mt-1 text-xs text-gray-400">Comprueba tu conexión e inténtalo nuevamente.</p>
+            <div class="mt-4 h-7 w-7 animate-spin rounded-full border-4 border-neutral-200 border-t-[#D9182A]"></div>
+            <p class="mt-4 text-sm font-semibold text-neutral-800">Cargando permisos</p>
+            <p class="mt-1 text-xs text-neutral-500">Estamos consultando los accesos configurados para este rol.</p>
+          </div>
+        } @else if (errorCarga()) {
+          <div class="flex flex-col items-center justify-center px-6 py-16 text-center">
+            <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-neutral-100">
+              <span class="material-icons text-2xl text-[#58595B]">cloud_off</span>
+            </div>
+            <p class="text-sm font-semibold text-neutral-800">No se pudieron cargar los permisos</p>
+            <p class="mt-1 max-w-sm text-xs leading-5 text-neutral-500">Ocurrió un problema al consultar los permisos de este rol. Puedes volver a intentarlo.</p>
             <button
               type="button"
               (click)="cargar()"
@@ -53,78 +101,88 @@
               Reintentar
             </button>
           </div>
-
         } @else {
-
-          <div class="shrink-0 space-y-3 border-b border-neutral-200 px-6 py-4">
+          <div class="shrink-0 space-y-4 border-b border-neutral-200 px-6 py-4">
 
             @if (esRolPropio) {
-              <div class="flex items-start gap-2 rounded border border-amber-300 bg-amber-50 px-3 py-2.5">
+              <div class="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-3">
                 <span class="material-icons mt-px text-[18px] text-amber-700">warning</span>
-                <p class="text-xs leading-5 text-amber-800">
-                  Estás editando el rol que usas actualmente. Si quitas permisos, podrías perder el acceso a algunas secciones.
-                </p>
+                <div>
+                  <p class="text-xs font-bold text-amber-900">Estás editando tu propio rol</p>
+                  <p class="mt-1 text-xs leading-5 text-amber-800">Retirar permisos de tu propio rol podría limitar tu acceso a determinadas secciones del sistema.</p>
+                </div>
               </div>
             }
 
+            <div>
+              <h4 class="text-sm font-bold text-neutral-800">Administración de accesos</h4>
+              <p class="mt-1 text-xs leading-5 text-neutral-500">Selecciona las funcionalidades que podrá utilizar este rol. Puedes buscar permisos específicos o gestionarlos por módulo.</p>
+            </div>
+
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <div
-                class="flex h-10 flex-1 items-center gap-2 rounded-md border border-gray-300 bg-white px-3 transition-colors focus-within:border-[#58595B] focus-within:ring-1 focus-within:ring-[#58595B]">
-                <span class="material-icons text-[20px] text-gray-400">search</span>
+              <div class="flex h-10 flex-1 items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 transition-colors focus-within:border-[#D9182A] focus-within:ring-1 focus-within:ring-[#D9182A]">
+                <span class="material-icons text-[20px] text-neutral-400">search</span>
                 <input
                   type="text"
                   [value]="busqueda()"
                   (input)="busqueda.set($any($event.target).value)"
                   placeholder="Buscar permiso o módulo..."
-                  class="w-full bg-transparent text-sm text-gray-700 outline-none placeholder-gray-400"
+                  class="w-full bg-transparent text-sm text-neutral-800 outline-none placeholder-neutral-400"
                 />
               </div>
 
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   (click)="marcarVisibles(true)"
-                  class="h-10 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+                  class="h-10 rounded-md border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-700 transition-colors hover:border-[#D9182A] hover:bg-red-50 hover:text-[#D9182A]">
                   Marcar todo
                 </button>
                 <button
                   type="button"
                   (click)="marcarVisibles(false)"
-                  class="h-10 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+                  class="h-10 rounded-md border border-neutral-300 bg-white px-3 text-sm font-medium text-neutral-700 transition-colors hover:border-[#58595B] hover:bg-neutral-100">
                   Desmarcar todo
                 </button>
               </div>
             </div>
 
-            <p class="text-xs font-medium text-neutral-500">
-              <span class="font-bold text-neutral-800">{{ totalSeleccionados() }}</span>
-              de {{ totalPermisos() }} permisos seleccionados
-            </p>
-
+            <div class="flex flex-wrap items-center justify-between gap-2 rounded-md border border-neutral-200 bg-neutral-50 px-3 py-2.5">
+              <div class="flex items-center gap-2">
+                <span class="material-icons text-[19px] text-[#58595B]">fact_check</span>
+                <span class="text-xs font-medium text-neutral-600">Permisos seleccionados</span>
+              </div>
+              <p class="text-sm font-bold text-neutral-800">
+                <span class="text-[#D9182A]">{{ totalSeleccionados() }}</span>
+                <span class="font-medium text-neutral-400"> / {{ totalPermisos() }}</span>
+              </p>
+            </div>
           </div>
 
           <div class="min-h-0 flex-1 space-y-4 overflow-y-auto px-6 py-4 [scrollbar-width:thin]">
 
             @for (grupo of grupos(); track grupo.modulo) {
+              <section class="overflow-hidden rounded-lg border border-neutral-200">
 
-              <section class="rounded border border-neutral-200">
-
-                <div class="flex items-center justify-between gap-3 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5">
-                  <label class="flex cursor-pointer items-center gap-3">
+                <div class="flex items-start justify-between gap-3 border-b border-neutral-200 bg-neutral-50 px-4 py-3">
+                  <label class="flex min-w-0 cursor-pointer items-start gap-3">
                     <input
                       type="checkbox"
-                      class="h-4 w-4 shrink-0 rounded border-neutral-300 accent-[#D9182A]"
+                      class="mt-0.5 h-4 w-4 shrink-0 rounded border-neutral-300 accent-[#D9182A] focus:ring-[#D9182A]"
                       [checked]="grupo.estado === 'todos'"
                       [indeterminate]="grupo.estado === 'parcial'"
                       (change)="alternarGrupo(grupo)"
                     />
-                    <span class="text-sm font-bold text-neutral-800">{{ grupo.titulo }}</span>
+                    <span class="min-w-0">
+                      <span class="block text-sm font-bold text-neutral-800">MODULO: {{ grupo.titulo.toUpperCase() }}</span>
+                      <span class="mt-1 block text-xs leading-5 text-neutral-500">Administra los permisos disponibles para consultar y utilizar las funcionalidades de este módulo.</span>
+                    </span>
                   </label>
 
                   <span
-                    class="rounded-full border px-2.5 py-0.5 text-[11px] font-bold"
+                    class="shrink-0 rounded-md border px-2.5 py-1 text-[11px] font-bold"
                     [ngClass]="grupo.seleccionados > 0
-                      ? 'border-[#0d6b68]/20 bg-[#0d6b68]/10 text-[#0d6b68]'
+                      ? 'border-[#D9182A]/30 bg-red-50 text-[#D9182A]'
                       : 'border-neutral-300 bg-white text-neutral-500'">
                     {{ grupo.seleccionados }}/{{ grupo.total }}
                   </span>
@@ -133,80 +191,80 @@
                 <div class="grid grid-cols-1 gap-2 p-3 sm:grid-cols-2">
                   @for (permiso of grupo.visibles; track permiso.id) {
                     <label
-                      class="flex cursor-pointer items-start gap-3 rounded border px-3 py-2.5 transition-colors"
+                      class="flex cursor-pointer items-start gap-3 rounded-md border px-3 py-3 transition-colors"
                       [ngClass]="seleccion().has(permiso.id)
-                        ? 'border-[#D9182A]/40 bg-[#D9182A]/[0.04]'
-                        : 'border-neutral-200 bg-white hover:border-[#58595B]/50 hover:bg-neutral-50'">
+                        ? 'border-[#D9182A]/50 bg-red-50'
+                        : 'border-neutral-200 bg-white hover:border-neutral-400 hover:bg-neutral-50'">
                       <input
                         type="checkbox"
-                        class="mt-0.5 h-4 w-4 shrink-0 rounded border-neutral-300 accent-[#D9182A]"
+                        class="mt-0.5 h-4 w-4 shrink-0 rounded border-neutral-300 accent-[#D9182A] focus:ring-[#D9182A]"
                         [checked]="seleccion().has(permiso.id)"
                         (change)="alternar(permiso.id)"
                       />
                       <span class="min-w-0">
                         <span class="block text-sm font-semibold text-neutral-800">{{ permiso.nombre }}</span>
-                        <span class="block break-all font-mono text-[11px] text-neutral-400">{{ permiso.codigo }}</span>
+                        <span class="mt-1 block break-all font-mono text-[11px] text-neutral-500">{{ permiso.codigo }}</span>
                       </span>
                     </label>
                   }
                 </div>
-
               </section>
-
             } @empty {
-
               <div class="flex flex-col items-center justify-center py-12 text-center">
-                <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-                  <span class="material-icons text-2xl text-gray-400">search_off</span>
+                <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-neutral-100">
+                  <span class="material-icons text-2xl text-neutral-500">search_off</span>
                 </div>
-                <p class="text-sm font-semibold text-gray-600">No se encontraron permisos</p>
-                <p class="mt-1 text-xs text-gray-400">Prueba con otro término de búsqueda.</p>
+                <p class="text-sm font-semibold text-neutral-700">No se encontraron permisos</p>
+                <p class="mt-1 max-w-sm text-xs leading-5 text-neutral-500">No hay permisos que coincidan con tu búsqueda. Prueba con otro término.</p>
               </div>
-
             }
-
           </div>
 
-          <div class="shrink-0 space-y-3 border-t border-neutral-200 bg-[#fafafa] px-6 py-4">
+          <div class="shrink-0 space-y-3 border-t border-neutral-200 bg-neutral-50 px-6 py-4">
+            <div class="flex items-start gap-2">
+              <span class="material-icons mt-px text-[16px] text-neutral-400">info</span>
+              <p class="text-[11px] leading-5 text-neutral-500">Los usuarios con este rol deberán iniciar sesión de nuevo para que los cambios surtan efecto.</p>
+            </div>
 
-            <p class="text-[11px] leading-4 text-neutral-500">
-              Los usuarios con este rol deberán iniciar sesión de nuevo para que los cambios surtan efecto.
-            </p>
-
-            <div class="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <span class="text-xs font-semibold" [ngClass]="hayCambios() ? 'text-neutral-700' : 'text-neutral-400'">
+            <div class="flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
                 @if (hayCambios()) {
-                  {{ agregados() }} por agregar · {{ quitados() }} por quitar
+                  <p class="text-xs font-semibold text-neutral-700">Cambios pendientes</p>
+                  <p class="mt-1 text-xs text-neutral-500">
+                    <span class="font-semibold text-[#D9182A]">{{ agregados() }} por agregar</span>
+                    <span class="mx-1 text-neutral-300">·</span>
+                    <span>{{ quitados() }} por quitar</span>
+                  </p>
                 } @else {
-                  Sin cambios
+                  <p class="text-xs font-medium text-neutral-400">Sin cambios pendientes</p>
                 }
-              </span>
+              </div>
 
               <div class="flex flex-col-reverse gap-2 sm:flex-row">
                 <button
                   type="button"
                   (click)="cerrar()"
                   [disabled]="guardando()"
-                  class="rounded border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-50">
+                  class="rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 disabled:cursor-not-allowed disabled:opacity-50">
                   Cancelar
                 </button>
                 <button
                   type="button"
                   (click)="guardar()"
                   [disabled]="!hayCambios() || guardando()"
-                  class="flex items-center justify-center gap-2 rounded bg-[#D9182A] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:opacity-50">
+                  class="flex items-center justify-center gap-2 rounded-md bg-[#D9182A] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:cursor-not-allowed disabled:opacity-50">
                   @if (guardando()) {
                     <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+                    Guardando...
+                  } @else {
+                    <span class="material-icons text-[18px]">lock_open</span>
+                    Guardar permisos
                   }
-                  Guardar permisos
                 </button>
               </div>
             </div>
-
           </div>
-
         }
-
       </div>
     </div>
   </div>

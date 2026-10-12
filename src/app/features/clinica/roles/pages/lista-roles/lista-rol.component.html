@@ -119,6 +119,30 @@
 
       }
 
+
+      @if (field === 'permisos') {
+        <div class="flex justify-center" (click)="$event.stopPropagation()">
+
+          <button
+            type="button"
+            (click)="setRolVerPermisos(row)"
+            class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+            <span class="material-icons text-[18px]">visibility</span>
+            Ver permisos
+          </button>
+
+          <button
+            *appTienePermiso="PERMISOS.ROLES_ASIGNAR"
+            type="button"
+            (click)="setRolPermisos(row)"
+            class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[#D9182A]/30 bg-red-50 px-3 text-sm font-semibold text-[#D9182A] transition-colors hover:border-[#D9182A] hover:bg-red-100">
+            <span class="material-icons text-[18px]">vpn_key</span>
+            Editar permisos
+          </button>
+        </div>
+      }
+
+
       @if (field === 'id') {
 
         <div class="flex items-center justify-end gap-2" (click)="$event.stopPropagation()">
@@ -137,15 +161,6 @@
             class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
             <span class="material-icons text-[18px]">edit</span>
             Editar
-          </button>
-
-          <button
-            *appTienePermiso="PERMISOS.ROLES_ASIGNAR"
-            type="button"
-            (click)="setRolPermisos(row)"
-            class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
-            <span class="material-icons text-[18px]">vpn_key</span>
-            Permisos
           </button>
 
           @if (row.estado === 1) {
@@ -222,4 +237,11 @@
     (close)="rolPermisos = null"
     (guardado)="handlePermisosGuardados()"
   ></app-permisos-rol-modal>
+}
+
+@if (rolVerPermisos) {
+  <app-ver-permisos-rol-modal
+    [rol]="rolVerPermisos"
+    (close)="rolVerPermisos = null"
+  ></app-ver-permisos-rol-modal>
 }

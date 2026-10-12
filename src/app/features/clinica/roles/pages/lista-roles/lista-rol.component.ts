@@ -13,6 +13,7 @@ import { TableColumn } from '../../../../../shared/components/custom-table/table
 import { PermisosRolModalComponent } from '../../components/permisos-rol-modal/permisos-rol-modal.component';
 import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
 import { PERMISOS } from '../../../../../core/constants/permisos.constants';
+import { VerPermisosRolModalComponent} from '../../components/ver-permisos-rol-modal/ver-permisos-rol-modal.component';
 
 type FiltroEstado = 'todos' | 'activo' | 'inactivo';
 
@@ -28,6 +29,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     PermisosRolModalComponent,
     TienePermisoDirective,
     EditarRolModalComponent,
+    VerPermisosRolModalComponent,
   ],
   templateUrl: './lista-rol.component.html',
 })
@@ -43,11 +45,13 @@ export class ListaRolComponent implements OnInit {
   filtroEstado: FiltroEstado = 'todos';
   readonly PERMISOS = PERMISOS;
   rolPermisos: Rol | null = null;
+  rolVerPermisos: Rol | null = null;
 
   columns: TableColumn<Rol>[] = [
     { header: 'Rol', field: 'nombre', sortable: true, type: 'custom' },
     { header: 'Descripción', field: 'descripcion', type: 'text' },
     { header: 'Estado', field: 'estado', type: 'custom' },
+    { header: 'Permisos', field: 'permisos', type: 'custom', align: 'center' },
     { header: 'Acciones', field: 'id', type: 'custom', align: 'center' },
   ];
 
@@ -68,6 +72,10 @@ export class ListaRolComponent implements OnInit {
   handlePermisosGuardados(): void {
     this.rolPermisos = null;
     this.cdr.detectChanges();
+  }
+
+  setRolVerPermisos(rol: Rol): void {
+    this.rolVerPermisos = rol;
   }
 
   cargarRoles(): void {
