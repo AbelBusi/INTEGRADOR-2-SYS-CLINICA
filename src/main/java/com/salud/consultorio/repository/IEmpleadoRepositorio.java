@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,9 @@ import java.util.Optional;
 public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
 
     boolean existsByCargoId(Integer idCargo);
+
+    @Query("SELECT e.persona.id FROM Empleado e WHERE e.id = :idEmpleado")
+    Integer empleadoPersonaID(@PathVariable("idEmpleado") Integer idEmpleado);
 
     @Query("""
             SELECT new com.salud.consultorio.dto.empleado.EmpleadoLeerDTO(
@@ -145,7 +149,8 @@ public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
     @Query("""
                 SELECT new com.salud.consultorio.dto.usuario.PersonaUsuarioDTO(
                     e.persona.id,
-                    CONCAT(e.persona.nombre, ' ', e.persona.apellidos)
+                    CONCAT(e.persona.nombre, ' ', e.persona.apellidos),
+                    e.persona.numeroDocumento
                 )
                 FROM Empleado e
                 WHERE e.estado = 1

@@ -21,6 +21,8 @@ public interface IEmpleadoServicio {
 
     List<EmpleadoActivoResumenDTO> listaEmpleadosActivosCargo(Integer id);
 
+    boolean existeEmpleadoID(Integer id);
+
     Empleado entidadPorIDTransaccion(Integer id);
 
     EmpleadoRespuestaDTO crear(EmpleadoCrearDTO dto, MultipartFile imagen);
@@ -34,5 +36,7 @@ public interface IEmpleadoServicio {
     List<PersonaUsuarioDTO> listarPacientesSinUusario();
 
     boolean existeEmpleadoPorCargo(Integer idCargo);
+
+    Integer IDEmpleadoPersona(Integer id);
 
 }

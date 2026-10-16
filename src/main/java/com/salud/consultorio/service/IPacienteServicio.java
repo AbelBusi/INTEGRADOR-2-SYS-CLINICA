@@ -23,4 +23,9 @@ public interface IPacienteServicio{
     void cambiarEstado(Integer id, EntidadEstado estado);
 
     List<PersonaUsuarioDTO> listarPacientesSinUusario();
+
+    EmpleadoConvertidoPacienteRespuestaDTO convertirEmpleadoPaciente(Integer idEmpleado, EmpleadoConvertirPacienteDTO dto);
+
+
+
 }

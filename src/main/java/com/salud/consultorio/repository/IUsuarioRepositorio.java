@@ -50,7 +50,8 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
     @Query("""
                 SELECT new com.salud.consultorio.dto.usuario.PersonaUsuarioDTO(
                     e.persona.id,
-                    CONCAT(e.persona.nombre, ' ', e.persona.apellidos)
+                    CONCAT(e.persona.nombre, ' ', e.persona.apellidos),
+                    e.persona.numeroDocumento
                 )
                 FROM Empleado e
                 WHERE e.estado = 1
@@ -158,7 +159,8 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
                 u.fechaCreacion,
                 u.fechaActualizacion,
                 u.requiereCambioClave,
-                u.estado
+                u.estado,
+                pa.id
             )
             FROM Usuario u
             JOIN u.persona p
@@ -180,7 +182,8 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
                 u.fechaCreacion,
                 u.fechaActualizacion,
                 u.requiereCambioClave,
-                u.estado
+                u.estado,
+                e.id
             )
             FROM Usuario u
             JOIN u.persona p

@@ -67,7 +67,7 @@ public interface ICargoRepositorio extends JpaRepository<Cargo, Integer> {
                 c.nombre
                 )
             FROM Cargo c
-            WHERE c.estado=1
+            WHERE c.estado=1 AND c.esPersonalMedico= true
             """)
     List<CargoResumenDTO> listaResumenDatos();
 

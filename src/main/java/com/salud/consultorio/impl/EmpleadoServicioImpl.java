@@ -85,6 +85,12 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
 
     @Transactional(readOnly = true)
     @Override
+    public boolean existeEmpleadoID(Integer id) {
+        return empleadoRepositorio.existsById(id);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public Empleado entidadPorIDTransaccion(Integer id) {
         return empleadoRepositorio.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("El empleado que desea validar no existe o no se encuentra."));
@@ -254,6 +260,12 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
     @Override
     public boolean existeEmpleadoPorCargo(Integer idCargo) {
         return empleadoRepositorio.existsByCargoId(idCargo);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Integer IDEmpleadoPersona(Integer id) {
+        return empleadoRepositorio.empleadoPersonaID(id);
     }
 
     private void validarId(Integer id) {

@@ -1,5 +1,6 @@
 package com.salud.consultorio.impl;
 
+import com.salud.consultorio.auth.service.ITokenServicio;
 import com.salud.consultorio.dto.autorizacion.*;
 import com.salud.consultorio.model.entity.Permiso;
 import com.salud.consultorio.model.entity.Rol;
@@ -12,9 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +23,7 @@ public class AutorizacionServicioImpl implements IAutorizacionServicio {
     private final IAutorizacionRepositorio autorizacionRepositorio;
     private final IRolServicio rolServicio;
     private final IPermisoServicio permisoServicio;
+    private final ITokenServicio tokenServicio;
 
     @Transactional
     @Override
@@ -139,8 +139,7 @@ public class AutorizacionServicioImpl implements IAutorizacionServicio {
             );
         }
 
-        Set<Integer> idPermisos = dto.idPermisos().stream()
-                .collect(Collectors.toSet());
+        Set<Integer> idPermisos = new LinkedHashSet<>(dto.idPermisos());
 
         if (dto.idPermisos().size() != idPermisos.size()) {
             throw new IllegalArgumentException(
@@ -152,22 +151,19 @@ public class AutorizacionServicioImpl implements IAutorizacionServicio {
 
         List<Permiso> permisos = idPermisos.isEmpty()
                 ? List.of()
-                : permisoServicio.traerPermisosExistentesPorID(
-                idPermisos.stream().toList()
+                : permisoServicio.traerPermisosExistentesPorID(List.copyOf(idPermisos));
+
+        Set<Integer> idActuales = new HashSet<>(
+                autorizacionRepositorio.idsPermisoPorRol(rol.getId())
         );
 
-        List<RolPermiso> actuales =
-                autorizacionRepositorio.findByRol_Id(rol.getId());
-
-        Set<Integer> idActuales = actuales.stream()
-                .map(rp -> rp.getPermiso().getId())
-                .collect(Collectors.toSet());
-
-        List<RolPermiso> eliminar = actuales.stream()
-                .filter(rp -> !idPermisos.contains(rp.getPermiso().getId()))
+        List<Integer> idEliminar = idActuales.stream()
+                .filter(id -> !idPermisos.contains(id))
                 .toList();
 
-        autorizacionRepositorio.deleteAll(eliminar);
+        if (!idEliminar.isEmpty()) {
+            autorizacionRepositorio.eliminarPorRolYPermisos(rol.getId(), idEliminar);
+        }
 
         List<RolPermiso> agregar = permisos.stream()
                 .filter(p -> !idActuales.contains(p.getId()))
@@ -179,13 +175,14 @@ public class AutorizacionServicioImpl implements IAutorizacionServicio {
 
         autorizacionRepositorio.saveAll(agregar);
 
+        tokenServicio.revocarPorRol(rol.getId());
+
         return new AutorizacionRespuesta(
                 rol.getId(),
-                dto.idPermisos().stream()
+                idPermisos.stream()
                         .map(AgregarPermiso::new)
                         .toList()
         );
     }
-
 
 }

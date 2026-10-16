@@ -16,6 +16,10 @@ import java.util.Optional;
 @Repository
 public interface IPacienteRepositorio extends JpaRepository<Paciente, Integer> {
 
+    boolean existsByPersona_Id(Integer idPaciente);
+
+    boolean existsByCodigoAsegurado(String codigoAsegurado);
+
     @Query("""
             SELECT new com.salud.consultorio.dto.paciente.PacienteLeerDTO(
                 pa.id,
@@ -94,7 +98,8 @@ public interface IPacienteRepositorio extends JpaRepository<Paciente, Integer> {
     @Query("""
                 SELECT new com.salud.consultorio.dto.usuario.PersonaUsuarioDTO(
                     p.persona.id,
-                    CONCAT(p.persona.nombre, ' ', p.persona.apellidos)
+                    CONCAT(p.persona.nombre, ' ', p.persona.apellidos),
+                    p.persona.numeroDocumento
                 )
                 FROM Paciente p
                 WHERE p.estado = 1
