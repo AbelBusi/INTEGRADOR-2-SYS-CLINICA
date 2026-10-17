@@ -92,7 +92,12 @@ export interface TipoDocumentoResumen {
   longitud: number;
 }
 
-export type AccionEmpleado = 'ACTIVO' | 'DESACTIVADO' | 'REACTIVAR';
+export type AccionEmpleado = 'ACTIVO' | 'DESACTIVADO' | 'REACTIVAR' | 'REGISTRAR';
+
+export interface EmpleadoConvertirPacienteDTO {
+  entidadAsegurado: string;
+  codigoAsegurado: string;
+}
 
 export interface EmpleadoBusqueda {
   idEmpleado: number;

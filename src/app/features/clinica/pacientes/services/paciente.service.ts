@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import {
   EmpleadoBusqueda,
+  EmpleadoConvertirPacienteDTO,
   MensajeResponse,
   Paciente,
   PacienteActualizarDTO,
@@ -68,6 +69,16 @@ export class PacienteService {
   ): Observable<MensajeResponse<EmpleadoBusqueda>> {
     return this.http.get<MensajeResponse<EmpleadoBusqueda>>(
       `${environment.apiUrl}/empleados/buscar/${encodeURIComponent(numeroDocumento)}`,
+    );
+  }
+
+  convertirEmpleadoEnPaciente(
+    idEmpleado: number,
+    dto: EmpleadoConvertirPacienteDTO,
+  ): Observable<MensajeResponse<unknown>> {
+    return this.http.post<MensajeResponse<unknown>>(
+      `${this.baseUrl}/desde-empleado/${idEmpleado}/convertir-paciente`,
+      dto,
     );
   }
 }
