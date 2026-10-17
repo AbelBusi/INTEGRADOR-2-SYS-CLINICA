@@ -1,9 +1,6 @@
 package com.salud.consultorio.repository;
 
-import com.salud.consultorio.dto.empleado.EmpleadoActivoResumenDTO;
-import com.salud.consultorio.dto.empleado.EmpleadoDetalleDTO;
-import com.salud.consultorio.dto.empleado.EmpleadoLeerDTO;
-import com.salud.consultorio.dto.empleado.EmpleadoMedicoResumenDTO;
+import com.salud.consultorio.dto.empleado.*;
 import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.entity.Empleado;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,8 +23,29 @@ public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
     @Query("SELECT e.persona.id FROM Empleado e WHERE e.id = :idEmpleado")
     Integer empleadoPersonaID(@PathVariable("idEmpleado") Integer idEmpleado);
 
-    @Query("SELECT e.id FROM Empleado e JOIN e.persona p WHERE p.numeroDocumento= :nroDocumento")
-    Integer empleadoIDporNroDocumento(@PathVariable("nroDocumento") String nroDocumento);
+    @Query("""
+            SELECT new com.salud.consultorio.dto.empleado.EmpleadoIDPorBuscarNroDocDTO(
+                e.id,
+                p.id,
+                CONCAT(p.nombre, ' ', p.apellidos),
+                CASE
+                    WHEN pa.id IS NULL THEN 'REGISTRAR'
+                    WHEN pa.estado = 1 THEN 'ACTIVO'
+                    WHEN pa.estado = 2 THEN 'DESACTIVADO'
+                    WHEN pa.estado = 0 THEN 'REACTIVAR'
+                    ELSE 'DESCONOCIDO'
+                END
+            )
+            FROM Empleado e
+            JOIN e.persona p
+            LEFT JOIN Paciente pa ON pa.persona.id = p.id
+            WHERE p.numeroDocumento = :nroDocumento
+              AND e.estado = 1
+              AND p.estado = 1
+            """)
+    EmpleadoIDPorBuscarNroDocDTO empleadoIDporNroDocumento(
+            @Param("nroDocumento") String nroDocumento
+    );
 
     @Query("""
             SELECT new com.salud.consultorio.dto.empleado.EmpleadoLeerDTO(

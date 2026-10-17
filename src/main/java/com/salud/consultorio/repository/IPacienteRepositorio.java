@@ -68,6 +68,10 @@ public interface IPacienteRepositorio extends JpaRepository<Paciente, Integer> {
     @Query("UPDATE Paciente pa SET pa.estado =0 WHERE pa.id=:id")
     void eliminarLogicamente(@Param("id") Integer id);
 
+    @Modifying
+    @Query("UPDATE Paciente pa SET pa.estado =1 WHERE pa.id=:id")
+    void reactivarLogicamente(@Param("id") Integer id);
+
     @Query("""
             SELECT new com.salud.consultorio.dto.paciente.PacienteDetalleDTO(
                 pa.id,

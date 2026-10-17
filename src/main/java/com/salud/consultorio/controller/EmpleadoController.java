@@ -200,7 +200,7 @@ public class EmpleadoController {
             @ApiResponse(responseCode = "404", description = "El cargo no existe o no está activo"),
             @ApiResponse(responseCode = "409", description = "Datos duplicados")
     })
-    @PostMapping( value = "/desde-paciente/{idPaciente}" ,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping( value = "/desde-paciente/{idPaciente}/convertir-empleado" ,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<MensajeResponse> crearEmpleadoDesdePaciente(
             @PathVariable("idPaciente") Integer idPaciente,
             @Valid @RequestPart("empleado") ConvertirPacienteEmpledo dto,
@@ -211,6 +211,24 @@ public class EmpleadoController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Empleado agregado con exito")
                 .object(empleado).build(), HttpStatus.CREATED);
+
+    }
+
+    @Operation(summary = "Obtener id del empleado por su numero de documento")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Empleado encontrado"),
+            @ApiResponse(responseCode = "400", description = "ID inválido"),
+            @ApiResponse(responseCode = "404", description = "Empleado no encontrado")
+    })
+    @GetMapping("/buscar/{numeroDocumento}")
+    public ResponseEntity<MensajeResponse> idEmpleadoPorNumeroDocumento(
+            @PathVariable("numeroDocumento") String numeroDocumento) {
+
+        EmpleadoIDPorBuscarNroDocDTO dto = empleadoServicio.empleadoIDporDni(numeroDocumento);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("EMPLEADO ENCONTRADO")
+                .object(dto).build(), HttpStatus.OK);
 
     }
 

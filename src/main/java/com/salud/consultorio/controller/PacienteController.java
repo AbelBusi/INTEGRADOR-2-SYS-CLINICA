@@ -150,7 +150,7 @@ public class PacienteController {
             @ApiResponse(responseCode = "201", description = "Paciente registrado correctamente"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos")
     })
-    @PostMapping("/{idEmpleado}/convertir-paciente")
+    @PostMapping("/desde-empleado/{idEmpleado}/convertir-paciente")
     public ResponseEntity<MensajeResponse> crearEmpleadoConvertidoPaciente(
             @PathVariable("idEmpleado") Integer idEmpleado
             ,@Valid @RequestBody EmpleadoConvertirPacienteDTO dto) {
@@ -160,6 +160,22 @@ public class PacienteController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Paciente agregado con exito")
                 .object(paciente).build(), HttpStatus.CREATED);
+
+    }
+
+    @Operation(summary = "Reactivar paciente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Paciente reactivado correctamente"),
+            @ApiResponse(responseCode = "404", description = "Paciente no encontrado")
+    })
+    @PatchMapping("/{id}/reactivar")
+    public ResponseEntity<MensajeResponse> reactivarPaciente(@PathVariable Integer id) {
+
+        pacienteServicio.reactivarPorId(id);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Paciente reactivado con exito")
+                .object(null).build(), HttpStatus.NO_CONTENT);
 
     }
 

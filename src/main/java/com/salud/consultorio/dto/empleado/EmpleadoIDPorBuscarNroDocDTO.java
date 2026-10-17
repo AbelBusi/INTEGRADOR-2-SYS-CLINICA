@@ -5,7 +5,10 @@ import lombok.Builder;
 @Builder(toBuilder = true)
 public record EmpleadoIDPorBuscarNroDocDTO(
 
-        Integer idEmpleado
+        Integer idEmpleado,
+        Integer idPersona,
+        String nombres,
+        String accion
 
 ) {
 }

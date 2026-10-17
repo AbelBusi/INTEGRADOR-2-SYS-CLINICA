@@ -306,28 +306,23 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
     @Override
     public EmpleadoIDPorBuscarNroDocDTO empleadoIDporDni(String nroDocumento) {
 
-        if(nroDocumento == null || nroDocumento.isEmpty() || nroDocumento.isBlank() ){
-
-            throw new IllegalArgumentException("El numero de documento, no debe ser vacio, null y mucho menos con espacios en blanco.");
-
+        if (nroDocumento == null || nroDocumento.isBlank()) {
+            throw new IllegalArgumentException(
+                    "El número de documento no debe ser nulo ni estar vacío."
+            );
         }
 
-        Integer empleadoID = empleadoRepositorio.empleadoIDporNroDocumento(nroDocumento);
+        EmpleadoIDPorBuscarNroDocDTO dto =
+                empleadoRepositorio.empleadoIDporNroDocumento(nroDocumento);
 
-        if (empleadoID == null){
-
-            throw new EntityNotFoundException("El numero de documento ingresado, no existe en la entidad");
-
+        if (dto == null) {
+            throw new EntityNotFoundException(
+                    "No se encontró un empleado activo con el número de documento ingresado."
+            );
         }
-
-        EmpleadoIDPorBuscarNroDocDTO dto = EmpleadoIDPorBuscarNroDocDTO.builder()
-                .idEmpleado(empleadoID)
-                .build();
 
         return dto;
-
     }
-
     private void validarId(Integer id) {
 
         if (id == null || id <= 0) {

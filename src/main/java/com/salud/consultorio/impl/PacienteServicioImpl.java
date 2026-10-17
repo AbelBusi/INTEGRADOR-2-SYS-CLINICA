@@ -107,6 +107,22 @@ public class PacienteServicioImpl implements IPacienteServicio {
 
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public void reactivarPorId(Integer id) {
+
+        Paciente paciente = pacienteRepositorio.findById(id).orElseThrow(
+                ()-> new EntityNotFoundException("El paciente que desea eliminar no existe en la entidad")
+        );
+
+        if (paciente.getEstado()!=0){
+            throw new IllegalArgumentException("No se puede reactivar un paciente que no ha sido eliminado.");
+        }
+
+        pacienteRepositorio.reactivarLogicamente(paciente.getId());
+
+    }
+
     @Override
     public boolean existeNrCodigoAegurado(String codigo) {
         return pacienteRepositorio.existsByCodigoAsegurado(codigo);
