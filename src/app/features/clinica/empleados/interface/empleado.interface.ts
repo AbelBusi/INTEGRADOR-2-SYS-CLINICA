@@ -97,6 +97,33 @@ export interface TipoDocumentoResumen {
   longitud: number;
 }
 
+export type AccionPaciente = 'ACTIVO' | 'DESACTIVADO' | 'REACTIVAR' | 'REGISTRAR';
+
+export interface PacienteBusqueda {
+  idEmpleado: number | null;
+  idPersona: number;
+  idPaciente: number | null;
+  nombres: string;
+  accion: AccionPaciente | string;
+}
+
+export interface ConvertirPacienteEmpleadoDTO {
+  idCargo: number;
+}
+
+export interface TipoDocumentoBusqueda {
+  codigo: 'DNI' | 'CE' | 'PAS';
+  etiqueta: string;
+  longitud: number;
+}
+
+export const TIPOS_DOCUMENTO_BUSQUEDA: TipoDocumentoBusqueda[] = [
+  { codigo: 'DNI', etiqueta: 'DNI', longitud: 8 },
+  { codigo: 'CE', etiqueta: 'Carné de extranjería (CE)', longitud: 9 },
+  { codigo: 'PAS', etiqueta: 'Pasaporte', longitud: 9 },
+];
+
+
 export const GENEROS = ['Masculino', 'Femenino'];
 
 export function formularioVacio(): EmpleadoForm {

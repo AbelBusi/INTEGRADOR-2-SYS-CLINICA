@@ -9,6 +9,7 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { VerDetalleEmpleadoModalComponent } from '../../components/ver-detalle-empleado-modal/ver-detalle-empleado-modal.component';
 import { CrearEmpleadoModalComponent } from '../../components/crear-empleado-modal/crear-empleado-modal.component';
 import { EditarEmpleadoModalComponent } from '../../components/editar-empleado-modal/editar-empleado-modal.component';
+import { BuscarPacienteModalComponent } from '../../components/buscar-paciente-modal/buscar-paciente-modal.component';
 
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
@@ -27,6 +28,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     CrearEmpleadoModalComponent,
     EditarEmpleadoModalComponent,
     TienePermisoDirective,
+    BuscarPacienteModalComponent,
   ],
   templateUrl: './lista-empleado.component.html',
 })
@@ -40,6 +42,7 @@ export class ListaEmpleadoComponent implements OnInit {
   empleadoSeleccionado: Empleado | null = null;
   sortField = 'nombreCompleto';
   filtroEstado: FiltroEstado = 'todos';
+  isBuscarOpen = false;
 
   columns: TableColumn<Empleado>[] = [
     { header: 'Empleado', field: 'nombreCompleto', sortable: true, type: 'custom' },
@@ -79,6 +82,11 @@ export class ListaEmpleadoComponent implements OnInit {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  handleEmpleadoProcesado(): void {
+    this.empleadoSeleccionado = null;
+    this.cargarEmpleados();
   }
 
   get empleadosFiltrados(): Empleado[] {

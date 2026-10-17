@@ -4,12 +4,14 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import {
   CargoResumen,
+  ConvertirPacienteEmpleadoDTO,
   Empleado,
   EmpleadoActualizarDTO,
   EmpleadoCrearDTO,
   EmpleadoDetalle,
   EmpleadoRespuesta,
   MensajeResponse,
+  PacienteBusqueda,
   TipoDocumentoResumen,
 } from '../interface/empleado.interface';
 
@@ -70,6 +72,27 @@ export class EmpleadoService {
   listarTiposDocumentoResumen(): Observable<MensajeResponse<TipoDocumentoResumen[]>> {
     return this.http.get<MensajeResponse<TipoDocumentoResumen[]>>(
       `${environment.apiUrl}/tipo-documentos/resumen`,
+    );
+  }
+
+  reactivarPorId(id: number): Observable<MensajeResponse<null>> {
+    return this.http.patch<MensajeResponse<null>>(`${this.baseUrl}/${id}/reactivar`, null);
+  }
+
+  buscarPorDocumento(numeroDocumento: string): Observable<MensajeResponse<PacienteBusqueda>> {
+    return this.http.get<MensajeResponse<PacienteBusqueda>>(
+      `${environment.apiUrl}/pacientes/buscar/${encodeURIComponent(numeroDocumento)}`,
+    );
+  }
+
+  convertirPacienteEnEmpleado(
+    idPaciente: number,
+    dto: ConvertirPacienteEmpleadoDTO,
+    imagen?: File | null,
+  ): Observable<MensajeResponse<unknown>> {
+    return this.http.post<MensajeResponse<unknown>>(
+      `${this.baseUrl}/desde-paciente/${idPaciente}/convertir-empleado`,
+      this.construirFormData(dto, imagen),
     );
   }
 
