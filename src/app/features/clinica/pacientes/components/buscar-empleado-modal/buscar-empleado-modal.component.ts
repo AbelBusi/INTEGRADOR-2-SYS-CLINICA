@@ -1,14 +1,20 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
 
+import { environment } from '../../../../../../environments/environment';
 import { PacienteService } from '../../services/paciente.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import {
   AccionEmpleado,
+  ENTIDAD_ASEGURADORA,
   EmpleadoBusqueda,
+  MensajeResponse,
   TIPOS_DOCUMENTO_BUSQUEDA,
   TipoDocumentoBusqueda,
+  esperar,
+  generarCodigoAsegurado,
 } from '../../interface/paciente.interface';
 
 @Component({
@@ -23,12 +29,17 @@ export class BuscarEmpleadoModalComponent {
   @Output() onPacienteActualizado = new EventEmitter<void>();
 
   readonly tiposDocumento = TIPOS_DOCUMENTO_BUSQUEDA;
+  readonly simulacionSeguro = !environment.production;
 
   tipoDocumento: TipoDocumentoBusqueda | null = null;
   numeroDocumento = '';
 
+  entidadAsegurado = ENTIDAD_ASEGURADORA;
+  codigoAsegurado = '';
+
   buscando = false;
   procesando = false;
+  consultandoSeguro = false;
   resultado: EmpleadoBusqueda | null = null;
   errorBusqueda = '';
 
@@ -42,21 +53,38 @@ export class BuscarEmpleadoModalComponent {
     return this.tipoDocumento?.longitud ?? null;
   }
 
+  get esDni(): boolean {
+    return this.tipoDocumento?.codigo === 'DNI';
+  }
+
   get puedeBuscar(): boolean {
     return (
       !!this.tipoDocumento &&
       this.numeroDocumento.length === this.tipoDocumento.longitud &&
-      !this.buscando &&
-      !this.procesando
+      !this.ocupado
     );
+  }
+
+  get puedeConsultarSeguro(): boolean {
+    return this.esDni && this.numeroDocumento.length === 8 && !this.ocupado;
+  }
+
+  get puedeRegistrar(): boolean {
+    return !!this.entidadAsegurado.trim() && !!this.codigoAsegurado.trim() && !this.ocupado;
   }
 
   get accion(): AccionEmpleado | null {
     return this.resultado ? (this.resultado.accion?.toUpperCase() as AccionEmpleado) : null;
   }
 
+  get hayAccion(): boolean {
+    return (
+      this.accion === 'DESACTIVADO' || this.accion === 'REACTIVAR' || this.accion === 'REGISTRAR'
+    );
+  }
+
   get ocupado(): boolean {
-    return this.buscando || this.procesando;
+    return this.buscando || this.procesando || this.consultandoSeguro;
   }
 
   onTipoDocumentoChange(): void {
@@ -65,7 +93,7 @@ export class BuscarEmpleadoModalComponent {
   }
 
   soloNumeros(event: KeyboardEvent): void {
-    if (!/^[0-9]$/.test(event.key)) {
+    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !/\d/.test(event.key)) {
       event.preventDefault();
     }
   }
@@ -101,33 +129,59 @@ export class BuscarEmpleadoModalComponent {
     });
   }
 
+  async consultarSeguro(): Promise<void> {
+    if (!this.puedeConsultarSeguro) {
+      this.toastService.warning('Ingrese primero un DNI válido de 8 dígitos.');
+      return;
+    }
+
+    this.consultandoSeguro = true;
+    this.cdr.detectChanges();
+
+    await esperar(1400);
+
+    this.entidadAsegurado = ENTIDAD_ASEGURADORA;
+    this.codigoAsegurado = generarCodigoAsegurado();
+    this.consultandoSeguro = false;
+
+    this.toastService.success('Datos del seguro cargados.');
+    this.cdr.detectChanges();
+  }
+
   ejecutarAccion(): void {
-    if (!this.resultado || this.procesando) {
+    if (!this.resultado || this.procesando || !this.hayAccion) {
       return;
     }
 
     const accion = this.accion;
-    if (accion !== 'DESACTIVADO' && accion !== 'REACTIVAR') {
-      return;
-    }
+    const id = this.resultado.idPaciente;
+    const idEmpleado = this.resultado.idEmpleado;
+    let peticion: Observable<MensajeResponse<unknown>>;
+    let mensajeOk: string;
 
-    // El id del registro sobre el que se actúa (ver nota de integración)
-    const id = this.resultado.idEmpleado;
-    const peticion =
-      accion === 'DESACTIVADO'
-        ? this.pacienteService.cambiarEstado(id, 'ACTIVO')
-        : this.pacienteService.reactivarPorId(id);
+    if (accion === 'REGISTRAR') {
+      if (!this.puedeRegistrar) {
+        this.toastService.warning('Complete los datos del seguro.');
+        return;
+      }
+      peticion = this.pacienteService.convertirEmpleadoEnPaciente(idEmpleado, {
+        entidadAsegurado: this.entidadAsegurado.trim(),
+        codigoAsegurado: this.codigoAsegurado.trim(),
+      });
+      mensajeOk = 'Paciente agregado con éxito';
+    } else if (accion === 'DESACTIVADO') {
+      peticion = this.pacienteService.cambiarEstado(id, 'ACTIVO');
+      mensajeOk = 'Paciente activado con éxito';
+    } else {
+      peticion = this.pacienteService.reactivarPorId(id);
+      mensajeOk = 'Paciente reactivado con éxito';
+    }
 
     this.procesando = true;
 
     peticion.subscribe({
       next: (response) => {
-        this.toastService.success(
-          response?.mensaje ||
-            (accion === 'DESACTIVADO'
-              ? 'Paciente activado con éxito'
-              : 'Paciente reactivado con éxito'),
-        );
+        this.toastService.success(response?.mensaje || mensajeOk);
         this.procesando = false;
         this.onPacienteActualizado.emit();
         this.cerrar();
@@ -154,5 +208,7 @@ export class BuscarEmpleadoModalComponent {
   private limpiarResultado(): void {
     this.resultado = null;
     this.errorBusqueda = '';
+    this.entidadAsegurado = ENTIDAD_ASEGURADORA;
+    this.codigoAsegurado = '';
   }
 }

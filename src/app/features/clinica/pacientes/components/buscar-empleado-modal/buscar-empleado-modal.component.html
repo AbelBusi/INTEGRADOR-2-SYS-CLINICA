@@ -127,6 +127,85 @@
               <div class="px-4 py-3">
                 @switch (accion) {
 
+                  @case ('REGISTRAR') {
+                    <div class="space-y-4">
+                      <div class="flex items-start gap-3">
+                        <span class="material-icons text-[#58595B] text-[22px]">person_add</span>
+                        <div>
+                          <span
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border uppercase tracking-wide bg-neutral-100 text-neutral-600 border-neutral-300">
+                            <span class="w-1.5 h-1.5 rounded-full bg-neutral-500"></span>
+                            Aún no es paciente
+                          </span>
+                          <p class="mt-2 text-sm text-neutral-600">
+                            El empleado existe pero no está registrado como paciente. Completa los datos del seguro para registrarlo.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div class="flex items-center justify-between pt-1">
+                        <span class="text-xs font-bold text-neutral-500 uppercase tracking-wider">Datos del seguro</span>
+
+                        @if (simulacionSeguro) {
+                          <button
+                            type="button"
+                            (click)="consultarSeguro()"
+                            [disabled]="!puedeConsultarSeguro"
+                            [attr.title]="puedeConsultarSeguro ? 'Consulta Entidad Aseguradora' : 'Solo disponible para DNI de 8 dígitos'"
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-neutral-600 bg-white hover:bg-neutral-100 rounded border border-neutral-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                            @if (consultandoSeguro) {
+                              <span
+                                class="w-3.5 h-3.5 border-2 border-neutral-300 border-t-[#D9182A] rounded-full animate-spin"></span>
+                              Consultando seguro...
+                            } @else {
+                              <span class="material-icons text-[16px]">verified_user</span>
+                              Consultar seguro
+                            }
+                          </button>
+                        }
+                      </div>
+
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                          <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">
+                            Entidad aseguradora
+                          </label>
+                          <input
+                            type="text"
+                            name="entidadAsegurado"
+                            [(ngModel)]="entidadAsegurado"
+                            readonly
+                            class="w-full bg-neutral-100 border border-neutral-300 rounded px-3 py-2 text-sm font-semibold text-neutral-600 outline-none cursor-not-allowed"
+                          />
+                        </div>
+
+                        <div class="space-y-1.5">
+                          <div class="flex justify-between items-center">
+                            <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">
+                              Código asegurado
+                            </label>
+                            <span class="text-[11px] font-medium text-neutral-400"
+                                  [class.text-[#D9182A]]="codigoAsegurado.length >= 20">
+                              {{ codigoAsegurado.length }}/20
+                            </span>
+                          </div>
+                          <input
+                            type="text"
+                            name="codigoAsegurado"
+                            [(ngModel)]="codigoAsegurado"
+                            [readonly]="consultandoSeguro"
+                            [class.animate-pulse]="consultandoSeguro"
+                            [class.bg-neutral-100]="consultandoSeguro"
+                            maxlength="20"
+                            autocomplete="off"
+                            class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                            placeholder="Ej. SIS-12345678"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  }
+
                   @case ('ACTIVO') {
                     <div class="flex items-start gap-3">
                       <span class="material-icons text-[#0d6b68] text-[22px]">check_circle</span>
@@ -169,7 +248,7 @@
                           Registro eliminado
                         </span>
                         <p class="mt-2 text-sm text-neutral-600">
-                          Este paciente fue eliminado lógicamente. Puedes recuperar su registro.
+                          Este paciente fue eliminado. Puedes recuperar su registro.
                         </p>
                       </div>
                     </div>
@@ -195,17 +274,21 @@
               {{ accion === 'ACTIVO' ? 'Cerrar' : 'Cancelar' }}
             </button>
 
-            @if (accion === 'DESACTIVADO' || accion === 'REACTIVAR') {
+            @if (hayAccion) {
               <button
                 type="button"
                 (click)="ejecutarAccion()"
-                [disabled]="procesando"
+                [disabled]="procesando || consultandoSeguro || (accion === 'REGISTRAR' && !puedeRegistrar)"
                 class="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded transition-colors disabled:opacity-50"
                 [ngClass]="accion === 'DESACTIVADO' ? 'bg-[#0d6b68] hover:bg-[#0a5755]' : 'bg-[#D9182A] hover:bg-[#B81424]'">
                 @if (procesando) {
                   <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                 }
-                {{ accion === 'DESACTIVADO' ? 'Activar paciente' : 'Reactivar paciente' }}
+                @switch (accion) {
+                  @case ('REGISTRAR') { Registrar paciente }
+                  @case ('DESACTIVADO') { Activar paciente }
+                  @default { Reactivar paciente }
+                }
               </button>
             }
           </div>

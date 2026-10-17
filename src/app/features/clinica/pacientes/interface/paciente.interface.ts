@@ -102,6 +102,7 @@ export interface EmpleadoConvertirPacienteDTO {
 export interface EmpleadoBusqueda {
   idEmpleado: number;
   idPersona: number;
+  idPaciente: number;
   nombres: string;
   accion: AccionEmpleado | string;
 }
