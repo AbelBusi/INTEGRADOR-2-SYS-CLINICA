@@ -1,6 +1,7 @@
 package com.salud.consultorio.controller;
 
 
+import com.salud.consultorio.dto.empleado.EmpleadoIDPorBuscarNroDocDTO;
 import com.salud.consultorio.dto.paciente.*;
 import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.enums.EntidadEstado;
@@ -176,6 +177,24 @@ public class PacienteController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Paciente reactivado con exito")
                 .object(null).build(), HttpStatus.NO_CONTENT);
+
+    }
+
+    @Operation(summary = "Obtener id del empleado por su numero de documento")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Empleado encontrado"),
+            @ApiResponse(responseCode = "400", description = "ID inválido"),
+            @ApiResponse(responseCode = "404", description = "Empleado no encontrado")
+    })
+    @GetMapping("/buscar/{numeroDocumento}")
+    public ResponseEntity<MensajeResponse> idPacientePorNumeroDocumento(
+            @PathVariable("numeroDocumento") String numeroDocumento) {
+
+        PacienteIDPorBuscarNroDocDTO dto = pacienteServicio.pacienteIDporDni(numeroDocumento);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("PACIENTE ENCONTRADO")
+                .object(dto).build(), HttpStatus.OK);
 
     }
 

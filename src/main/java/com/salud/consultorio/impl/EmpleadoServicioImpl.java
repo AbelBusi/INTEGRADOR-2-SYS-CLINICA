@@ -4,6 +4,7 @@ import com.salud.consultorio.dto.empleado.*;
 import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.entity.Cargo;
 import com.salud.consultorio.model.entity.Empleado;
+import com.salud.consultorio.model.entity.Paciente;
 import com.salud.consultorio.model.entity.Persona;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.enums.RutasImagen;
@@ -245,6 +246,21 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
 
             default -> throw new IllegalArgumentException("Solo se permite cambiar a estado ACTIVO o INACTIVO.");
         }
+    }
+
+    @Transactional
+    @Override
+    public void reactivarPorId(Integer id) {
+
+        Empleado empleado = empleadoRepositorio.findById(id).orElseThrow(
+                ()-> new EntityNotFoundException("El empleado que desea eliminar no existe en la entidad")
+        );
+
+        if (empleado.getEstado()!=0){
+            throw new IllegalArgumentException("No se puede reactivar un paciente que no ha sido eliminado.");
+        }
+
+        empleadoRepositorio.reactivarLogicamente(empleado.getId());
     }
 
     @Transactional(readOnly = true)

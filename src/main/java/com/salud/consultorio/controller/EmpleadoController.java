@@ -232,4 +232,20 @@ public class EmpleadoController {
 
     }
 
+    @Operation(summary = "Reactivar empleado")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Empleado reactivado correctamente"),
+            @ApiResponse(responseCode = "404", description = "Empleado no encontrado")
+    })
+    @PatchMapping("/{id}/reactivar")
+    public ResponseEntity<MensajeResponse> reactivarEmpleado(@PathVariable Integer id) {
+
+        empleadoServicio.reactivarPorId(id);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Empleado reactivado con exito")
+                .object(null).build(), HttpStatus.NO_CONTENT);
+
+    }
+
 }

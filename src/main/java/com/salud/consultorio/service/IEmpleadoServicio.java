@@ -32,6 +32,8 @@ public interface IEmpleadoServicio {
 
     void cambiarEstado(Integer id, EntidadEstado estado);
 
+    void reactivarPorId(Integer id);
+
     List<PersonaUsuarioDTO> listarPacientesSinUusario();
 
     boolean existeEmpleadoPorCargo(Integer idCargo);

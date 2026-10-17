@@ -170,6 +170,10 @@ public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
     @Query("UPDATE Empleado em SET em.estado = 0 WHERE em.id = :id")
     void eliminarLogicamente(@Param("id") Integer id);
 
+    @Modifying
+    @Query("UPDATE Empleado e SET e.estado =1 WHERE e.id=:id")
+    void reactivarLogicamente(@Param("id") Integer id);
+
     @Query("""
                 SELECT new com.salud.consultorio.dto.usuario.PersonaUsuarioDTO(
                     e.persona.id,
