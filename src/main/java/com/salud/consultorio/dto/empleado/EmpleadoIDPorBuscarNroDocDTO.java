@@ -7,6 +7,7 @@ public record EmpleadoIDPorBuscarNroDocDTO(
 
         Integer idEmpleado,
         Integer idPersona,
+        Integer idPaciente,
         String nombres,
         String accion
 

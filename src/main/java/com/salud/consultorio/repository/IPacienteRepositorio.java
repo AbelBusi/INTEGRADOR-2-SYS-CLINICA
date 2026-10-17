@@ -1,6 +1,7 @@
 package com.salud.consultorio.repository;
 
 import com.salud.consultorio.dto.paciente.PacienteDetalleDTO;
+import com.salud.consultorio.dto.paciente.PacienteIDPorBuscarNroDocDTO;
 import com.salud.consultorio.dto.paciente.PacienteLeerDTO;
 import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.entity.Paciente;
@@ -119,5 +120,30 @@ public interface IPacienteRepositorio extends JpaRepository<Paciente, Integer> {
                 ORDER BY p.persona.apellidos, p.persona.nombre
             """)
     List<PersonaUsuarioDTO> listarParaCrearUsuario();
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.paciente.PacienteIDPorBuscarNroDocDTO(
+                pa.id,
+                p.id,
+                e.id,
+                CONCAT(p.nombre, ' ', p.apellidos),
+                CASE
+                    WHEN e.id IS NULL THEN 'REGISTRAR'
+                    WHEN e.estado = 1 THEN 'ACTIVO'
+                    WHEN e.estado = 2 THEN 'DESACTIVADO'
+                    WHEN e.estado = 0 THEN 'REACTIVAR'
+                    ELSE 'DESCONOCIDO'
+                END
+            )
+            FROM Paciente pa
+            JOIN pa.persona p
+            LEFT JOIN Empleado e ON e.persona.id = p.id
+            WHERE p.numeroDocumento = :nroDocumento
+              AND pa.estado = 1
+              AND p.estado = 1
+            """)
+    PacienteIDPorBuscarNroDocDTO pacienteIDporNroDocumento(
+            @Param("nroDocumento") String nroDocumento
+    );
 
 }

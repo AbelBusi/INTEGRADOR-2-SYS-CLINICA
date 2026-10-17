@@ -27,6 +27,7 @@ public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
             SELECT new com.salud.consultorio.dto.empleado.EmpleadoIDPorBuscarNroDocDTO(
                 e.id,
                 p.id,
+                pa.id,
                 CONCAT(p.nombre, ' ', p.apellidos),
                 CASE
                     WHEN pa.id IS NULL THEN 'REGISTRAR'

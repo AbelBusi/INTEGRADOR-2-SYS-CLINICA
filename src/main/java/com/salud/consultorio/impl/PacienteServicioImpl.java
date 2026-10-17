@@ -207,6 +207,29 @@ public class PacienteServicioImpl implements IPacienteServicio {
         return pacienteRepositorio.pacientePersonaID(id);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public PacienteIDPorBuscarNroDocDTO pacienteIDporDni(String nroDocumento) {
+
+        if (nroDocumento == null || nroDocumento.isBlank()) {
+            throw new IllegalArgumentException(
+                    "El número de documento no debe ser nulo ni estar vacío."
+            );
+        }
+
+        PacienteIDPorBuscarNroDocDTO dto =
+                pacienteRepositorio.pacienteIDporNroDocumento(nroDocumento);
+
+        if (dto == null) {
+            throw new EntityNotFoundException(
+                    "No se encontró un paciente activo con el número de documento ingresado."
+            );
+        }
+
+        return dto;
+
+    }
+
 
     private Paciente validarCambiarEstado(Integer id, EntidadEstado estado) {
 

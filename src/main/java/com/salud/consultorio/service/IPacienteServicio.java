@@ -32,4 +32,6 @@ public interface IPacienteServicio{
 
     Integer IDPacientePersona(Integer id);
 
+    PacienteIDPorBuscarNroDocDTO pacienteIDporDni(String nroDocumento);
+
 }
