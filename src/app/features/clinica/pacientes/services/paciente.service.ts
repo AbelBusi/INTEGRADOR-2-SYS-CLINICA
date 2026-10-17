@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import {
+  EmpleadoBusqueda,
   MensajeResponse,
   Paciente,
   PacienteActualizarDTO,
@@ -58,4 +59,15 @@ export class PacienteService {
     );
   }
 
+  reactivarPorId(id: number): Observable<MensajeResponse<null>> {
+    return this.http.patch<MensajeResponse<null>>(`${this.baseUrl}/${id}/reactivar`, null);
+  }
+
+  buscarEmpleadoPorDocumento(
+    numeroDocumento: string,
+  ): Observable<MensajeResponse<EmpleadoBusqueda>> {
+    return this.http.get<MensajeResponse<EmpleadoBusqueda>>(
+      `${environment.apiUrl}/empleados/buscar/${encodeURIComponent(numeroDocumento)}`,
+    );
+  }
 }

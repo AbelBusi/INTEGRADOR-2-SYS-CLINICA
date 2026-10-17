@@ -41,14 +41,25 @@
       <option value="inactivo">Inactivos</option>
     </select>
 
-    <button
-      type="button"
-      *appTienePermiso="'PACIENTE_CREAR'"
-      (click)="isCrearOpen = true"
-      class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 h-10 rounded-md bg-[#D9182A] hover:bg-[#B81424] text-white text-sm font-semibold transition-colors">
-      <span class="material-icons text-[20px]">add</span>
-      Nuevo paciente
-    </button>
+    <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+      <button
+        type="button"
+        *appTienePermiso="'PACIENTE_CREAR'"
+        (click)="isBuscarOpen = true"
+        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 h-10 rounded-md border border-gray-300 bg-white hover:border-[#58595B] hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-colors">
+        <span class="material-icons text-[20px]">person_search</span>
+        Buscar empleado
+      </button>
+
+      <button
+        type="button"
+        *appTienePermiso="'PACIENTE_CREAR'"
+        (click)="isCrearOpen = true"
+        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 h-10 rounded-md bg-[#D9182A] hover:bg-[#B81424] text-white text-sm font-semibold transition-colors">
+        <span class="material-icons text-[20px]">add</span>
+        Nuevo paciente
+      </button>
+    </div>
 
   </div>
 
@@ -121,12 +132,14 @@
             <span class="material-icons text-[18px]">edit</span> <span class="hidden lg:inline">Editar</span></button>
 
           @if (row.estado === 1) {
-            <button type="button" title="Desactivar" *appTienePermiso="'PACIENTE_CAMBIAR_ESTADO'" (click)="cambiarEstado(row, 'INACTIVO')"
+            <button type="button" title="Desactivar" *appTienePermiso="'PACIENTE_CAMBIAR_ESTADO'"
+                    (click)="cambiarEstado(row, 'INACTIVO')"
                     class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 sm:px-2 lg:px-2.5">
               <span class="material-icons text-[18px]">toggle_off</span> <span
               class="hidden lg:inline">Desactivar</span></button>
           } @else {
-            <button type="button" title="Activar" *appTienePermiso="'PACIENTE_CAMBIAR_ESTADO'" (click)="cambiarEstado(row, 'ACTIVO')"
+            <button type="button" title="Activar" *appTienePermiso="'PACIENTE_CAMBIAR_ESTADO'"
+                    (click)="cambiarEstado(row, 'ACTIVO')"
                     class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68] sm:px-2 lg:px-2.5">
               <span class="material-icons text-[18px]">toggle_on</span> <span class="hidden lg:inline">Activar</span>
             </button>
@@ -165,4 +178,12 @@
     [paciente]="pacienteVer"
     (close)="pacienteVer = null"
   ></app-ver-detalle-paciente-modal>
+}
+
+@if (isBuscarOpen) {
+  <app-buscar-empleado-modal
+    [isOpen]="isBuscarOpen"
+    (onClose)="isBuscarOpen = false"
+    (onPacienteActualizado)="handleEmpleadoProcesado()"
+  ></app-buscar-empleado-modal>
 }

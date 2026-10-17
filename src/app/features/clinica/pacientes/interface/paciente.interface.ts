@@ -92,6 +92,27 @@ export interface TipoDocumentoResumen {
   longitud: number;
 }
 
+export type AccionEmpleado = 'ACTIVO' | 'DESACTIVADO' | 'REACTIVAR';
+
+export interface EmpleadoBusqueda {
+  idEmpleado: number;
+  idPersona: number;
+  nombres: string;
+  accion: AccionEmpleado | string;
+}
+
+export interface TipoDocumentoBusqueda {
+  codigo: 'DNI' | 'CE' | 'PAS';
+  etiqueta: string;
+  longitud: number;
+}
+
+export const TIPOS_DOCUMENTO_BUSQUEDA: TipoDocumentoBusqueda[] = [
+  { codigo: 'DNI', etiqueta: 'DNI', longitud: 8 },
+  { codigo: 'CE', etiqueta: 'Carné de extranjería (CE)', longitud: 9 },
+  { codigo: 'PAS', etiqueta: 'Pasaporte', longitud: 9 },
+];
+
 export const GENEROS = ['Masculino', 'Femenino'];
 
 export const ENTIDAD_ASEGURADORA = 'SIS';

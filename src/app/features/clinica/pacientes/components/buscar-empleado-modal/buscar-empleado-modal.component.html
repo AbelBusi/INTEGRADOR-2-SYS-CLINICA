@@ -1,0 +1,217 @@
+<div *ngIf="isOpen" class="relative z-50">
+
+  <div class="fixed inset-0 bg-neutral-900/50"></div>
+
+  <div class="fixed inset-0 overflow-y-auto">
+    <div class="flex min-h-full items-center justify-center p-4">
+
+      <div class="w-full max-w-lg overflow-hidden rounded border border-neutral-300 bg-white">
+
+        <!-- Cabecera -->
+        <div class="flex justify-between items-center px-6 py-4 bg-[#58595B]">
+          <h3 class="text-base font-bold text-white flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded bg-[#D9182A] flex items-center justify-center">
+              <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            Buscar Empleado
+          </h3>
+          <button type="button" (click)="cerrar()" [disabled]="ocupado"
+                  class="p-1 rounded hover:bg-neutral-700 text-neutral-300 hover:text-white transition-colors disabled:opacity-50">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex h-1">
+          <div class="w-1/2 bg-[#58595B]"></div>
+          <div class="w-1/2 bg-[#D9182A]"></div>
+        </div>
+
+        <div class="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+
+          <p class="text-sm text-neutral-500">
+            Verifica si un empleado ya es paciente, o recupera su registro si fue desactivado o eliminado.
+          </p>
+
+          <!-- Formulario de búsqueda -->
+          <form (ngSubmit)="buscar()" class="space-y-4">
+
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">
+                Tipo de documento
+              </label>
+              <select
+                name="tipoDocumento"
+                [(ngModel)]="tipoDocumento"
+                (ngModelChange)="onTipoDocumentoChange()"
+                [disabled]="ocupado"
+                class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors disabled:bg-neutral-100">
+                <option [ngValue]="null" disabled>Seleccione...</option>
+                @for (tipo of tiposDocumento; track tipo.codigo) {
+                  <option [ngValue]="tipo">{{ tipo.etiqueta }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="space-y-1.5">
+              <div class="flex justify-between items-center">
+                <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">
+                  N° de documento
+                </label>
+                @if (longitudDocumento) {
+                  <span class="text-[11px] font-medium text-neutral-400"
+                        [class.text-[#D9182A]]="numeroDocumento.length === longitudDocumento">
+                    {{ numeroDocumento.length }}/{{ longitudDocumento }}
+                  </span>
+                }
+              </div>
+
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  name="numeroDocumento"
+                  [(ngModel)]="numeroDocumento"
+                  (keypress)="soloNumeros($event)"
+                  (input)="onNumeroInput()"
+                  [attr.maxlength]="longitudDocumento"
+                  [disabled]="!tipoDocumento || ocupado"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors disabled:bg-neutral-100 disabled:cursor-not-allowed"
+                  [placeholder]="tipoDocumento ? 'Ingrese ' + longitudDocumento + ' dígitos' : 'Seleccione un tipo primero'"
+                />
+
+                <button
+                  type="submit"
+                  [disabled]="!puedeBuscar"
+                  class="px-4 py-2 text-sm font-semibold text-white bg-[#58595B] hover:bg-[#3d3e40] rounded transition-colors flex items-center gap-1.5 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
+                  @if (buscando) {
+                    <span class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    Buscando...
+                  } @else {
+                    <span class="material-icons text-[18px]">search</span>
+                    Buscar
+                  }
+                </button>
+              </div>
+            </div>
+          </form>
+
+          <!-- Error / no encontrado -->
+          @if (errorBusqueda) {
+            <div class="flex items-start gap-3 rounded border border-[#D9182A]/20 bg-[#D9182A]/10 px-4 py-3">
+              <span class="material-icons text-[#D9182A] text-[20px]">error_outline</span>
+              <p class="text-sm font-medium text-[#D9182A]">{{ errorBusqueda }}</p>
+            </div>
+          }
+
+          <!-- Resultado -->
+          @if (resultado) {
+            <div class="rounded border border-neutral-300 overflow-hidden">
+
+              <div class="flex items-center gap-3 px-4 py-3 bg-neutral-50 border-b border-neutral-200">
+                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
+                  <span class="material-icons text-[#58595B] text-[22px]">person</span>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-[11px] font-semibold text-neutral-500 uppercase tracking-wide">Empleado encontrado</p>
+                  <p class="text-sm font-bold text-neutral-800 truncate">{{ resultado.nombres }}</p>
+                  <p class="text-xs text-neutral-500">{{ tipoDocumento?.codigo }} · {{ numeroDocumento }}</p>
+                </div>
+              </div>
+
+              <div class="px-4 py-3">
+                @switch (accion) {
+
+                  @case ('ACTIVO') {
+                    <div class="flex items-start gap-3">
+                      <span class="material-icons text-[#0d6b68] text-[22px]">check_circle</span>
+                      <div>
+                        <span
+                          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border uppercase tracking-wide bg-[#0d6b68]/10 text-[#0d6b68] border-[#0d6b68]/20">
+                          <span class="w-1.5 h-1.5 rounded-full bg-[#0d6b68]"></span>
+                          Ya es paciente
+                        </span>
+                        <p class="mt-2 text-sm text-neutral-600">
+                          Este empleado ya se encuentra registrado como paciente activo. No es necesario realizar ninguna acción.
+                        </p>
+                      </div>
+                    </div>
+                  }
+
+                  @case ('DESACTIVADO') {
+                    <div class="flex items-start gap-3">
+                      <span class="material-icons text-amber-600 text-[22px]">toggle_off</span>
+                      <div>
+                        <span
+                          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border uppercase tracking-wide bg-amber-50 text-amber-700 border-amber-200">
+                          <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                          Paciente desactivado
+                        </span>
+                        <p class="mt-2 text-sm text-neutral-600">
+                          El registro existe pero está desactivado. Puedes activarlo nuevamente.
+                        </p>
+                      </div>
+                    </div>
+                  }
+
+                  @case ('REACTIVAR') {
+                    <div class="flex items-start gap-3">
+                      <span class="material-icons text-[#D9182A] text-[22px]">restore</span>
+                      <div>
+                        <span
+                          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border uppercase tracking-wide bg-[#D9182A]/10 text-[#D9182A] border-[#D9182A]/20">
+                          <span class="w-1.5 h-1.5 rounded-full bg-[#D9182A]"></span>
+                          Registro eliminado
+                        </span>
+                        <p class="mt-2 text-sm text-neutral-600">
+                          Este paciente fue eliminado lógicamente. Puedes recuperar su registro.
+                        </p>
+                      </div>
+                    </div>
+                  }
+
+                  @default {
+                    <p class="text-sm text-neutral-600">
+                      No hay acciones disponibles para este empleado.
+                    </p>
+                  }
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Pie -->
+          <div class="flex flex-col-reverse sm:flex-row gap-3 pt-1">
+            <button
+              type="button"
+              (click)="cerrar()"
+              [disabled]="ocupado"
+              class="flex-1 px-4 py-2 text-sm font-medium text-neutral-600 bg-white hover:bg-neutral-100 hover:text-neutral-900 rounded border border-neutral-300 transition-colors disabled:opacity-50">
+              {{ accion === 'ACTIVO' ? 'Cerrar' : 'Cancelar' }}
+            </button>
+
+            @if (accion === 'DESACTIVADO' || accion === 'REACTIVAR') {
+              <button
+                type="button"
+                (click)="ejecutarAccion()"
+                [disabled]="procesando"
+                class="flex-1 flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded transition-colors disabled:opacity-50"
+                [ngClass]="accion === 'DESACTIVADO' ? 'bg-[#0d6b68] hover:bg-[#0a5755]' : 'bg-[#D9182A] hover:bg-[#B81424]'">
+                @if (procesando) {
+                  <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                }
+                {{ accion === 'DESACTIVADO' ? 'Activar paciente' : 'Reactivar paciente' }}
+              </button>
+            }
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

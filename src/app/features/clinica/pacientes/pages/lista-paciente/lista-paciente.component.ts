@@ -14,6 +14,7 @@ import { CustomTableComponent } from '../../../../../shared/components/custom-ta
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
 import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
 import { PERMISOS } from '../../../../../core/constants/permisos.constants';
+import { BuscarEmpleadoModalComponent } from '../../components/buscar-empleado-modal/buscar-empleado-modal.component';
 
 type FiltroEstado = 'todos' | 'activo' | 'inactivo';
 
@@ -28,6 +29,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     CrearPacienteModalComponent,
     EditarPacienteModalComponent,
     TienePermisoDirective,
+    BuscarEmpleadoModalComponent,
   ],
   templateUrl: './lista-paciente.component.html',
 })
@@ -41,6 +43,7 @@ export class ListaPacienteComponent implements OnInit {
   pacienteSeleccionado: Paciente | null = null;
   sortField = 'paciente';
   filtroEstado: FiltroEstado = 'todos';
+  isBuscarOpen = false;
 
   columns: TableColumn<Paciente>[] = [
     { header: 'Paciente', field: 'paciente', sortable: true, type: 'custom' },
@@ -58,6 +61,11 @@ export class ListaPacienteComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.cargarPacientes();
+  }
+
+  handleEmpleadoProcesado(): void {
+    this.pacienteSeleccionado = null;
     this.cargarPacientes();
   }
 
