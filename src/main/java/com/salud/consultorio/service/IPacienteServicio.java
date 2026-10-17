@@ -26,6 +26,8 @@ public interface IPacienteServicio{
 
     EmpleadoConvertidoPacienteRespuestaDTO convertirEmpleadoPaciente(Integer idEmpleado, EmpleadoConvertirPacienteDTO dto);
 
+    boolean existePacienteID(Integer id);
 
+    Integer IDPacientePersona(Integer id);
 
 }

@@ -8,11 +8,8 @@ import com.salud.consultorio.model.entity.Persona;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.enums.RutasImagen;
 import com.salud.consultorio.model.mapper.IEmpleadoMapper;
-import com.salud.consultorio.repository.ICargoRepositorio;
 import com.salud.consultorio.repository.IEmpleadoRepositorio;
-import com.salud.consultorio.service.IArchivoServicio;
-import com.salud.consultorio.service.IEmpleadoServicio;
-import com.salud.consultorio.service.IPersonaServicio;
+import com.salud.consultorio.service.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,10 +29,11 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
 
 
     private final IEmpleadoRepositorio empleadoRepositorio;
-    private final ICargoRepositorio cargoRepositorio;
+    private final ICargoServicio cargoServicio;
     private final IPersonaServicio personaServicio;
     private final IEmpleadoMapper empleadoMapper;
     private final IArchivoServicio archivoServicio;
+    private final IPacienteServicio pacienteServicio;
 
     @Transactional(readOnly = true)
     @Override
@@ -268,6 +265,35 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
         return empleadoRepositorio.empleadoPersonaID(id);
     }
 
+    @Transactional
+    @Override
+    public PacienteConvertidoEmpleadoRespuestaDTO convertirPacienteEmplado(Integer idPaciente, ConvertirPacienteEmpledo dto) {
+
+        if (!pacienteServicio.existePacienteID(idPaciente)){
+            throw new EntityNotFoundException("Este paciente que desea vincular como empleado, no se encuentra registrado en el sistema");
+        }
+
+        Integer personaID = pacienteServicio.IDPacientePersona(idPaciente);
+
+        if (empleadoRepositorio.existsByPersona_Id(personaID)){
+            throw new EntityNotFoundException("El paciente ya esta registrado en el sistema como un empelado, no se permite duplicar.");
+
+        }
+
+        Cargo cargo = cargoServicio.entidadPorIDTransaccion(dto.idCargo());
+
+        Persona persona = personaServicio.entidadPorIDTransaccion(personaID);
+
+        Empleado empleado = empleadoMapper.toEntity(dto);
+
+        empleado.setPersona(persona);
+        empleado.setCargo(cargo);
+
+        empleadoRepositorio.save(empleado);
+
+        return empleadoMapper.toDtoEntity(empleado);
+    }
+
     private void validarId(Integer id) {
 
         if (id == null || id <= 0) {
@@ -278,7 +304,7 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
 
     private Cargo obtenerCargoActivo(Integer idCargo) {
 
-        return cargoRepositorio.findByIdAndEstado(idCargo, ESTADO_ACTIVO).orElseThrow(
+        return cargoServicio.findByIdAndEstado(idCargo, ESTADO_ACTIVO).orElseThrow(
                 () -> new EntityNotFoundException("El cargo seleccionado no existe o no está activo.")
         );
 

@@ -21,6 +21,8 @@ public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
 
     boolean existsByCargoId(Integer idCargo);
 
+    boolean existsByPersona_Id(Integer idEmpleado);
+
     @Query("SELECT e.persona.id FROM Empleado e WHERE e.id = :idEmpleado")
     Integer empleadoPersonaID(@PathVariable("idEmpleado") Integer idEmpleado);
 

@@ -150,10 +150,12 @@ public class PacienteController {
             @ApiResponse(responseCode = "201", description = "Paciente registrado correctamente"),
             @ApiResponse(responseCode = "400", description = "Datos inválidos")
     })
-    @PostMapping("/empleados/{id}")
-    public ResponseEntity<MensajeResponse> crearEmpleadoConvertidoPaciente(@PathVariable Integer id,@Valid @RequestBody EmpleadoConvertirPacienteDTO dto) {
+    @PostMapping("/{idEmpleado}/convertir-paciente")
+    public ResponseEntity<MensajeResponse> crearEmpleadoConvertidoPaciente(
+            @PathVariable("idEmpleado") Integer idEmpleado
+            ,@Valid @RequestBody EmpleadoConvertirPacienteDTO dto) {
 
-        EmpleadoConvertidoPacienteRespuestaDTO paciente = pacienteServicio.convertirEmpleadoPaciente(id, dto);
+        EmpleadoConvertidoPacienteRespuestaDTO paciente = pacienteServicio.convertirEmpleadoPaciente(idEmpleado, dto);
 
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Paciente agregado con exito")

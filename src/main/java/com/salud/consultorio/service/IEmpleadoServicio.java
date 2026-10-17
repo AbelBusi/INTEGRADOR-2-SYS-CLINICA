@@ -39,4 +39,8 @@ public interface IEmpleadoServicio {
 
     Integer IDEmpleadoPersona(Integer id);
 
+    PacienteConvertidoEmpleadoRespuestaDTO convertirPacienteEmplado(Integer idPaciente, ConvertirPacienteEmpledo dto);
+
+
+
 }

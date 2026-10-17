@@ -13,6 +13,7 @@ import com.salud.consultorio.repository.IPacienteRepositorio;
 import com.salud.consultorio.service.IEmpleadoServicio;
 import com.salud.consultorio.service.IPacienteServicio;
 import com.salud.consultorio.service.IPersonaServicio;
+import com.salud.consultorio.service.IValidarEmpleadoCargoServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -29,7 +30,7 @@ public class PacienteServicioImpl implements IPacienteServicio {
     private final IPacienteRepositorio pacienteRepositorio;
     private final IPersonaServicio personaServicio;
     private final IPacienteMapper pacienteMapper;
-    private final IEmpleadoServicio empleadoServicio;
+    private final IValidarEmpleadoCargoServicio validarEmpleadoCargoServicio;
 
     @Transactional(readOnly = true)
     @Override
@@ -156,11 +157,11 @@ public class PacienteServicioImpl implements IPacienteServicio {
             throw new DataIntegrityViolationException("No se puede duplicar codigos de seguro");
         }
 
-        if (!empleadoServicio.existeEmpleadoID(idEmpleado)){
+        if (!validarEmpleadoCargoServicio.existeEmpleadoID(idEmpleado)){
             throw new EntityNotFoundException("Este empleado que desea vincular como paciente, no se encuentra registrado en el sistema");
         }
 
-        Integer personaID = empleadoServicio.IDEmpleadoPersona(idEmpleado);
+        Integer personaID = validarEmpleadoCargoServicio.IDEmpleadoPersona(idEmpleado);
 
         if (pacienteRepositorio.existsByPersona_Id(personaID)){
             throw new EntityNotFoundException("El empleado ya esta registrado en el sistema como un paciente, no se permite duplicar.");
@@ -176,6 +177,18 @@ public class PacienteServicioImpl implements IPacienteServicio {
 
         return pacienteMapper.toDtoEntity(paciente);
 
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public boolean existePacienteID(Integer id) {
+        return pacienteRepositorio.existsById(id);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public Integer IDPacientePersona(Integer id) {
+        return pacienteRepositorio.pacientePersonaID(id);
     }
 
 
