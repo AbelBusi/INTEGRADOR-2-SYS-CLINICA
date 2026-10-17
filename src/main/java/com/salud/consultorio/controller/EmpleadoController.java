@@ -193,4 +193,25 @@ public class EmpleadoController {
 
     }
 
+    @Operation(summary = "Registrar un nuevo empleado que viene de paciente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Empleado registrado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+            @ApiResponse(responseCode = "404", description = "El cargo no existe o no está activo"),
+            @ApiResponse(responseCode = "409", description = "Datos duplicados")
+    })
+    @PostMapping( value = "/desde-paciente/{idPaciente}" ,consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<MensajeResponse> crearEmpleadoDesdePaciente(
+            @PathVariable("idPaciente") Integer idPaciente,
+            @Valid @RequestPart("empleado") ConvertirPacienteEmpledo dto,
+            @RequestPart(value = "imagen", required = false)MultipartFile imagen) {
+
+        PacienteConvertidoEmpleadoRespuestaDTO empleado = empleadoServicio.convertirPacienteEmplado(idPaciente, dto, imagen);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Empleado agregado con exito")
+                .object(empleado).build(), HttpStatus.CREATED);
+
+    }
+
 }

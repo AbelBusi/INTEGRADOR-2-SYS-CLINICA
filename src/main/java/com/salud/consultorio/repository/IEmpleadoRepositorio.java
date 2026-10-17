@@ -26,6 +26,9 @@ public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
     @Query("SELECT e.persona.id FROM Empleado e WHERE e.id = :idEmpleado")
     Integer empleadoPersonaID(@PathVariable("idEmpleado") Integer idEmpleado);
 
+    @Query("SELECT e.id FROM Empleado e JOIN e.persona p WHERE p.numeroDocumento= :nroDocumento")
+    Integer empleadoIDporNroDocumento(@PathVariable("nroDocumento") String nroDocumento);
+
     @Query("""
             SELECT new com.salud.consultorio.dto.empleado.EmpleadoLeerDTO(
                 em.id,

@@ -7,7 +7,6 @@ import com.salud.consultorio.model.enums.EntidadEstado;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface IEmpleadoServicio {
 
@@ -39,8 +38,8 @@ public interface IEmpleadoServicio {
 
     Integer IDEmpleadoPersona(Integer id);
 
-    PacienteConvertidoEmpleadoRespuestaDTO convertirPacienteEmplado(Integer idPaciente, ConvertirPacienteEmpledo dto);
+    PacienteConvertidoEmpleadoRespuestaDTO convertirPacienteEmplado(Integer idPaciente, ConvertirPacienteEmpledo dto, MultipartFile imagen);
 
-
+    EmpleadoIDPorBuscarNroDocDTO empleadoIDporDni(String nroDocumento);
 
 }
