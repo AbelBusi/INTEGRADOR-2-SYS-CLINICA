@@ -12,27 +12,36 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ITokenRepositorio extends JpaRepository<Token,Integer> {
+public interface ITokenRepositorio extends JpaRepository<Token, Integer> {
 
     List<Token> findAllByUsuarioIdAndExpiredFalseAndRevokedFalse(Integer id);
 
     Optional<Token> findByToken(String jwtToken);
 
     @Query("""
-        SELECT new com.salud.consultorio.auth.dto.TokenSesionDTO(
-            t.expired,
-            t.revoked,
-            u.estado,
-            u.requiereCambioClave
-        )
-        FROM Token t
-        JOIN t.usuario u
-        WHERE t.token = :token
-        """)
+            SELECT new com.salud.consultorio.auth.dto.TokenSesionDTO(
+                t.expired,
+                t.revoked,
+                u.estado,
+                u.requiereCambioClave
+            )
+            FROM Token t
+            JOIN t.usuario u
+            WHERE t.token = :token
+            """)
     Optional<TokenSesionDTO> buscarSesion(@Param("token") String token);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Token t SET t.expired = true, t.revoked = true WHERE t.usuario.id IN (SELECT u.id FROM Usuario u WHERE u.rol.id = :idRol)")
+    @Query("""
+            UPDATE Token t
+            SET t.expired = true,
+                t.revoked = true
+            WHERE t.usuario.id IN (
+                SELECT ur.usuario.id
+                FROM UsuarioRol ur
+                WHERE ur.rol.id = :idRol
+                  AND ur.estado = 1
+            )
+            """)
     void revocarPorRol(@Param("idRol") Integer idRol);
-
 }

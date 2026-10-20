@@ -1,7 +1,7 @@
 package com.salud.consultorio.auth.configuration;
 
-import com.salud.consultorio.model.entity.Usuario;
-import com.salud.consultorio.repository.IUsuarioRepositorio;
+import com.salud.consultorio.model.entity.UsuarioRol;
+import com.salud.consultorio.repository.IUsuarioRolRepositorio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,31 +24,41 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final IUsuarioRepositorio usuarioRepositorio;
+    private final IUsuarioRolRepositorio usuarioRolRepositorio;
 
     @Bean
     public UserDetailsService userDetailsService(){
         return username -> {
-            final Usuario usuario = usuarioRepositorio.findByUsuario(username)
-                    .orElseThrow(()-> new UsernameNotFoundException("El usuario no existe en la base de datos"));
 
-            List<SimpleGrantedAuthority> permisos =
-                    usuario.getRol()
+            // Solo asignaciones vigentes: asignación activa (1) y rol activo (1).
+            // Antes se leían todas, y un rol revocado o desactivado seguía aportando permisos.
+            List<UsuarioRol> asignaciones = usuarioRolRepositorio
+                    .findAllByUsuario_UsuarioAndEstadoAndRol_Estado(username, 1, 1);
+
+            if (asignaciones.isEmpty()){
+                throw new UsernameNotFoundException("El usuario no existe o no tiene roles activos");
+            }
+
+            var usuario = asignaciones.get(0).getUsuario();
+
+            List<SimpleGrantedAuthority> permisos = asignaciones.stream()
+                    .flatMap(usuarioRol -> usuarioRol.getRol()
                             .getRolPermisos()
-                            .stream()
-                            .map(rolPermiso ->
-                                    new SimpleGrantedAuthority(
-                                            rolPermiso.getPermiso().getCodigo()
-                                    )
-                            )
-                            .toList();
+                            .stream())
+                    .map(rolPermiso -> new SimpleGrantedAuthority(
+                            rolPermiso.getPermiso().getCodigo()
+                    ))
+                    .distinct()
+                    .toList();
 
             return User.builder()
                     .username(usuario.getUsuario())
                     .password(usuario.getClaveAcceso())
                     .authorities(permisos)
                     .build();
+
         };
+
     }
 
     @Bean

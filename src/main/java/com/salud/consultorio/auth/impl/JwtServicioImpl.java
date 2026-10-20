@@ -2,6 +2,7 @@ package com.salud.consultorio.auth.impl;
 
 import com.salud.consultorio.auth.service.IJwtServicio;
 import com.salud.consultorio.model.entity.Usuario;
+import com.salud.consultorio.model.entity.UsuarioRol;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -53,20 +54,26 @@ public class JwtServicioImpl implements IJwtServicio {
     @Override
     public String construirToken(Usuario usuario, Integer expiration) {
 
-        List<String> permisos = usuario.getRol()
-                .getRolPermisos()
+        List<UsuarioRol> asignaciones = usuario.getUsuarioRoles()
                 .stream()
-                .map(rolPermiso -> rolPermiso.getPermiso().getCodigo())
+                .filter(ur -> Integer.valueOf(1).equals(ur.getEstado()))
+                .filter(ur -> Integer.valueOf(1).equals(ur.getRol().getEstado()))
                 .toList();
 
-        String rolNombre = usuario.getRol() != null && usuario.getRol().getNombre() != null
-                ? usuario.getRol().getNombre()
-                : "";
+        List<String> permisos = asignaciones.stream()
+                .flatMap(usuarioRol -> usuarioRol.getRol().getRolPermisos().stream())
+                .map(rp -> rp.getPermiso().getCodigo())
+                .distinct().toList();
+
+        List<String> roles = asignaciones.stream()
+                .map(ur-> ur.getRol().getNombre())
+                .distinct()
+                .toList();
 
         Map<String, Object> extraClaims = Map.of(
                 "name", usuario.getUsuario(),
                 "authorities",permisos,
-                "role", rolNombre
+                "role", roles
         );
 
         return Jwts.builder()

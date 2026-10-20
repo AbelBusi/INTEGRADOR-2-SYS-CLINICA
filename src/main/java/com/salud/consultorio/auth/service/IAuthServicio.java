@@ -1,8 +1,10 @@
 package com.salud.consultorio.auth.service;
 
-import com.salud.consultorio.auth.dto.*;
+import com.salud.consultorio.auth.dto.CambiarClaveRequest;
+import com.salud.consultorio.auth.dto.EstadoCuentaResponse;
+import com.salud.consultorio.auth.dto.InicioSolicitud;
+import com.salud.consultorio.auth.dto.TokenResponse;
 import com.salud.consultorio.dto.usuario.UsuarioAltaDTO;
-import com.salud.consultorio.dto.usuario.UsuarioCambiarRolDTO;
 import com.salud.consultorio.dto.usuario.UsuarioCreadoDTO;
 
 public interface IAuthServicio {
@@ -11,7 +13,7 @@ public interface IAuthServicio {
 
     TokenResponse ingresar(InicioSolicitud request);
 
-    TokenResponse refrescarToken(String authHeder);
+    TokenResponse refrescarToken(String authHeader);
 
     void cambiarClave(String nombreUsuario, CambiarClaveRequest dto);
 
@@ -19,6 +21,6 @@ public interface IAuthServicio {
 
     void validarNoEsCuentaPropia(Integer idUsuario, String usuarioActual, String mensaje);
 
-    void cambiarRol(Integer idUsuario, UsuarioCambiarRolDTO dto, String usuarioActual);
+    void revocarSesionesUsuario(Integer idUsuario);
 
 }

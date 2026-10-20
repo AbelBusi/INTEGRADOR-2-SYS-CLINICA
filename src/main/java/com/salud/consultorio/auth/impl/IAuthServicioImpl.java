@@ -8,14 +8,10 @@ import com.salud.consultorio.auth.exception.UsuarioInactivoException;
 import com.salud.consultorio.auth.service.IAuthServicio;
 import com.salud.consultorio.auth.service.IJwtServicio;
 import com.salud.consultorio.dto.usuario.UsuarioAltaDTO;
-import com.salud.consultorio.dto.usuario.UsuarioCambiarRolDTO;
 import com.salud.consultorio.dto.usuario.UsuarioCreadoDTO;
 import com.salud.consultorio.model.entity.*;
 import com.salud.consultorio.model.enums.TipoUsuario;
-import com.salud.consultorio.repository.IPersonaRepositorio;
-import com.salud.consultorio.repository.IRolRepositorio;
-import com.salud.consultorio.repository.ITokenRepositorio;
-import com.salud.consultorio.repository.IUsuarioRepositorio;
+import com.salud.consultorio.repository.*;
 import com.salud.consultorio.service.IUsuarioServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -69,6 +65,7 @@ public class IAuthServicioImpl implements IAuthServicio {
     private final AuthenticationManager authenticationManager;
     private final IPersonaRepositorio personaRepositorio;
     private final CorreoServicio correoServicio;
+    private final IUsuarioRolRepositorio usuarioRolRepositorio;
 
     @Transactional
     @Override
@@ -89,7 +86,7 @@ public class IAuthServicioImpl implements IAuthServicio {
             );
         }
 
-        Rol rol = resolverRol(dto);
+        List<Rol> roles = resolverRoles(dto);
 
         String nombreUsuario = generarNombreUsuario(persona);
         String claveTemporal = generarClaveTemporal();
@@ -98,15 +95,28 @@ public class IAuthServicioImpl implements IAuthServicio {
                 .usuario(nombreUsuario)
                 .claveAcceso(passwordEncoder.encode(claveTemporal))
                 .persona(persona)
-                .rol(rol)
                 .requiereCambioClave(true)
                 .build();
 
         Usuario guardado = usuarioRepositorio.save(usuario);
 
-        correoServicio.enviarCredencialesUsuario(correo, nombreUsuario, claveTemporal);
+        List<UsuarioRol> asignaciones = roles.stream()
+                .map(rol -> UsuarioRol.builder()
+                        .usuario(guardado)
+                        .rol(rol)
+                        .build())
+                .toList();
 
-        return new UsuarioCreadoDTO(guardado.getId(), nombreUsuario, enmascararCorreo(correo));
+        usuarioRolRepositorio.saveAll(asignaciones);
+
+        correoServicio.enviarCredencialesUsuario(
+                correo, nombreUsuario, claveTemporal
+        );
+
+        return new UsuarioCreadoDTO(
+                guardado.getId(), nombreUsuario, enmascararCorreo(correo)
+        );
+
     }
 
     @Transactional
@@ -168,16 +178,14 @@ public class IAuthServicioImpl implements IAuthServicio {
             throw new UsuarioInactivoException(MENSAJE_INACTIVO);
         }
 
-        List<SimpleGrantedAuthority> authorities = usuario.getRol()
-                .getRolPermisos()
-                .stream()
-                .map(rolPermiso -> new SimpleGrantedAuthority(rolPermiso.getPermiso().getCodigo()))
-                .toList();
-
-        UserDetails userDetails = new User(usuario.getUsuario(), usuario.getClaveAcceso(), authorities);
+        UserDetails userDetails = new User(
+                usuario.getUsuario(),
+                usuario.getClaveAcceso(),
+                obtenerAutoridades(usuario.getUsuario())
+        );
 
         if (!jwtServicio.tokenValido(refreshToken, userDetails)) {
-            throw new IllegalArgumentException("Token Bearer Invalido3");
+            throw new IllegalArgumentException("Token Bearer Invalido");
         }
 
         final String accesoToken = jwtServicio.generarToken(usuario);
@@ -238,36 +246,17 @@ public class IAuthServicioImpl implements IAuthServicio {
         }
     }
 
+    /**
+     * Reemplaza al antiguo cambiarRol. La asignación/revocación de roles vive ahora en
+     * UsuarioRolServicioImpl; aquí solo queda cerrar las sesiones para que el usuario
+     * reciba los permisos actualizados en su próximo inicio de sesión.
+     */
     @Transactional
     @Override
-    public void cambiarRol(Integer idUsuario, UsuarioCambiarRolDTO dto, String usuarioActual) {
-
-        validarNoEsCuentaPropia(idUsuario, usuarioActual, "No puedes cambiar tu propio rol");
+    public void revocarSesionesUsuario(Integer idUsuario) {
 
         Usuario usuario = usuarioRepositorio.findById(idUsuario)
                 .orElseThrow(() -> new EntityNotFoundException("No existe el usuario indicado"));
-
-        if (ROL_PACIENTE.equalsIgnoreCase(usuario.getRol().getNombre())) {
-            throw new IllegalArgumentException("El rol de un paciente no se puede modificar");
-        }
-
-        Rol nuevoRol = rolRepositorio.findById(dto.idRol())
-                .orElseThrow(() -> new EntityNotFoundException("No existe el rol indicado"));
-
-        if (ROL_PACIENTE.equalsIgnoreCase(nuevoRol.getNombre())) {
-            throw new IllegalArgumentException("El rol " + ROL_PACIENTE + " no se puede asignar a un empleado");
-        }
-
-        if (!Integer.valueOf(1).equals(nuevoRol.getEstado())) {
-            throw new IllegalArgumentException("El rol seleccionado no está activo");
-        }
-
-        if (usuario.getRol().getId().equals(nuevoRol.getId())) {
-            throw new IllegalArgumentException("El usuario ya tiene ese rol");
-        }
-
-        usuario.setRol(nuevoRol);
-        usuarioRepositorio.save(usuario);
 
         revokeAllUserToken(usuario);
     }
@@ -280,22 +269,60 @@ public class IAuthServicioImpl implements IAuthServicio {
         return usuario.isRequiereCambioClave();
     }
 
-    private Rol resolverRol(UsuarioAltaDTO dto) {
+    /** Permisos de todos los roles vigentes (asignación activa + rol activo), sin repetidos. */
+    private List<SimpleGrantedAuthority> obtenerAutoridades(String nombreUsuario) {
+
+        return usuarioRolRepositorio
+                .findAllByUsuario_UsuarioAndEstadoAndRol_Estado(nombreUsuario, 1, 1)
+                .stream()
+                .flatMap(ur -> ur.getRol().getRolPermisos().stream())
+                .map(rp -> new SimpleGrantedAuthority(rp.getPermiso().getCodigo()))
+                .distinct()
+                .toList();
+    }
+
+    private List<Rol> resolverRoles(UsuarioAltaDTO dto) {
 
         if (dto.tipo() == TipoUsuario.PACIENTE) {
-            return rolRepositorio.findByNombreIgnoreCase(ROL_PACIENTE)
-                    .orElseThrow(() -> new EntityNotFoundException("No existe el rol " + ROL_PACIENTE));
+            Rol rolPaciente = rolRepositorio.findByNombreIgnoreCase(ROL_PACIENTE)
+                    .filter(rol -> Integer.valueOf(1).equals(rol.getEstado()))
+                    .orElseThrow(() ->
+                            new EntityNotFoundException(
+                                    "El rol PACIENTE no existe o no está activo"
+                            )
+                    );
+            return List.of(rolPaciente);
         }
 
-        if (dto.idRol() == null) {
-            throw new IllegalArgumentException("El rol es obligatorio para los empleados");
+        if (dto.idRoles() == null || dto.idRoles().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Debes indicar al menos un rol para los empleados"
+            );
         }
 
-        Rol rol = rolRepositorio.findById(dto.idRol())
-                .orElseThrow(() -> new EntityNotFoundException("No existe el rol indicado"));
+        return dto.idRoles().stream()
+                .distinct()
+                .map(this::validarRolAsignableAEmpleado)
+                .toList();
+    }
+
+    private Rol validarRolAsignableAEmpleado(Integer idRol) {
+
+        Rol rol = rolRepositorio.findById(idRol)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("No existe el rol indicado: " + idRol)
+                );
+
+        if (!Integer.valueOf(1).equals(rol.getEstado())) {
+            throw new IllegalArgumentException(
+                    "El rol " + rol.getNombre() + " no está activo"
+            );
+        }
 
         if (ROL_PACIENTE.equalsIgnoreCase(rol.getNombre())) {
-            throw new IllegalArgumentException("El rol " + ROL_PACIENTE + " no se puede asignar a un empleado");
+            throw new IllegalArgumentException(
+                    "El rol PACIENTE no se puede asignar a un empleado"
+            );
         }
 
         return rol;
