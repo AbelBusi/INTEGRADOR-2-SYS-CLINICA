@@ -89,6 +89,14 @@ public class IPersonaServicioImpl implements IPersonaServicio {
         return personaRepositorio.existsByCorreo(correo);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public Persona entidadPorIDTransaccion(Integer id) {
+        return personaRepositorio.findById(id).orElseThrow(
+                ()-> new EntityNotFoundException("No existe la persona en la entidad")
+        );
+    }
+
     @Override
     public boolean existePersonaNumeroDocumentoExcepto(String numeroDocumento, Integer idPersona) {
         return false;

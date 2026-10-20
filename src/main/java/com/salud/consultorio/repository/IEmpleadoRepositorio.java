@@ -1,9 +1,6 @@
 package com.salud.consultorio.repository;
 
-import com.salud.consultorio.dto.empleado.EmpleadoActivoResumenDTO;
-import com.salud.consultorio.dto.empleado.EmpleadoDetalleDTO;
-import com.salud.consultorio.dto.empleado.EmpleadoLeerDTO;
-import com.salud.consultorio.dto.empleado.EmpleadoMedicoResumenDTO;
+import com.salud.consultorio.dto.empleado.*;
 import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.entity.Empleado;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +17,36 @@ import java.util.Optional;
 public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
 
     boolean existsByCargoId(Integer idCargo);
+
+    boolean existsByPersona_Id(Integer idEmpleado);
+
+    @Query("SELECT e.persona.id FROM Empleado e WHERE e.id = :idEmpleado")
+    Integer empleadoPersonaID(@PathVariable("idEmpleado") Integer idEmpleado);
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.empleado.EmpleadoIDPorBuscarNroDocDTO(
+                e.id,
+                p.id,
+                pa.id,
+                CONCAT(p.nombre, ' ', p.apellidos),
+                CASE
+                    WHEN pa.id IS NULL THEN 'REGISTRAR'
+                    WHEN pa.estado = 1 THEN 'ACTIVO'
+                    WHEN pa.estado = 2 THEN 'DESACTIVADO'
+                    WHEN pa.estado = 0 THEN 'REACTIVAR'
+                    ELSE 'DESCONOCIDO'
+                END
+            )
+            FROM Empleado e
+            JOIN e.persona p
+            LEFT JOIN Paciente pa ON pa.persona.id = p.id
+            WHERE p.numeroDocumento = :nroDocumento
+              AND e.estado = 1
+              AND p.estado = 1
+            """)
+    EmpleadoIDPorBuscarNroDocDTO empleadoIDporNroDocumento(
+            @Param("nroDocumento") String nroDocumento
+    );
 
     @Query("""
             SELECT new com.salud.consultorio.dto.empleado.EmpleadoLeerDTO(
@@ -142,10 +170,15 @@ public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
     @Query("UPDATE Empleado em SET em.estado = 0 WHERE em.id = :id")
     void eliminarLogicamente(@Param("id") Integer id);
 
+    @Modifying
+    @Query("UPDATE Empleado e SET e.estado =1 WHERE e.id=:id")
+    void reactivarLogicamente(@Param("id") Integer id);
+
     @Query("""
                 SELECT new com.salud.consultorio.dto.usuario.PersonaUsuarioDTO(
                     e.persona.id,
-                    CONCAT(e.persona.nombre, ' ', e.persona.apellidos)
+                    CONCAT(e.persona.nombre, ' ', e.persona.apellidos),
+                    e.persona.numeroDocumento
                 )
                 FROM Empleado e
                 WHERE e.estado = 1

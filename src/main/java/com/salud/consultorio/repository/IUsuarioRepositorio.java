@@ -2,7 +2,7 @@ package com.salud.consultorio.repository;
 
 import com.salud.consultorio.auth.dto.rol.UsuarioRolDTO;
 import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
-import com.salud.consultorio.dto.usuario.UsuarioListadoDTO;
+import com.salud.consultorio.dto.usuario.UsuarioBaseDTO;
 import com.salud.consultorio.model.entity.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -19,9 +19,9 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
     boolean existsByUsuario(String usuario);
 
     @Query("""
-                SELECT 
-                    CASE WHEN COUNT(*) > 0 
-                    THEN true 
+                SELECT
+                    CASE WHEN COUNT(*) > 0
+                    THEN true
                     ELSE false END
                 FROM Usuario u
                 WHERE u.persona.id=:id
@@ -33,15 +33,17 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
     Optional<Usuario> findByUsuario(String usuario);
 
     @Query("""
-                SELECT new com.salud.consultorio.auth.dto.rol.UsuarioRolDTO(
-                    UPPER(CONCAT(u.persona.nombre, ' ', u.persona.apellidos)), 
-                    UPPER(u.rol.nombre)
-                )
-                FROM Usuario u
-                WHERE u.id = :id
+            SELECT new com.salud.consultorio.auth.dto.rol.UsuarioRolDTO(
+                UPPER(CONCAT(u.persona.nombre, ' ', u.persona.apellidos)),
+                UPPER(ur.rol.nombre)
+            )
+            FROM Usuario u
+            JOIN UsuarioRol ur ON ur.usuario = u
+            WHERE u.id = :id
+              AND ur.estado = 1
+              AND ur.rol.estado = 1
             """)
-    Optional<UsuarioRolDTO> obtenerUsuarioYRolPorId(@Param("id") Integer id);
-
+    List<UsuarioRolDTO> obtenerUsuariosYRolesPorId(@Param("id") Integer id);
 
     @Modifying
     @Query("UPDATE Usuario u SET u.estado =:estado WHERE u.id=:id")
@@ -50,7 +52,8 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
     @Query("""
                 SELECT new com.salud.consultorio.dto.usuario.PersonaUsuarioDTO(
                     e.persona.id,
-                    CONCAT(e.persona.nombre, ' ', e.persona.apellidos)
+                    CONCAT(e.persona.nombre, ' ', e.persona.apellidos),
+                    e.persona.numeroDocumento
                 )
                 FROM Empleado e
                 WHERE e.estado = 1
@@ -64,135 +67,54 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
     List<PersonaUsuarioDTO> listarParaCrearUsuario();
 
     @Query("""
-            SELECT new com.salud.consultorio.dto.usuario.UsuarioListadoDTO(
+            SELECT new com.salud.consultorio.dto.usuario.UsuarioBaseDTO(
                 u.id,
-                CONCAT(p.nombre, ' ', p.apellidos),
                 u.usuario,
-                r.nombre,
-                u.fechaCreacion,
-                u.fechaActualizacion,
-                u.requiereCambioClave,
+                CONCAT(u.persona.nombre, ' ', u.persona.apellidos),
+                u.persona.numeroDocumento,
                 u.estado
             )
             FROM Usuario u
-            JOIN u.persona p
-            JOIN u.rol r
-            WHERE u.estado = :estado
-            ORDER BY u.id DESC
+            WHERE (:estado IS NULL AND u.estado <> 0) OR u.estado = :estado
+            ORDER BY u.persona.apellidos, u.persona.nombre
             """)
-    List<UsuarioListadoDTO> listarUsuariosPorEstado(@Param("estado") Integer estado);
+    List<UsuarioBaseDTO> listarUsuarios(@Param("estado") Integer estado);
 
     @Query("""
-            SELECT new com.salud.consultorio.dto.usuario.UsuarioListadoDTO(
+            SELECT new com.salud.consultorio.dto.usuario.UsuarioBaseDTO(
                 u.id,
-                CONCAT(p.nombre, ' ', p.apellidos),
                 u.usuario,
-                r.nombre,
-                u.fechaCreacion,
-                u.fechaActualizacion,
-                u.requiereCambioClave,
+                CONCAT(u.persona.nombre, ' ', u.persona.apellidos),
+                u.persona.numeroDocumento,
                 u.estado
             )
             FROM Usuario u
-            JOIN u.persona p
-            JOIN u.rol r
-            WHERE u.estado IN (1, 2)
-            ORDER BY u.id DESC
+            WHERE ((:estado IS NULL AND u.estado <> 0) OR u.estado = :estado)
+              AND EXISTS (SELECT 1 FROM Empleado e WHERE e.persona.id = u.persona.id)
+            ORDER BY u.persona.apellidos, u.persona.nombre
             """)
-    List<UsuarioListadoDTO> listarUsuarios();
+    List<UsuarioBaseDTO> listarUsuariosEmpleados(@Param("estado") Integer estado);
 
     @Query("""
-            SELECT new com.salud.consultorio.dto.usuario.UsuarioListadoDTO(
+            SELECT new com.salud.consultorio.dto.usuario.UsuarioBaseDTO(
                 u.id,
-                CONCAT(p.nombre, ' ', p.apellidos),
                 u.usuario,
-                r.nombre,
-                u.fechaCreacion,
-                u.fechaActualizacion,
-                u.requiereCambioClave,
+                CONCAT(u.persona.nombre, ' ', u.persona.apellidos),
+                u.persona.numeroDocumento,
                 u.estado
             )
             FROM Usuario u
-            JOIN u.persona p
-            JOIN u.rol r
-            JOIN Empleado e ON e.persona.id = p.id
-            WHERE u.estado IN (1, 2)
-            ORDER BY u.id DESC
+            WHERE ((:estado IS NULL AND u.estado <> 0) OR u.estado = :estado)
+              AND EXISTS (SELECT 1 FROM Paciente p WHERE p.persona.id = u.persona.id)
+            ORDER BY u.persona.apellidos, u.persona.nombre
             """)
-    List<UsuarioListadoDTO> listarUsuariosEmpleados();
+    List<UsuarioBaseDTO> listarUsuariosPacientes(@Param("estado") Integer estado);
 
     @Query("""
-            SELECT new com.salud.consultorio.dto.usuario.UsuarioListadoDTO(
-                u.id,
-                CONCAT(p.nombre, ' ', p.apellidos),
-                u.usuario,
-                r.nombre,
-                u.fechaCreacion,
-                u.fechaActualizacion,
-                u.requiereCambioClave,
-                u.estado
-            )
-            FROM Usuario u
-            JOIN u.persona p
-            JOIN u.rol r
-            JOIN Paciente pa ON pa.persona.id = p.id
-            WHERE u.estado IN (1, 2)
-            ORDER BY u.id DESC
+            SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END
+            FROM Paciente p
+            WHERE p.persona.id = (SELECT u.persona.id FROM Usuario u WHERE u.id = :idUsuario)
             """)
-    List<UsuarioListadoDTO> listarUsuariosPacientes();
-
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Usuario u SET u.estado = 2 WHERE u.id = :id")
-    void desactivarLogicamente(@Param("id") Integer id);
-
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE Usuario u SET u.estado = 1 WHERE u.id = :id")
-    void activarLogicamente(@Param("id") Integer id);
-
-    @Query("""
-            SELECT new com.salud.consultorio.dto.usuario.UsuarioListadoDTO(
-                u.id,
-                CONCAT(p.nombre, ' ', p.apellidos),
-                u.usuario,
-                r.nombre,
-                u.fechaCreacion,
-                u.fechaActualizacion,
-                u.requiereCambioClave,
-                u.estado
-            )
-            FROM Usuario u
-            JOIN u.persona p
-            JOIN u.rol r
-            JOIN Paciente pa ON pa.persona.id = p.id
-            WHERE (:estado IS NULL OR u.estado = :estado)
-            ORDER BY u.id DESC
-            """)
-    List<UsuarioListadoDTO> listarUsuariosPacientes(
-            @Param("estado") Integer estado
-    );
-
-    @Query("""
-            SELECT new com.salud.consultorio.dto.usuario.UsuarioListadoDTO(
-                u.id,
-                CONCAT(p.nombre, ' ', p.apellidos),
-                u.usuario,
-                r.nombre,
-                u.fechaCreacion,
-                u.fechaActualizacion,
-                u.requiereCambioClave,
-                u.estado
-            )
-            FROM Usuario u
-            JOIN u.persona p
-            JOIN u.rol r
-            JOIN Empleado e ON e.persona.id = p.id
-            WHERE (:estado IS NULL OR u.estado = :estado)
-            ORDER BY u.id DESC
-            """)
-    List<UsuarioListadoDTO> listarUsuariosEmpleados(
-            @Param("estado") Integer estado
-    );
-
-    boolean existsByRolId(Integer idRol);
+    boolean esPaciente(@Param("idUsuario") Integer idUsuario);
 
 }

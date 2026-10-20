@@ -1,33 +1,35 @@
 package com.salud.consultorio.impl;
 
-import com.salud.consultorio.auth.dto.rol.UsuarioRolDTO;
-import com.salud.consultorio.dto.especialidad.EspecialidadRespuestaDTO;
-import com.salud.consultorio.dto.usuario.UsuarioListaDTO;
+import com.salud.consultorio.auth.dto.rol.RolResumenDTO;
+import com.salud.consultorio.dto.usuario.UsuarioBaseDTO;
 import com.salud.consultorio.dto.usuario.UsuarioListadoDTO;
-import com.salud.consultorio.dto.usuario.UsuarioRespuestaDTO;
-import com.salud.consultorio.model.entity.Especialidad;
+import com.salud.consultorio.dto.usuario.UsuarioRolAsignadoDTO;
+import com.salud.consultorio.dto.usuario.UsuarioRolesDTO;
 import com.salud.consultorio.model.entity.Usuario;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.repository.IUsuarioRepositorio;
+import com.salud.consultorio.repository.IUsuarioRolRepositorio;
 import com.salud.consultorio.service.IUsuarioServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UsuarioServicioImpl implements IUsuarioServicio {
 
-    private final IUsuarioRepositorio usuarioRepositorio;
+    private static final int ESTADO_ELIMINADO = 0;
+    private static final int ESTADO_ACTIVO = 1;
+    private static final int ESTADO_INACTIVO = 2;
 
-    @Override
-    public List<UsuarioRespuestaDTO> leerTodos() {
-        return List.of();
-    }
+    private final IUsuarioRepositorio usuarioRepositorio;
+    private final IUsuarioRolRepositorio usuarioRolRepositorio;
 
     @Transactional(readOnly = true)
     @Override
@@ -43,62 +45,56 @@ public class UsuarioServicioImpl implements IUsuarioServicio {
 
     @Transactional(readOnly = true)
     @Override
-    public Optional<UsuarioRolDTO> obtenerInformacionUsuarioYRol(Integer id) {
-        return usuarioRepositorio.obtenerUsuarioYRolPorId(id);
-    }
+    public UsuarioRolesDTO obtenerInformacionUsuarioYRol(Integer id) {
 
-    @Transactional(readOnly = true)
-    @Override
-    public List<UsuarioListaDTO> listaUsuarios() {
-        return null;
-    }
+        Usuario usuario = usuarioRepositorio.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("El usuario no existe.")
+        );
 
-    @Transactional(readOnly = true)
-    @Override
-    public List<UsuarioListaDTO> listaUsuariosActivos() {
-        return null;
-    }
+        List<RolResumenDTO> roles = rolesPorUsuarios(List.of(id)).getOrDefault(id, List.of());
 
-    @Transactional(readOnly = true)
-    @Override
-    public List<UsuarioListaDTO> listaUsuariosInactivos() {
-        return null;
+        String nombreCompleto = usuario.getPersona().getNombre() + " " + usuario.getPersona().getApellidos();
+
+        return new UsuarioRolesDTO(usuario.getId(), usuario.getUsuario(), nombreCompleto, roles);
     }
 
     @Transactional
     @Override
     public void eliminarPorId(Integer id) {
-        usuarioRepositorio.UsuarioCambiarEstado(0,id);
+        usuarioRepositorio.UsuarioCambiarEstado(ESTADO_ELIMINADO, id);
     }
 
     @Transactional
     @Override
     public void cambiarEstado(Integer id, EntidadEstado estado) {
 
-        Usuario usuario = validarCambiarEstado(id, estado);
+        if (id == null || estado == null) {
+            throw new IllegalArgumentException("El id y el estado son obligatorios.");
+        }
 
-        if (usuario.getEstado() == 0) {
-            throw new IllegalArgumentException("No se puede cambiar el estado de un cargo eliminado.");
+        Usuario usuario = usuarioRepositorio.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("El usuario al que desea cambiarle el estado no existe.")
+        );
+
+        if (usuario.getEstado() == ESTADO_ELIMINADO) {
+            throw new IllegalArgumentException("No se puede cambiar el estado de un usuario eliminado.");
         }
 
         if (estado == EntidadEstado.ACTIVO) {
 
-            if (usuario.getEstado() == 1) {
-                throw new IllegalArgumentException("No se puede activar un estado que ya se encuentra Activo");
+            if (usuario.getEstado() == ESTADO_ACTIVO) {
+                throw new IllegalArgumentException("El usuario ya se encuentra activo.");
             }
 
-            usuarioRepositorio.activarLogicamente(usuario.getId());
+            usuarioRepositorio.UsuarioCambiarEstado(ESTADO_ACTIVO, usuario.getId());
 
-        }
+        } else if (estado == EntidadEstado.INACTIVO) {
 
-        if (estado == EntidadEstado.INACTIVO) {
-
-            if (usuario.getEstado() == 2) {
-                throw new IllegalArgumentException("No se puede desactivar un estado que ya se encuentra desactivado");
+            if (usuario.getEstado() == ESTADO_INACTIVO) {
+                throw new IllegalArgumentException("El usuario ya se encuentra inactivo.");
             }
 
-            usuarioRepositorio.desactivarLogicamente(usuario.getId());
-
+            usuarioRepositorio.UsuarioCambiarEstado(ESTADO_INACTIVO, usuario.getId());
         }
 
     }
@@ -106,107 +102,57 @@ public class UsuarioServicioImpl implements IUsuarioServicio {
     @Transactional(readOnly = true)
     @Override
     public List<UsuarioListadoDTO> lista(EntidadEstado estado) {
-        return listaPorEstado(estado);
+        return conRoles(usuarioRepositorio.listarUsuarios(aCodigo(estado)));
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<UsuarioListadoDTO> listaEmpleados(EntidadEstado estado) {
-        return listaPorEstadoEmpleados(estado);
+        return conRoles(usuarioRepositorio.listarUsuariosEmpleados(aCodigo(estado)));
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<UsuarioListadoDTO> listaPacientes(EntidadEstado estado) {
-        return listaPorEstadoPacientes(estado);
+        return conRoles(usuarioRepositorio.listarUsuariosPacientes(aCodigo(estado)));
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public boolean existeUsuarioPorRol(Integer idRol) {
-        return usuarioRepositorio.existsByRolId(idRol);
+    private Integer aCodigo(EntidadEstado estado) {
+        if (estado == EntidadEstado.ACTIVO) return ESTADO_ACTIVO;
+        if (estado == EntidadEstado.INACTIVO) return ESTADO_INACTIVO;
+        return null;
     }
 
-    @Transactional(readOnly = true)
-    private Usuario validarCambiarEstado(Integer id, EntidadEstado estado) {
+    private List<UsuarioListadoDTO> conRoles(List<UsuarioBaseDTO> usuarios) {
 
-        if (id == null || estado == null) {
-            throw new IllegalArgumentException("El id y el estado son obligatorios.");
+        if (usuarios.isEmpty()) {
+            return List.of();
         }
 
-        return usuarioRepositorio.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("El estado que desea cambiarle el estado, no existe.")
-        );
+        List<Integer> ids = usuarios.stream().map(UsuarioBaseDTO::id).toList();
+        Map<Integer, List<RolResumenDTO>> roles = rolesPorUsuarios(ids);
 
+        return usuarios.stream()
+                .map(u -> new UsuarioListadoDTO(
+                        u.id(),
+                        u.usuario(),
+                        u.nombreCompleto(),
+                        u.numeroDocumento(),
+                        u.estado(),
+                        roles.getOrDefault(u.id(), List.of())
+                ))
+                .toList();
     }
 
-    @Transactional(readOnly = true)
-    private List<UsuarioListadoDTO> listaPorEstado(EntidadEstado estado) {
-
-        if (estado != null) {
-
-            if (estado == EntidadEstado.ACTIVO) {
-
-                return usuarioRepositorio.listarUsuariosPorEstado(1);
-
-            }
-
-            if (estado == EntidadEstado.INACTIVO) {
-
-                return usuarioRepositorio.listarUsuariosPorEstado(2);
-
-            }
-
-        }
-
-        return usuarioRepositorio.listarUsuarios();
-
-    }
-
-    @Transactional(readOnly = true)
-    private List<UsuarioListadoDTO> listaPorEstadoEmpleados(EntidadEstado estado) {
-
-        if (estado != null) {
-
-            if (estado == EntidadEstado.ACTIVO) {
-
-                return usuarioRepositorio.listarUsuariosEmpleados(1);
-
-            }
-
-            if (estado == EntidadEstado.INACTIVO) {
-
-                return usuarioRepositorio.listarUsuariosEmpleados(2);
-
-            }
-
-        }
-
-        return usuarioRepositorio.listarUsuariosEmpleados(null);
-
-    }
-
-    @Transactional(readOnly = true)
-    private List<UsuarioListadoDTO> listaPorEstadoPacientes(EntidadEstado estado) {
-
-        if (estado != null) {
-
-            if (estado == EntidadEstado.ACTIVO) {
-
-                return usuarioRepositorio.listarUsuariosPacientes(1);
-
-            }
-
-            if (estado == EntidadEstado.INACTIVO) {
-
-                return usuarioRepositorio.listarUsuariosPacientes(2);
-
-            }
-
-        }
-
-        return usuarioRepositorio.listarUsuariosPacientes(null);
-
+    private Map<Integer, List<RolResumenDTO>> rolesPorUsuarios(Collection<Integer> ids) {
+        return usuarioRolRepositorio.listarRolesActivosPorUsuarios(ids).stream()
+                .collect(Collectors.groupingBy(
+                        UsuarioRolAsignadoDTO::idUsuario,
+                        Collectors.mapping(
+                                a -> new RolResumenDTO(a.idRol(), a.nombreRol()),
+                                Collectors.toList()
+                        )
+                ));
     }
 
 }

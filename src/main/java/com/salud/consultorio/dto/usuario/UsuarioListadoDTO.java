@@ -1,15 +1,15 @@
 package com.salud.consultorio.dto.usuario;
 
-import java.time.LocalDateTime;
+import com.salud.consultorio.auth.dto.rol.RolResumenDTO;
+
+import java.util.List;
 
 public record UsuarioListadoDTO(
         Integer id,
-        String persona,
-        String nombreUsuario,
-        String rol,
-        LocalDateTime fechaCreacion,
-        LocalDateTime fechaActualizacion,
-        boolean requiereCambioClave,
-        Integer estado
+        String usuario,
+        String nombreCompleto,
+        String numeroDocumento,
+        Integer estado,
+        List<RolResumenDTO> roles
 ) {
 }
