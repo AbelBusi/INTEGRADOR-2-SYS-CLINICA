@@ -159,6 +159,14 @@
 
           </form>
 
+        } @else if (vista() === 'perfil') {
+          <app-seleccionar-perfil
+            [usuario]="usuario()"
+            [perfiles]="perfiles()"
+            [cargando]="cargando()"
+            (elegir)="elegirPerfil($event)"
+            (volver)="volverAlLogin()"
+          />
         } @else {
           <app-recuperar-clave (volver)="vista.set('login')" />
         }

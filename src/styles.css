@@ -1,2 +1,84 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Playfair+Display:wght@600;700&display=swap');
 @import 'tailwindcss';
+
+
+.heading-enter {
+  animation: heading-enter 400ms ease-out both;
+}
+
+.session-badge {
+  animation: heading-enter 350ms ease-out both;
+}
+
+.profile-enter {
+  animation: profile-enter 380ms ease-out both;
+}
+
+.profile-indicator {
+  transform: scaleY(0);
+  transform-origin: center;
+}
+
+.profile-option:hover .profile-indicator,
+.profile-option:focus-visible .profile-indicator {
+  transform: scaleY(1);
+}
+
+.profile-icon {
+  transition:
+    background-color 200ms ease,
+    transform 200ms ease;
+}
+
+.profile-option:hover .profile-icon {
+  transform: translateX(2px);
+}
+
+.logout-link:hover .material-symbols-outlined {
+  transform: translateX(-3px);
+}
+
+@keyframes heading-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes profile-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heading-enter,
+  .session-badge,
+  .profile-enter {
+    animation: none;
+  }
+
+  .profile-option,
+  .profile-indicator,
+  .profile-icon,
+  .logout-link,
+  .logout-link .material-symbols-outlined {
+    transition: none;
+  }
+
+  .profile-option:hover,
+  .profile-option:hover .profile-icon {
+    transform: none;
+  }
+}

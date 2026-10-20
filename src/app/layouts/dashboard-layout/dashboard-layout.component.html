@@ -117,7 +117,7 @@
 
             <div
               class="relative"
-              [title]="!open && usuarioInfo() ? usuarioInfo()?.nombre : ''"
+              [title]="!open && usuarioInfo() ? usuarioInfo()?.nombreCompleto : ''"
             >
 
               <div
@@ -142,15 +142,13 @@
 
                 <p
                   class="text-xs font-bold text-[#292929] truncate"
-                  [title]="usuario.nombre"
+                  [title]="usuario.nombreCompleto"
                 >
-                  {{ usuario.nombre || 'Usuario Activo' }}
+                  {{ usuario.nombreCompleto || 'Usuario Activo' }}
                 </p>
 
-                <p
-                  class="text-[10px] font-bold text-[#D9182A] uppercase tracking-wider mt-0.5"
-                >
-                  {{ usuario.rol || usuario.rol || 'SIN ROL' }}
+                <p class="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">
+                  {{ rolActivo }}
                 </p>
 
               </div>

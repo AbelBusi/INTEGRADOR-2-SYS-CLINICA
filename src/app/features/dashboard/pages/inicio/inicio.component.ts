@@ -118,18 +118,19 @@ export class InicioComponent implements OnInit {
   ];
 
   get accesosVisibles() {
-    const rol = this.authService.getRole();
+    const roles = this.authService.getRole();
 
-    return this.accesosRapidos.filter((acceso) => !acceso.roles || acceso.roles.includes(rol));
+    return this.accesosRapidos.filter(
+      (acceso) => !acceso.roles || acceso.roles.some((rol) => roles.includes(rol)),
+    );
   }
-
   ngOnInit(): void {
-    const rol = this.authService.getRole();
+    const roles = this.authService.getRole();
 
-    this.esRecepcionista = rol === 'RECEPCIONISTA';
-    this.esDoctor = rol === 'DOCTOR';
-    this.esAdmin = rol === 'ADMINISTRADOR';
-    this.esPaciente = rol === 'PACIENTE';
+    this.esRecepcionista = roles.includes('RECEPCIONISTA');
+    this.esDoctor = roles.includes('DOCTOR');
+    this.esAdmin = roles.includes('ADMINISTRADOR');
+    this.esPaciente = roles.includes('PACIENTE');
 
     this.cargarComunicados();
     this.cargarDatos();

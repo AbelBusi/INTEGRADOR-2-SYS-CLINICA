@@ -1,0 +1,119 @@
+<div class="w-full">
+
+  <div
+    class="session-badge mx-auto mb-6 flex w-fit items-center gap-3 border border-neutral-200 bg-white py-2 pl-2 pr-4"
+  >
+    <span
+      class="flex h-8 w-8 items-center justify-center bg-[#D9182A] text-sm font-bold text-white"
+    >
+      {{ inicial() }}
+    </span>
+
+    <span class="text-xs text-neutral-600">
+      Sesión de
+      <strong class="font-bold text-neutral-900">
+        {{ usuario() }}
+      </strong>
+    </span>
+
+    <span class="ml-1 h-2 w-2 rounded-full bg-green-600"></span>
+  </div>
+
+  <div class="heading-enter text-center">
+    <span
+      class="mx-auto mb-3 block h-1 w-12 bg-[#D9182A]"
+    ></span>
+
+    <h1 class="text-2xl font-bold tracking-tight text-neutral-900">
+      ¿Cómo deseas ingresar?
+    </h1>
+
+    <p class="mx-auto mt-2 max-w-sm text-sm leading-6 text-neutral-600">
+      Selecciona uno de los perfiles asociados a tu cuenta.
+    </p>
+  </div>
+
+  <ul class="mt-7 space-y-3">
+    @for (perfil of perfiles(); track perfil.id; let i = $index) {
+      <li
+        class="profile-enter"
+        [style.animation-delay]="(i * 90) + 'ms'"
+      >
+        <button
+          type="button"
+          (click)="elegir.emit(perfil.id)"
+          [disabled]="cargando()"
+          class="profile-option group relative flex w-full items-center gap-4 overflow-hidden border border-neutral-300 bg-white p-4 text-left transition-[border-color,background-color,transform] duration-200 ease-out hover:-translate-y-0.5 hover:border-[#D9182A] hover:bg-[#FFF9F9] focus:outline-none focus-visible:border-[#D9182A] focus-visible:ring-2 focus-visible:ring-[#D9182A] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+        >
+          <span
+            class="profile-indicator absolute bottom-0 left-0 top-0 w-1 bg-[#D9182A] transition-transform duration-200"
+          ></span>
+
+          <span
+            class="profile-icon flex h-12 w-12 shrink-0 items-center justify-center bg-[#58595B] text-white transition-colors duration-200 group-hover:bg-[#D9182A]"
+          >
+            <span class="material-symbols-outlined text-[26px]">
+              {{ icono(perfil.nombre) }}
+            </span>
+          </span>
+
+          <span class="min-w-0 flex-1">
+            <span
+              class="block text-sm font-bold text-neutral-900 transition-colors duration-200 group-hover:text-[#D9182A]"
+            >
+              {{ titulo(perfil.nombre) }}
+            </span>
+
+            <span
+              class="mt-1 block text-xs leading-5 text-neutral-500"
+            >
+              {{ perfil.descripcion }}
+            </span>
+          </span>
+
+          <span
+            class="flex h-8 w-8 shrink-0 items-center justify-center border border-neutral-200 text-neutral-400 transition-[color,border-color,transform] duration-200 group-hover:translate-x-1 group-hover:border-[#D9182A] group-hover:text-[#D9182A]"
+          >
+            <span class="material-symbols-outlined text-[20px]">
+              arrow_forward
+            </span>
+          </span>
+        </button>
+      </li>
+    }
+  </ul>
+
+  @if (cargando()) {
+    <div
+      class="loading-enter mt-5 flex items-center justify-center gap-3 border border-neutral-200 bg-neutral-50 px-4 py-3"
+      role="status"
+      aria-live="polite"
+    >
+      <span
+        class="h-5 w-5 animate-spin rounded-full border-2 border-neutral-300 border-t-[#D9182A]"
+      ></span>
+
+      <span class="text-sm font-medium text-neutral-700">
+        Ingresando...
+      </span>
+    </div>
+  }
+
+  <div class="mt-6 border-t border-neutral-200 pt-4">
+    <button
+      type="button"
+      (click)="volver.emit()"
+      [disabled]="cargando()"
+      class="logout-link inline-flex items-center gap-2 text-sm font-semibold text-[#58595B] transition-colors duration-200 hover:text-[#D9182A] disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      <span
+        class="material-symbols-outlined text-[19px] transition-transform duration-200 group-hover:-translate-x-1"
+      >
+        arrow_back
+      </span>
+
+      Cerrar sesión y volver
+    </button>
+  </div>
+
+</div>

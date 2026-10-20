@@ -14,14 +14,22 @@ import { environment } from '../../../environments/environment';
 import { MENU_BASE, PAGE_TITLES } from './dashboard-menu.config';
 
 interface UsuarioRolInfo {
+  id: number;
+  usuario: string;
+  nombreCompleto: string;
+  roles: RolResumen[];
+}
+
+interface RolResumen {
+  idRol: number;
   nombre: string;
-  rol: string;
 }
 
 interface MensajeResponse {
   mensaje: string;
   object: UsuarioRolInfo;
 }
+
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -33,7 +41,7 @@ export class DashboardLayoutComponent implements OnInit {
   private http = inject(HttpClient);
   private router = inject(Router);
   private authService = inject(AuthService);
-
+  rolActivo = this.authService.getRole()[0] ?? '';
   readonly cambioClave = inject(CambioClaveService);
 
   open = true;
@@ -44,7 +52,7 @@ export class DashboardLayoutComponent implements OnInit {
 
   inicialAvatar = computed(() => {
     const info = this.usuarioInfo();
-    return info && info.nombre ? info.nombre.charAt(0).toUpperCase() : '?';
+    return info && info.nombreCompleto ? info.nombreCompleto.charAt(0).toUpperCase() : '?';
   });
 
   private currentUrl = toSignal(
@@ -64,11 +72,12 @@ export class DashboardLayoutComponent implements OnInit {
   });
 
   navItems = computed(() => {
-    const rol = this.authService.getRole();
+    const roles = this.authService.getRole();
     const permisos = this.authService.getAuthorities();
 
     const tieneAcceso = (item: { roles?: string[]; permisos?: string[] }): boolean => {
-      const cumpleRol = !item.roles || item.roles.includes(rol);
+      const cumpleRol = !item.roles || item.roles.some((rol) => roles.includes(rol));
+
       const cumplePermisos =
         !item.permisos || item.permisos.every((permiso) => permisos.includes(permiso));
 
@@ -84,10 +93,14 @@ export class DashboardLayoutComponent implements OnInit {
       return true;
     });
 
+    console.log('Rol activo:', this.authService.getActiveRole());
+    console.log('Roles del token:', this.authService.getRole());
+
     let grupoAnterior: string | undefined;
 
     return visibles.map((item) => {
       const encabezado = item.grupo && item.grupo !== grupoAnterior ? item.grupo : null;
+
       grupoAnterior = item.grupo;
 
       return { ...item, encabezado };
@@ -105,7 +118,7 @@ export class DashboardLayoutComponent implements OnInit {
     const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
 
     this.http
-      .get<MensajeResponse>(`${environment.apiUrl}/usuarios/${userId}/rol`, { headers })
+      .get<MensajeResponse>(`${environment.apiUrl}/usuarios/${userId}/roles`, { headers })
       .subscribe({
         next: (res) => {
           if (res && res.object) {

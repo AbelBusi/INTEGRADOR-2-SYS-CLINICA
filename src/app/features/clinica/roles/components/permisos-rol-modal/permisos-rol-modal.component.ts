@@ -127,7 +127,10 @@ export class PermisosRolModalComponent implements OnInit {
   });
 
   get esRolPropio(): boolean {
-    return normalizar(this.authService.getRole() ?? '') === normalizar(this.rol?.nombre ?? '');
+    const roles = this.authService.getRole();
+    const nombreRol = normalizar(this.rol?.nombre ?? '');
+
+    return roles.some((rol) => normalizar(rol) === nombreRol);
   }
 
   ngOnInit(): void {

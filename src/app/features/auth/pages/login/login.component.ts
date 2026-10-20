@@ -3,12 +3,14 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { RecuperarClaveComponent } from '../recuperar-clave/recuperar-clave.component';
+import { SeleccionarPerfilComponent } from '../seleccionar-perfil/seleccionar-perfil.component';
 import { HttpErrorResponse } from '@angular/common/http';
+import { Perfil } from '../../models/auth.models';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, RecuperarClaveComponent],
+  imports: [FormsModule, RecuperarClaveComponent, SeleccionarPerfilComponent],
   templateUrl: './login.component.html',
   styles: [],
 })
@@ -25,7 +27,11 @@ export class LoginComponent {
   error = signal<string | null>(null);
   serverError = signal<string | null>(null);
   recordarme = signal<boolean>(false);
-  vista = signal<'login' | 'recuperar'>('login');
+  vista = signal<'login' | 'recuperar' | 'perfil'>('login');
+
+  perfiles = signal<Perfil[]>([]);
+
+  private tokenSeleccion = '';
 
   stats = signal([
     { label: 'Pacientes', value: '1,240' },
@@ -81,29 +87,85 @@ export class LoginComponent {
     };
 
     this.authService.login(credenciales).subscribe({
-      next: (response) => {
+      next: (respuesta) => {
         this.cargando.set(false);
         this.guardarUsuarioRecordado();
-        this.onLogin.emit();
-        this.router.navigate(['/dashboard']);
+
+        if (
+          respuesta.requiere_seleccion_rol &&
+          respuesta.token_seleccion &&
+          respuesta.perfiles?.length
+        ) {
+          this.tokenSeleccion = respuesta.token_seleccion;
+          this.perfiles.set(respuesta.perfiles);
+          this.claveAcceso.set('');
+          this.vista.set('perfil');
+          return;
+        }
+
+        this.finalizarLogin();
       },
       error: (err: HttpErrorResponse) => {
         this.cargando.set(false);
-
-        if (err.error?.mensaje) {
-          this.serverError.set(err.error.mensaje);
-        } else if (err.status === 401 || err.status === 403) {
-          this.serverError.set('Usuario o contraseña incorrectos.');
-        } else if (err.status === 0) {
-          this.serverError.set('No hay conexión con el servidor del backend.');
-        } else {
-          this.serverError.set('Ocurrió un error inesperado en el sistema.');
-        }
+        this.serverError.set(this.mensajeDeError(err));
       },
     });
   }
 
+  elegirPerfil(idRol: number): void {
+    if (this.cargando()) return;
+
+    this.cargando.set(true);
+    this.serverError.set(null);
+
+    this.authService.seleccionarRol(this.tokenSeleccion, idRol).subscribe({
+      next: () => {
+        this.cargando.set(false);
+        this.tokenSeleccion = '';
+        this.finalizarLogin();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.cargando.set(false);
+
+        if (err.status === 401) {
+          this.volverAlLogin();
+          this.error.set('La selección de perfil expiró. Inicia sesión nuevamente.');
+          return;
+        }
+
+        this.serverError.set(this.mensajeDeError(err));
+      },
+    });
+  }
+
+  volverAlLogin(): void {
+    this.tokenSeleccion = '';
+    this.perfiles.set([]);
+    this.claveAcceso.set('');
+    this.error.set(null);
+    this.serverError.set(null);
+    this.vista.set('login');
+  }
+
   closeServerError(): void {
     this.serverError.set(null);
+  }
+
+  private finalizarLogin(): void {
+    this.onLogin.emit();
+    this.router.navigate(['/dashboard']);
+  }
+
+  private mensajeDeError(err: HttpErrorResponse): string {
+    if (err.error?.mensaje) {
+      return err.error.mensaje;
+    }
+    if (err.status === 401 || err.status === 403) {
+      return 'Usuario o contraseña incorrectos.';
+    }
+    if (err.status === 0) {
+      return 'No hay conexión con el servidor del backend.';
+    }
+    return 'Ocurrió un error inesperado en el sistema.';
   }
 }

@@ -7,8 +7,7 @@ export const authGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
 
   if (!authService.getAccessToken()) {
-    router.navigate(['/login']);
-    return false;
+    return router.createUrlTree(['/login']);
   }
 
   const rolesPermitidos = route.data['roles'] as string[] | undefined;
@@ -17,10 +16,15 @@ export const authGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  if (rolesPermitidos.includes(authService.getRole())) {
+  const rolesUsuario = authService.getRole();
+
+  const tieneAcceso = rolesPermitidos.some((rol) =>
+    rolesUsuario.includes(rol),
+  );
+
+  if (tieneAcceso) {
     return true;
   }
 
-  router.navigate(['/dashboard/inicio']);
-  return false;
+  return router.createUrlTree(['/dashboard/inicio']);
 };

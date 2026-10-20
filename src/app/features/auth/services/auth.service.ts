@@ -1,7 +1,13 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
-import { InicioSolicitud, TokenResponse } from '../models/auth.models';
+import {
+  InicioSolicitud,
+  LoginResponse,
+  Perfil,
+  SeleccionarRolSolicitud,
+  TokenResponse,
+} from '../models/auth.models';
 
 export interface UsuarioRegistroDTO {
   persona: { id: number };
@@ -21,9 +27,31 @@ export class AuthService {
     return this.http.post<TokenResponse>('/auth/register', dto);
   }
 
-  login(credenciales: InicioSolicitud): Observable<TokenResponse> {
+  login(credenciales: InicioSolicitud): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>('/auth/login', credenciales).pipe(
+      tap((respuesta) => {
+        if (respuesta.sesion) {
+          this.guardarTokens(respuesta.sesion);
+        }
+      }),
+    );
+  }
+
+  seleccionarRol(tokenSeleccion: string, idRol: number): Observable<TokenResponse> {
+    const cuerpo: SeleccionarRolSolicitud = { tokenSeleccion, idRol };
+
     return this.http
-      .post<TokenResponse>('/auth/login', credenciales)
+      .post<TokenResponse>('/auth/seleccionar-rol', cuerpo)
+      .pipe(tap((tokens) => this.guardarTokens(tokens)));
+  }
+
+  getPerfiles(): Observable<Perfil[]> {
+    return this.http.get<Perfil[]>('/auth/perfiles');
+  }
+
+  cambiarPerfil(idRol: number): Observable<TokenResponse> {
+    return this.http
+      .post<TokenResponse>('/auth/cambiar-perfil', { idRol })
       .pipe(tap((tokens) => this.guardarTokens(tokens)));
   }
 
@@ -76,16 +104,49 @@ export class AuthService {
     }
   }
 
-  getRole(): string {
+  getRole(): string[] {
     const token = this.getAccessToken();
-    if (!token) return '';
+    if (!token) return [];
 
     try {
       const payloadBase64 = token.split('.')[1];
       const payloadJson = JSON.parse(atob(payloadBase64));
-      return (payloadJson.role || '').toUpperCase();
-    } catch (e) {
+
+      const roles = payloadJson.role;
+
+      if (Array.isArray(roles)) {
+        return roles.map((rol: string) => rol.toUpperCase());
+      }
+
+      return typeof roles === 'string' && roles ? [roles.toUpperCase()] : [];
+    } catch {
+      return [];
+    }
+  }
+
+  getActiveRole(): string {
+    const token = this.getAccessToken();
+
+    if (!token) return '';
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.activeRole ?? '';
+    } catch {
       return '';
+    }
+  }
+
+  getIdRol(): number | null {
+    const token = this.getAccessToken();
+    if (!token) return null;
+
+    try {
+      const payloadBase64 = token.split('.')[1];
+      const payloadJson = JSON.parse(atob(payloadBase64));
+      return payloadJson.idRol != null ? Number(payloadJson.idRol) : null;
+    } catch (e) {
+      return null;
     }
   }
 
