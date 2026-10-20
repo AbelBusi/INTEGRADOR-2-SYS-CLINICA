@@ -19,14 +19,8 @@ public class Permiso {
     @Column(name = "id_permiso")
     private Integer id;
 
-    @Column(name = "codigo", nullable = false, unique = true, length = 60)
-    private String codigo;
-
     @Column(name = "nombre", nullable = false, unique = true, length = 60)
     private String nombre;
-
-    @Column(name = "modulo", nullable = false, length = 60)
-    private String modulo;
 
     @Column(name = "descripcion", nullable = false, length = 200)
     private String descripcion;

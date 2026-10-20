@@ -5,7 +5,6 @@ import lombok.*;
 
 @Getter
 @Setter
-@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -26,7 +25,6 @@ public class RolPermiso {
     private Permiso permiso;
 
     @Column(name = "estado", nullable = false)
-    @Builder.Default
-    private Integer estado = 1;
+    private Integer estado;
 
 }

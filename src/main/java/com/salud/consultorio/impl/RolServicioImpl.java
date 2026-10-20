@@ -6,7 +6,7 @@ import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.mapper.IRolMapper;
 import com.salud.consultorio.repository.IRolRepositorio;
 import com.salud.consultorio.service.IRolServicio;
-import com.salud.consultorio.service.IUsuarioRolServicio;
+import com.salud.consultorio.service.IUsuarioServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -21,7 +21,7 @@ public class RolServicioImpl implements IRolServicio {
 
     private final IRolRepositorio rolRepositorio;
     private final IRolMapper rolMapper;
-    private final IUsuarioRolServicio usuarioRolServicio;
+    private final IUsuarioServicio usuarioServicio;
 
     @Transactional(readOnly = true)
     @Override
@@ -80,8 +80,8 @@ public class RolServicioImpl implements IRolServicio {
             throw new EntityNotFoundException("El rol que desea eliminar no existe");
         }
 
-        if (usuarioRolServicio.existeUsuarioPorRol(id)) {
-            throw new DataIntegrityViolationException(
+        if (usuarioServicio.existeUsuarioPorRol(id)) {
+            throw new RuntimeException(
                     "No se puede eliminar el rol porque está siendo utilizado por uno o más usuarios"
             );
         }
@@ -103,7 +103,7 @@ public class RolServicioImpl implements IRolServicio {
         if (estado == EntidadEstado.ACTIVO) {
 
             if (rol.getEstado() == 1) {
-                throw new IllegalArgumentException("El rol ya se encuentra activo.");
+                throw new IllegalArgumentException("No se puede activar un estado que ya se encuentra Activo");
             }
 
             rolRepositorio.activarLogicamente(rol.getId());
@@ -113,29 +113,18 @@ public class RolServicioImpl implements IRolServicio {
         if (estado == EntidadEstado.INACTIVO) {
 
             if (rol.getEstado() == 2) {
-                throw new IllegalArgumentException("El rol ya se encuentra desactivado.");
+                throw new IllegalArgumentException("No se puede desactivar un estado que ya se encuentra desactivado");
             }
 
             rolRepositorio.desactivarLogicamente(rol.getId());
-
-            usuarioRolServicio.revocarSesionesPorRol(rol.getId());
 
         }
 
     }
 
-    @Transactional(readOnly = true)
     @Override
     public boolean existeRolNombre(String nombre) {
-        return rolRepositorio.existsByNombre(nombre);
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public Rol entidadPorIDTransaccion(Integer id) {
-        return rolRepositorio.findById(id).orElseThrow(
-                ()-> new EntityNotFoundException("No existe el rol")
-        );
+        return false;
     }
 
     @Transactional(readOnly = true)
@@ -146,6 +135,7 @@ public class RolServicioImpl implements IRolServicio {
         ).orElseThrow(()-> new EntityNotFoundException("El rol no existe en la entidad."));
     }
 
+    @Transactional(readOnly = true)
     private Rol validarCambiarEstado(Integer id, EntidadEstado estado) {
 
         if (id == null || estado == null) {
@@ -153,28 +143,39 @@ public class RolServicioImpl implements IRolServicio {
         }
 
         return rolRepositorio.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("El rol al que desea cambiarle el estado no existe.")
+                () -> new EntityNotFoundException("El estado que desea cambiarle el estado, no existe.")
         );
 
     }
 
+    @Transactional(readOnly = true)
     private List<RolRespuestaDTO> listaPorEstado(EntidadEstado estado) {
 
-        if (estado == EntidadEstado.ACTIVO) {
-            return rolRepositorio.listaPorEstado(1);
-        }
+        if (estado != null) {
 
-        if (estado == EntidadEstado.INACTIVO) {
-            return rolRepositorio.listaPorEstado(2);
+            if (estado == EntidadEstado.ACTIVO) {
+
+                return rolRepositorio.listaPorEstado(1);
+
+            }
+
+            if (estado == EntidadEstado.INACTIVO) {
+
+                return rolRepositorio.listaPorEstado(2);
+
+            }
+
         }
 
         return rolRepositorio.listaPorEstadoActivoInactivo();
 
     }
 
+    @Transactional(readOnly = true)
     private void validarDatosUnicos(RolActualizarDTO dto, Integer id) {
 
-        if (rolRepositorio.existsByNombreAndIdNot(dto.nombre(), id)) {
+        if (rolRepositorio.existsByNombreAndIdNot(
+                dto.nombre(), id)) {
 
             throw new DataIntegrityViolationException(
                     "El nombre ya pertenece a otro rol."

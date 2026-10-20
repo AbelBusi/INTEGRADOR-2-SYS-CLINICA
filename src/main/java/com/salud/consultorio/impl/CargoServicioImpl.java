@@ -10,7 +10,6 @@ import com.salud.consultorio.model.mapper.ICargoMapper;
 import com.salud.consultorio.repository.ICargoRepositorio;
 import com.salud.consultorio.service.ICargoServicio;
 import com.salud.consultorio.service.IEmpleadoServicio;
-import com.salud.consultorio.service.IValidarEmpleadoCargoServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +24,7 @@ public class CargoServicioImpl implements ICargoServicio  {
 
     private final ICargoRepositorio cargoRepositorio;
     private final ICargoMapper cargoMapper;
-    private final IValidarEmpleadoCargoServicio empleadoServicio;
+    private final IEmpleadoServicio empleadoServicio;
 
     @Transactional(readOnly = true)
     @Override
@@ -137,20 +135,6 @@ public class CargoServicioImpl implements ICargoServicio  {
     @Override
     public List<CargoMedicoResumenDTO> listaCargoMedicoResumen() {
         return cargoRepositorio.listaResumenCargoMedico();
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public Optional<Cargo> findByIdAndEstado(Integer id, Integer estado) {
-        return cargoRepositorio.findByIdAndEstado(id,estado);
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public Cargo entidadPorIDTransaccion(Integer id) {
-        return cargoRepositorio.findById(id).orElseThrow(
-                ()->new EntityNotFoundException("El cargo no existe en la entidad")
-        );
     }
 
     @Transactional(readOnly = true)

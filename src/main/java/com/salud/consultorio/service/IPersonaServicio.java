@@ -2,7 +2,6 @@ package com.salud.consultorio.service;
 
 import com.salud.consultorio.dto.persona.PersonaActualizarDTO;
 import com.salud.consultorio.dto.persona.PersonaCrearDTO;
-import com.salud.consultorio.model.entity.Empleado;
 import com.salud.consultorio.model.entity.Persona;
 
 public interface IPersonaServicio{
@@ -16,8 +15,6 @@ public interface IPersonaServicio{
     boolean existePersonaTelefono(String dni);
 
     boolean existePersonaCorreo(String correo);
-
-    Persona entidadPorIDTransaccion(Integer id);
 
     boolean existePersonaNumeroDocumentoExcepto(String numeroDocumento, Integer idPersona);
 

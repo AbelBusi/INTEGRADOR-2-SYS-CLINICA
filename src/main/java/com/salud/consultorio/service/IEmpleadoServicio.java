@@ -7,6 +7,7 @@ import com.salud.consultorio.model.enums.EntidadEstado;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface IEmpleadoServicio {
 
@@ -20,8 +21,6 @@ public interface IEmpleadoServicio {
 
     List<EmpleadoActivoResumenDTO> listaEmpleadosActivosCargo(Integer id);
 
-    boolean existeEmpleadoID(Integer id);
-
     Empleado entidadPorIDTransaccion(Integer id);
 
     EmpleadoRespuestaDTO crear(EmpleadoCrearDTO dto, MultipartFile imagen);
@@ -32,16 +31,8 @@ public interface IEmpleadoServicio {
 
     void cambiarEstado(Integer id, EntidadEstado estado);
 
-    void reactivarPorId(Integer id);
-
     List<PersonaUsuarioDTO> listarPacientesSinUusario();
 
     boolean existeEmpleadoPorCargo(Integer idCargo);
-
-    Integer IDEmpleadoPersona(Integer id);
-
-    PacienteConvertidoEmpleadoRespuestaDTO convertirPacienteEmplado(Integer idPaciente, ConvertirPacienteEmpledo dto, MultipartFile imagen);
-
-    EmpleadoIDPorBuscarNroDocDTO empleadoIDporDni(String nroDocumento);
 
 }

@@ -4,13 +4,15 @@ import com.salud.consultorio.dto.empleado.*;
 import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.entity.Cargo;
 import com.salud.consultorio.model.entity.Empleado;
-import com.salud.consultorio.model.entity.Paciente;
 import com.salud.consultorio.model.entity.Persona;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.enums.RutasImagen;
 import com.salud.consultorio.model.mapper.IEmpleadoMapper;
+import com.salud.consultorio.repository.ICargoRepositorio;
 import com.salud.consultorio.repository.IEmpleadoRepositorio;
-import com.salud.consultorio.service.*;
+import com.salud.consultorio.service.IArchivoServicio;
+import com.salud.consultorio.service.IEmpleadoServicio;
+import com.salud.consultorio.service.IPersonaServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,11 +33,10 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
 
 
     private final IEmpleadoRepositorio empleadoRepositorio;
-    private final ICargoServicio cargoServicio;
+    private final ICargoRepositorio cargoRepositorio;
     private final IPersonaServicio personaServicio;
     private final IEmpleadoMapper empleadoMapper;
     private final IArchivoServicio archivoServicio;
-    private final IPacienteServicio pacienteServicio;
 
     @Transactional(readOnly = true)
     @Override
@@ -79,12 +81,6 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
     @Override
     public List<EmpleadoActivoResumenDTO> listaEmpleadosActivosCargo(Integer id) {
         return empleadoRepositorio.listarEmpleadosActivosPorCargo(id);
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public boolean existeEmpleadoID(Integer id) {
-        return empleadoRepositorio.existsById(id);
     }
 
     @Transactional(readOnly = true)
@@ -248,21 +244,6 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
         }
     }
 
-    @Transactional
-    @Override
-    public void reactivarPorId(Integer id) {
-
-        Empleado empleado = empleadoRepositorio.findById(id).orElseThrow(
-                ()-> new EntityNotFoundException("El empleado que desea eliminar no existe en la entidad")
-        );
-
-        if (empleado.getEstado()!=0){
-            throw new IllegalArgumentException("No se puede reactivar un paciente que no ha sido eliminado.");
-        }
-
-        empleadoRepositorio.reactivarLogicamente(empleado.getId());
-    }
-
     @Transactional(readOnly = true)
     @Override
     public List<PersonaUsuarioDTO> listarPacientesSinUusario() {
@@ -275,70 +256,6 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
         return empleadoRepositorio.existsByCargoId(idCargo);
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public Integer IDEmpleadoPersona(Integer id) {
-        return empleadoRepositorio.empleadoPersonaID(id);
-    }
-
-    @Transactional
-    @Override
-    public PacienteConvertidoEmpleadoRespuestaDTO convertirPacienteEmplado(Integer idPaciente, ConvertirPacienteEmpledo dto, MultipartFile imagen) {
-
-        if (!pacienteServicio.existePacienteID(idPaciente)){
-            throw new EntityNotFoundException("Este paciente que desea vincular como empleado, no se encuentra registrado en el sistema");
-        }
-
-        Integer personaID = pacienteServicio.IDPacientePersona(idPaciente);
-
-        if (empleadoRepositorio.existsByPersona_Id(personaID)){
-            throw new EntityNotFoundException("El paciente ya esta registrado en el sistema como un empelado, no se permite duplicar.");
-
-        }
-
-        Cargo cargo = cargoServicio.entidadPorIDTransaccion(dto.idCargo());
-
-        Persona persona = personaServicio.entidadPorIDTransaccion(personaID);
-
-        Empleado empleado = empleadoMapper.toEntity(dto);
-
-        empleado.setPersona(persona);
-        empleado.setCargo(cargo);
-
-        if (imagen != null && !imagen.isEmpty()){
-            String imagenUrl = archivoServicio.guardar(
-                    imagen, RUTAS_IMAGEN
-            );
-
-            empleado.setFoto(imagenUrl);
-        }
-
-        empleadoRepositorio.save(empleado);
-
-        return empleadoMapper.toDtoEntity(empleado);
-    }
-
-    @Transactional(readOnly = true)
-    @Override
-    public EmpleadoIDPorBuscarNroDocDTO empleadoIDporDni(String nroDocumento) {
-
-        if (nroDocumento == null || nroDocumento.isBlank()) {
-            throw new IllegalArgumentException(
-                    "El número de documento no debe ser nulo ni estar vacío."
-            );
-        }
-
-        EmpleadoIDPorBuscarNroDocDTO dto =
-                empleadoRepositorio.empleadoIDporNroDocumento(nroDocumento);
-
-        if (dto == null) {
-            throw new EntityNotFoundException(
-                    "No se encontró un empleado activo con el número de documento ingresado."
-            );
-        }
-
-        return dto;
-    }
     private void validarId(Integer id) {
 
         if (id == null || id <= 0) {
@@ -349,7 +266,7 @@ public class EmpleadoServicioImpl implements IEmpleadoServicio {
 
     private Cargo obtenerCargoActivo(Integer idCargo) {
 
-        return cargoServicio.findByIdAndEstado(idCargo, ESTADO_ACTIVO).orElseThrow(
+        return cargoRepositorio.findByIdAndEstado(idCargo, ESTADO_ACTIVO).orElseThrow(
                 () -> new EntityNotFoundException("El cargo seleccionado no existe o no está activo.")
         );
 
