@@ -92,7 +92,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "400", description = "Operación no permitida"),
             @ApiResponse(responseCode = "404", description = "El usuario no tiene asignado ese rol")
     })
-    @PreAuthorize("hasAuthority('USUARIOS_GESTIONAR')")
+
     @DeleteMapping("/{id}/roles/{idRol}")
     public ResponseEntity<MensajeResponse> revocarRol(
             @PathVariable Integer id,

@@ -39,6 +39,7 @@ public class UsuarioRolServicioImpl implements IUsuarioRolServicio {
     }
 
 
+
     @Transactional
     @Override
     public void asignarRol(Integer idUsuario, Integer idRol) {
@@ -73,23 +74,27 @@ public class UsuarioRolServicioImpl implements IUsuarioRolServicio {
 
         boolean esPaciente = usuarioRepositorio.esPaciente(idUsuario);
         boolean esEmpleado = usuarioRepositorio.esEmpleado(idUsuario);
+        boolean esRolPaciente =
+                ROL_PACIENTE.equalsIgnoreCase(rol.getNombre());
 
-        if (esPaciente && !esEmpleado) {
-            throw new IllegalArgumentException(
-                    "Un paciente no puede recibir roles adicionales."
-            );
-        }
+        if (esRolPaciente) {
+            if (!esPaciente) {
+                throw new IllegalArgumentException(
+                        "Solo se puede asignar el rol PACIENTE a una persona registrada como paciente."
+                );
+            }
+        } else {
+            if (esPaciente && !esEmpleado) {
+                throw new IllegalArgumentException(
+                        "Un paciente no puede recibir roles adicionales."
+                );
+            }
 
-        if (ROL_PACIENTE.equalsIgnoreCase(rol.getNombre())) {
-            throw new IllegalArgumentException(
-                    "No se puede asignar el rol PACIENTE mediante esta operación."
-            );
-        }
-
-        if (!esEmpleado) {
-            throw new IllegalArgumentException(
-                    "Solo se pueden asignar roles adicionales a usuarios registrados como empleados."
-            );
+            if (!esEmpleado) {
+                throw new IllegalArgumentException(
+                        "Solo se pueden asignar roles adicionales a usuarios registrados como empleados."
+                );
+            }
         }
 
         Optional<UsuarioRol> existente =
