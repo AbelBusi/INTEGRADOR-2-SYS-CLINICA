@@ -31,7 +31,28 @@ export class CambiarRolModalComponent implements OnInit {
 
   disponibles = computed(() => {
     const ids = new Set(this.asignados().map((rol) => rol.idRol));
-    return this.catalogo().filter((rol) => !ids.has(rol.idRol) && !esRolPaciente(rol));
+    const tipos = this.usuario?.tipos ?? [];
+
+    return this.catalogo().filter((rol) => {
+      if (ids.has(rol.idRol)) {
+        return false;
+      }
+      return esRolPaciente(rol) ? tipos.includes('PACIENTE') : tipos.includes('EMPLEADO');
+    });
+  });
+
+  avisos = computed(() => {
+    const tipos = this.usuario?.tipos ?? [];
+    const lista: string[] = [];
+
+    if (!tipos.includes('PACIENTE')) {
+      lista.push('Para asignar el rol PACIENTE, la persona debe estar registrada como paciente.');
+    }
+    if (!tipos.includes('EMPLEADO')) {
+      lista.push('Para asignar roles laborales, la persona debe estar registrada como empleado.');
+    }
+
+    return lista;
   });
 
   unSoloRol = computed(() => this.asignados().length <= 1);

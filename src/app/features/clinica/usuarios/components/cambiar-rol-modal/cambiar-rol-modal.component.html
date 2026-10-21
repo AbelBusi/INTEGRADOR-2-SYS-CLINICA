@@ -108,6 +108,9 @@
                   }
                   Agregar
                 </button>
+                @for (aviso of avisos(); track aviso) {
+                  <p class="mt-2 text-[11px] font-medium text-neutral-500">{{ aviso }}</p>
+                }
               </div>
             </div>
 
