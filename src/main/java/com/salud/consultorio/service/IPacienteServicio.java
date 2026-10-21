@@ -18,9 +18,20 @@ public interface IPacienteServicio{
 
     void eliminarPorId(Integer id);
 
+    void reactivarPorId(Integer id);
+
     boolean existeNrCodigoAegurado(String codigo);
 
     void cambiarEstado(Integer id, EntidadEstado estado);
 
     List<PersonaUsuarioDTO> listarPacientesSinUusario();
+
+    EmpleadoConvertidoPacienteRespuestaDTO convertirEmpleadoPaciente(Integer idEmpleado, EmpleadoConvertirPacienteDTO dto);
+
+    boolean existePacienteID(Integer id);
+
+    Integer IDPacientePersona(Integer id);
+
+    PacienteIDPorBuscarNroDocDTO pacienteIDporDni(String nroDocumento);
+
 }

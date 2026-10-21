@@ -38,6 +38,7 @@ public class SecurityFilterConfig {
                         .requestMatchers("/api/v1/pacientes/**").permitAll()
                         .requestMatchers("/api/v1/tipo-documentos/**").permitAll()
                         .requestMatchers("/api/v1/especialidades/**").authenticated()
+                        .requestMatchers("/api/v1/autorizaciones/**").permitAll()
                         .requestMatchers("/api/v1/empleados/**").permitAll()
                         .requestMatchers("/api/v1/usuarios/**").permitAll()
                         .requestMatchers("/api/v1/horarios/**").authenticated()

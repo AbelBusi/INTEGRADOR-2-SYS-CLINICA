@@ -1,11 +1,12 @@
 package com.salud.consultorio.service;
 
-import com.salud.consultorio.auth.dto.rol.RolRespuestaDTO;
+import com.salud.consultorio.model.entity.Permiso;
 
 import java.util.List;
 
 public interface IPermisoServicio {
 
-    List<RolRespuestaDTO> listaPermisosPorRolId(Integer id);
+    List<Permiso> traerPermisosExistentesPorID(List<Integer> idsPermisos);
+
 
 }
