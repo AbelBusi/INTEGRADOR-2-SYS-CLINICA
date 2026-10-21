@@ -3,9 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 
-import { TipoUsuario, UsuarioFila } from '../../interface/usuario.interface';
+import { TipoUsuario, UsuarioFila, UsuarioListado } from '../../interface/usuario.interface';
 import { UsuarioService } from '../../services/usuario.service';
-import { FechaHoraApi, claveOrden, formatearFechaHora, normalizar } from '../../utils/formato.util';
+import { normalizar } from '../../utils/formato.util';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { CrearUsuarioPanelComponent } from '../../components/crear-usuario-panel/crear-usuario-panel.component';
@@ -49,19 +49,22 @@ export class GestionUsuariosComponent implements OnInit {
   private idActual = '';
 
   columns: TableColumn<UsuarioFila>[] = [
-    { header: 'Persona', field: 'persona', sortable: true, type: 'custom' },
-    { header: 'Tipo', field: 'tipo', type: 'custom' },
-    { header: 'Rol', field: 'rol', type: 'custom' },
-    { header: 'Usuario', field: 'nombreUsuario', type: 'custom' },
-    { header: 'Fecha creación', field: 'fechaCreacion', type: 'custom' },
-    { header: 'Fecha actualización', field: 'fechaActualizacion', type: 'custom' },
+    { header: 'Persona', field: 'nombreCompleto', sortable: true, type: 'custom' },
+    { header: 'Documento', field: 'numeroDocumento', type: 'custom' },
+    { header: 'Perfil', field: 'tipos', type: 'custom' },
+    { header: 'Roles', field: 'roles', type: 'custom' },
+    { header: 'Usuario', field: 'usuario', type: 'custom' },
     { header: 'Estado', field: 'estado', type: 'custom' },
     { header: 'Acciones', field: 'id', type: 'custom' },
   ];
 
   total = computed(() => this.usuarios().length);
-  totalPacientes = computed(() => this.usuarios().filter((u) => u.tipo === 'PACIENTE').length);
-  totalEmpleados = computed(() => this.usuarios().filter((u) => u.tipo === 'EMPLEADO').length);
+  totalPacientes = computed(
+    () => this.usuarios().filter((u) => u.tipos.includes('PACIENTE')).length,
+  );
+  totalEmpleados = computed(
+    () => this.usuarios().filter((u) => u.tipos.includes('EMPLEADO')).length,
+  );
   totalActivos = computed(() => this.usuarios().filter((u) => u.estado === 1).length);
 
   hayFiltros = computed(
@@ -77,7 +80,7 @@ export class GestionUsuariosComponent implements OnInit {
     const estado = this.filtroEstado();
 
     const lista = this.usuarios().filter((u) => {
-      if (tipo !== 'todos' && u.tipo !== tipo) {
+      if (tipo !== 'todos' && !u.tipos.includes(tipo)) {
         return false;
       }
       if (estado === 'activo' && u.estado !== 1) {
@@ -86,19 +89,22 @@ export class GestionUsuariosComponent implements OnInit {
       if (estado === 'inactivo' && u.estado !== 2) {
         return false;
       }
-      if (termino && !normalizar(`${u.persona} ${u.nombreUsuario} ${u.rol}`).includes(termino)) {
+
+      const texto = `${u.nombreCompleto} ${u.usuario} ${u.numeroDocumento} ${u.roles
+        .map((rol) => rol.nombre)
+        .join(' ')}`;
+
+      if (termino && !normalizar(texto).includes(termino)) {
         return false;
       }
       return true;
     });
 
-    if (this.sortField() === 'persona') {
-      return [...lista].sort((a, b) => a.persona.localeCompare(b.persona));
+    if (this.sortField() === 'nombreCompleto') {
+      return [...lista].sort((a, b) => a.nombreCompleto.localeCompare(b.nombreCompleto));
     }
 
-    return [...lista].sort((a, b) =>
-      claveOrden(b.fechaCreacion).localeCompare(claveOrden(a.fechaCreacion)),
-    );
+    return lista;
   });
 
   constructor(
@@ -122,12 +128,7 @@ export class GestionUsuariosComponent implements OnInit {
       empleados: this.usuarioService.listarEmpleados(),
     }).subscribe({
       next: ({ pacientes, empleados }) => {
-        const filas: UsuarioFila[] = [
-          ...(pacientes.object || []).map((u) => ({ ...u, tipo: 'PACIENTE' as TipoUsuario })),
-          ...(empleados.object || []).map((u) => ({ ...u, tipo: 'EMPLEADO' as TipoUsuario })),
-        ];
-
-        this.usuarios.set(filas);
+        this.usuarios.set(this.combinar(pacientes.object || [], empleados.object || []));
         this.cargando.set(false);
       },
       error: (error) => {
@@ -138,12 +139,35 @@ export class GestionUsuariosComponent implements OnInit {
     });
   }
 
+  private combinar(pacientes: UsuarioListado[], empleados: UsuarioListado[]): UsuarioFila[] {
+    const cuentas = new Map<number, UsuarioFila>();
+
+    const agregar = (lista: UsuarioListado[], tipo: TipoUsuario): void => {
+      for (const usuario of lista) {
+        const existente = cuentas.get(usuario.id);
+
+        if (existente) {
+          if (!existente.tipos.includes(tipo)) {
+            existente.tipos.push(tipo);
+          }
+        } else {
+          cuentas.set(usuario.id, { ...usuario, roles: usuario.roles ?? [], tipos: [tipo] });
+        }
+      }
+    };
+
+    agregar(pacientes, 'PACIENTE');
+    agregar(empleados, 'EMPLEADO');
+
+    return [...cuentas.values()].sort((a, b) => b.id - a.id);
+  }
+
   esCuentaPropia(fila: UsuarioFila): boolean {
     return String(fila.id) === this.idActual;
   }
 
-  fecha(valor: FechaHoraApi): string {
-    return formatearFechaHora(valor);
+  puedeGestionarRoles(fila: UsuarioFila): boolean {
+    return fila.tipos.includes('EMPLEADO');
   }
 
   limpiarFiltros(): void {
@@ -162,14 +186,19 @@ export class GestionUsuariosComponent implements OnInit {
 
   setUsuarioRol(fila: UsuarioFila): void {
     if (this.esCuentaPropia(fila)) {
-      this.toastService.warning('No puedes cambiar tu propio rol.');
+      this.toastService.warning('No puedes modificar los roles de tu propia cuenta.');
       return;
     }
+
+    if (!this.puedeGestionarRoles(fila)) {
+      this.toastService.warning('Los roles solo se gestionan en cuentas de empleados.');
+      return;
+    }
+
     this.usuarioRol.set(fila);
   }
 
-  handleRolCambiado(): void {
-    this.usuarioRol.set(null);
+  handleRolesActualizados(): void {
     this.cargar(true);
   }
 
@@ -189,7 +218,7 @@ export class GestionUsuariosComponent implements OnInit {
     this.toastService
       .confirmar(
         `${activar ? 'Activar' : 'Desactivar'} Usuario`,
-        `¿Estás seguro de que deseas ${accion} la cuenta de "${fila.persona}"?`,
+        `¿Estás seguro de que deseas ${accion} la cuenta de "${fila.nombreCompleto}"?`,
       )
       .then((confirmar) => {
         if (!confirmar) {

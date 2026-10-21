@@ -11,6 +11,7 @@ import {
   UsuarioAltaDTO,
   UsuarioCreado,
   UsuarioListado,
+  UsuarioRoles,
 } from '../interface/usuario.interface';
 
 @Injectable({
@@ -54,8 +55,16 @@ export class UsuarioService {
     return this.http.get<MensajeResponse<RolResumen[]>>(`${environment.apiUrl}/auth/roles/resumen`);
   }
 
-  cambiarRol(id: number, idRol: number): Observable<MensajeResponse<null>> {
-    return this.http.patch<MensajeResponse<null>>(`${this.baseUrl}/${id}/rol`, { idRol });
+  obtenerRoles(id: number): Observable<MensajeResponse<UsuarioRoles>> {
+    return this.http.get<MensajeResponse<UsuarioRoles>>(`${this.baseUrl}/${id}/roles`);
+  }
+
+  asignarRol(id: number, idRol: number): Observable<MensajeResponse<null>> {
+    return this.http.post<MensajeResponse<null>>(`${this.baseUrl}/${id}/roles`, { idRol });
+  }
+
+  revocarRol(id: number, idRol: number): Observable<MensajeResponse<null>> {
+    return this.http.delete<MensajeResponse<null>>(`${this.baseUrl}/${id}/roles/${idRol}`);
   }
 
   obtenerPaciente(id: number): Observable<MensajeResponse<PacienteDetalle>> {

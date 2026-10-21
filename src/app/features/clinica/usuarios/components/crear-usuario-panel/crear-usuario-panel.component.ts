@@ -10,7 +10,6 @@ import {
 } from '../../interface/usuario.interface';
 import { UsuarioService } from '../../services/usuario.service';
 import { ToastService } from '../../../../../core/services/toast.service';
-import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
 
 type Fase = 'formulario' | 'generando' | 'listo';
 
@@ -19,7 +18,7 @@ const DURACION_MINIMA_MS = 1800;
 @Component({
   selector: 'app-crear-usuario-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule, TienePermisoDirective],
+  imports: [CommonModule, FormsModule],
   templateUrl: './crear-usuario-panel.component.html',
   styles: [
     `
@@ -75,7 +74,7 @@ export class CrearUsuarioPanelComponent implements OnInit {
   personas = signal<PersonaUsuario[]>([]);
   roles = signal<RolResumen[]>([]);
   idPersona = signal<number | null>(null);
-  idRol = signal<number | null>(null);
+  idRoles = signal<number[]>([]);
 
   cargandoPersonas = signal(false);
   fase = signal<Fase>('formulario');
@@ -91,7 +90,7 @@ export class CrearUsuarioPanelComponent implements OnInit {
     () =>
       this.fase() === 'formulario' &&
       this.idPersona() !== null &&
-      (this.tipo() === 'PACIENTE' || this.idRol() !== null),
+      (this.tipo() === 'PACIENTE' || this.idRoles().length > 0),
   );
 
   constructor(
@@ -114,8 +113,14 @@ export class CrearUsuarioPanelComponent implements OnInit {
   onTipoChange(tipo: TipoUsuario): void {
     this.tipo.set(tipo);
     this.idPersona.set(null);
-    this.idRol.set(null);
+    this.idRoles.set([]);
     this.cargarPersonas();
+  }
+
+  alternarRol(idRol: number): void {
+    this.idRoles.update((actual) =>
+      actual.includes(idRol) ? actual.filter((id) => id !== idRol) : [...actual, idRol],
+    );
   }
 
   private cargarPersonas(): void {
@@ -159,7 +164,7 @@ export class CrearUsuarioPanelComponent implements OnInit {
       creado: this.usuarioService.crear({
         idPersona,
         tipo: this.tipo(),
-        idRol: esEmpleado ? this.idRol() : null,
+        idRoles: esEmpleado ? this.idRoles() : [],
       }),
       pausa: timer(DURACION_MINIMA_MS),
     }).subscribe({
@@ -179,7 +184,7 @@ export class CrearUsuarioPanelComponent implements OnInit {
   crearOtro(): void {
     this.resultado.set(null);
     this.idPersona.set(null);
-    this.idRol.set(null);
+    this.idRoles.set([]);
     this.fase.set('formulario');
     this.cargarPersonas();
   }

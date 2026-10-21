@@ -1,5 +1,3 @@
-import { FechaHoraApi } from '../utils/formato.util';
-
 export type TipoUsuario = 'PACIENTE' | 'EMPLEADO';
 
 export interface MensajeResponse<T> {
@@ -7,37 +5,40 @@ export interface MensajeResponse<T> {
   object: T;
 }
 
-export interface UsuarioListado {
-  id: number;
-  persona: string;
-  nombreUsuario: string;
-  rol: string;
-  fechaCreacion: FechaHoraApi;
-  fechaActualizacion: FechaHoraApi;
-  requiereCambioClave: boolean;
-  estado: number;
-  idRegistro?: number | null;
-}
-
-export interface UsuarioFila extends UsuarioListado {
-  tipo: TipoUsuario;
-}
-
-export interface PersonaUsuario {
-  idPersona: number;
-  nombreCompleto: string;
-  numeroDocumento: String;
-}
-
 export interface RolResumen {
   idRol: number;
   nombre: string;
 }
 
+export interface UsuarioListado {
+  id: number;
+  usuario: string;
+  nombreCompleto: string;
+  numeroDocumento: string;
+  estado: number;
+  roles: RolResumen[];
+}
+
+export interface UsuarioFila extends UsuarioListado {
+  tipos: TipoUsuario[];
+}
+
+export interface UsuarioRoles {
+  id: number;
+  usuario: string;
+  nombreCompleto: string;
+  roles: RolResumen[];
+}
+
+export interface PersonaUsuario {
+  idPersona: number;
+  nombreCompleto: string;
+}
+
 export interface UsuarioAltaDTO {
   idPersona: number;
   tipo: TipoUsuario;
-  idRol: number | null;
+  idRoles: number[];
 }
 
 export interface UsuarioCreado {

@@ -1,9 +1,14 @@
 import { Component, EventEmitter, Input, OnInit, Output, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { RolResumen, UsuarioFila } from '../../interface/usuario.interface';
 import { UsuarioService } from '../../services/usuario.service';
 import { ToastService } from '../../../../../core/services/toast.service';
+
+function esRolPaciente(rol: RolResumen): boolean {
+  return rol.nombre.trim().toUpperCase() === 'PACIENTE';
+}
 
 @Component({
   selector: 'app-cambiar-rol-modal',
@@ -16,17 +21,22 @@ export class CambiarRolModalComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
   @Output() rolCambiado = new EventEmitter<void>();
 
-  roles = signal<RolResumen[]>([]);
-  idRol = signal<number | null>(null);
-  idRolActual = signal<number | null>(null);
+  asignados = signal<RolResumen[]>([]);
+  catalogo = signal<RolResumen[]>([]);
+  idNuevoRol = signal<number | null>(null);
+
   cargando = signal(false);
-  guardando = signal(false);
+  agregando = signal(false);
+  quitandoId = signal<number | null>(null);
 
-  rolesDisponibles = computed(() =>
-    this.roles().filter((rol) => rol.nombre.trim().toUpperCase() !== 'PACIENTE'),
-  );
+  disponibles = computed(() => {
+    const ids = new Set(this.asignados().map((rol) => rol.idRol));
+    return this.catalogo().filter((rol) => !ids.has(rol.idRol) && !esRolPaciente(rol));
+  });
 
-  hayCambio = computed(() => this.idRol() !== null && this.idRol() !== this.idRolActual());
+  unSoloRol = computed(() => this.asignados().length <= 1);
+
+  ocupado = computed(() => this.agregando() || this.quitandoId() !== null);
 
   constructor(
     private readonly usuarioService: UsuarioService,
@@ -34,50 +44,105 @@ export class CambiarRolModalComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    const usuario = this.usuario;
+
+    if (!usuario) {
+      return;
+    }
+
     this.cargando.set(true);
 
-    this.usuarioService.listarRoles().subscribe({
-      next: (response) => {
-        const lista = response.object || [];
-        this.roles.set(lista);
-
-        const actual = lista.find(
-          (rol) => rol.nombre.trim().toUpperCase() === this.usuario?.rol.trim().toUpperCase(),
-        );
-
-        this.idRolActual.set(actual?.idRol ?? null);
-        this.idRol.set(actual?.idRol ?? null);
+    forkJoin({
+      actuales: this.usuarioService.obtenerRoles(usuario.id),
+      catalogo: this.usuarioService.listarRoles(),
+    }).subscribe({
+      next: ({ actuales, catalogo }) => {
+        this.asignados.set(actuales.object?.roles ?? []);
+        this.catalogo.set(catalogo.object || []);
         this.cargando.set(false);
       },
       error: (error) => {
         console.error(error);
-        this.toastService.error('No se pudieron cargar los roles.');
+        this.toastService.error('No se pudieron cargar los roles de la cuenta.');
         this.cargando.set(false);
         this.onClose();
       },
     });
   }
 
-  guardar(): void {
-    const idRol = this.idRol();
+  esPaciente(rol: RolResumen): boolean {
+    return esRolPaciente(rol);
+  }
 
-    if (!this.usuario || idRol === null || !this.hayCambio() || this.guardando()) {
+  agregar(): void {
+    const usuario = this.usuario;
+    const idRol = this.idNuevoRol();
+
+    if (!usuario || idRol === null || this.ocupado()) {
       return;
     }
 
-    this.guardando.set(true);
+    this.agregando.set(true);
 
-    this.usuarioService.cambiarRol(this.usuario.id, idRol).subscribe({
+    this.usuarioService.asignarRol(usuario.id, idRol).subscribe({
       next: (response) => {
-        this.toastService.success(response?.mensaje || 'Rol actualizado con éxito');
-        this.guardando.set(false);
+        this.toastService.success(response?.mensaje || 'Rol asignado con éxito');
+        this.idNuevoRol.set(null);
+        this.agregando.set(false);
+        this.recargarRoles();
         this.rolCambiado.emit();
       },
       error: (error) => {
         console.error(error);
-        this.toastService.error(error.error?.mensaje || 'No se pudo cambiar el rol.');
-        this.guardando.set(false);
+        this.toastService.error(error.error?.mensaje || 'No se pudo asignar el rol.');
+        this.agregando.set(false);
       },
+    });
+  }
+
+  async quitar(rol: RolResumen): Promise<void> {
+    const usuario = this.usuario;
+
+    if (!usuario || this.ocupado() || this.esPaciente(rol) || this.unSoloRol()) {
+      return;
+    }
+
+    const confirmar = await this.toastService.confirmar(
+      'Quitar rol',
+      `¿Quitar el rol "${rol.nombre}" a ${usuario.nombreCompleto}? Su sesión actual se cerrará.`,
+    );
+
+    if (!confirmar) {
+      return;
+    }
+
+    this.quitandoId.set(rol.idRol);
+
+    this.usuarioService.revocarRol(usuario.id, rol.idRol).subscribe({
+      next: (response) => {
+        this.toastService.success(response?.mensaje || 'Rol revocado con éxito');
+        this.quitandoId.set(null);
+        this.recargarRoles();
+        this.rolCambiado.emit();
+      },
+      error: (error) => {
+        console.error(error);
+        this.toastService.error(error.error?.mensaje || 'No se pudo quitar el rol.');
+        this.quitandoId.set(null);
+      },
+    });
+  }
+
+  private recargarRoles(): void {
+    const usuario = this.usuario;
+
+    if (!usuario) {
+      return;
+    }
+
+    this.usuarioService.obtenerRoles(usuario.id).subscribe({
+      next: (response) => this.asignados.set(response.object?.roles ?? []),
+      error: (error) => console.error(error),
     });
   }
 

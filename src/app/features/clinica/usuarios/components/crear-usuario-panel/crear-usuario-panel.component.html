@@ -11,7 +11,7 @@
 
       <div class="p-6 space-y-4">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)_auto] gap-4 items-end">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[220px_minmax(0,1fr)_auto] gap-4 items-end">
 
           <div class="space-y-1.5">
             <label class="block text-xs font-bold text-gray-600">Tipo de usuario</label>
@@ -37,30 +37,13 @@
                 {{ cargandoPersonas() ? 'Cargando...' : 'Seleccionar ' + etiquetaPersona().toLowerCase() }}
               </option>
               @for (persona of personas(); track persona.idPersona) {
-                <option [ngValue]="persona.idPersona">DNI: {{ persona.numeroDocumento }} / {{ persona.nombreCompleto }} </option>
+                <option [ngValue]="persona.idPersona">{{ persona.nombreCompleto }}</option>
               }
             </select>
           </div>
 
-          @if (tipo() === 'EMPLEADO') {
-            <div class="space-y-1.5">
-              <label class="block text-xs font-bold text-gray-600">Rol</label>
-              <select
-                name="idRol"
-                [ngModel]="idRol()"
-                (ngModelChange)="idRol.set($event)"
-                class="h-10 w-full bg-white border border-gray-300 rounded-md px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
-                <option [ngValue]="null" disabled>Seleccionar rol</option>
-                @for (rol of rolesEmpleado(); track rol.idRol) {
-                  <option [ngValue]="rol.idRol">{{ rol.nombre }}</option>
-                }
-              </select>
-            </div>
-          }
-
           <button
             type="button"
-            *appTienePermiso="'USUARIO_CREAR'"
             (click)="crear()"
             [disabled]="!puedeCrear()"
             class="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-md bg-[#D9182A] hover:bg-[#B81424] text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
@@ -69,6 +52,36 @@
           </button>
 
         </div>
+
+        @if (tipo() === 'EMPLEADO') {
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-gray-600">
+              Roles <span class="font-medium text-gray-400">(puedes elegir varios)</span>
+            </label>
+
+            <div class="flex flex-wrap gap-2">
+              @for (rol of rolesEmpleado(); track rol.idRol) {
+                <label
+                  class="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
+                  [ngClass]="idRoles().includes(rol.idRol)
+                    ? 'border-[#D9182A]/40 bg-[#D9182A]/[0.04] text-gray-900'
+                    : 'border-gray-300 bg-white text-gray-700 hover:border-[#58595B]'">
+                  <input
+                    type="checkbox"
+                    class="h-4 w-4 rounded border-gray-300 accent-[#D9182A]"
+                    [checked]="idRoles().includes(rol.idRol)"
+                    (change)="alternarRol(rol.idRol)"
+                  />
+                  {{ rol.nombre }}
+                </label>
+              }
+            </div>
+
+            @if (idRoles().length === 0) {
+              <p class="text-[11px] font-medium text-gray-500">Selecciona al menos un rol para el empleado.</p>
+            }
+          </div>
+        }
 
         @if (!cargandoPersonas() && personas().length === 0) {
           <p class="text-xs font-medium text-gray-500">
@@ -81,6 +94,7 @@
           <p class="text-xs leading-5 text-gray-600">
             El nombre de usuario y la clave temporal se generan automáticamente. La clave se envía al correo
             registrado de la persona y no queda visible para nadie; deberá cambiarla en su primer ingreso.
+            Si la persona ya tiene una cuenta por su otro perfil, no aparece aquí: sus roles se gestionan desde la tabla.
           </p>
         </div>
 

@@ -3,7 +3,7 @@
 
   <div class="fixed inset-0 overflow-y-auto">
     <div class="flex min-h-full items-center justify-center p-4">
-      <div class="w-full max-w-2xl overflow-hidden rounded bg-white border border-neutral-300">
+      <div class="w-full max-w-lg overflow-hidden rounded bg-white border border-neutral-300">
 
         <div class="flex justify-between items-start px-6 py-4 bg-[#58595B]">
           <div class="flex items-center gap-3">
@@ -24,105 +24,73 @@
           <div class="w-1/2 bg-[#D9182A]"></div>
         </div>
 
-        <div class="space-y-5 p-6 max-h-[78vh] overflow-y-auto">
+        <div class="space-y-5 p-6">
 
-          <div>
-            <p class="text-[10px] uppercase font-bold text-[#D9182A] tracking-wider mb-2">Cuenta</p>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded border border-neutral-200 bg-neutral-50 p-4">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-full bg-neutral-100 border border-neutral-300 flex items-center justify-center shrink-0">
+              <span class="material-icons text-[#58595B] text-[30px]">person</span>
+            </div>
 
-              <div>
-                <label class="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block mb-1">Usuario</label>
-                <p class="font-mono text-sm font-bold text-neutral-900">{{ usuario.nombreUsuario }}</p>
+            <div class="min-w-0">
+              <p class="text-base font-bold text-neutral-900 truncate">{{ usuario.nombreCompleto }}</p>
+              <div class="mt-1 flex flex-wrap gap-1.5">
+                @for (tipo of usuario.tipos; track tipo) {
+                  <span
+                    class="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                    [ngClass]="tipo === 'EMPLEADO' ? 'bg-[#0d6b68]/10 text-[#0d6b68]' : 'bg-neutral-100 text-neutral-600'">
+                    {{ tipo === 'PACIENTE' ? 'Paciente' : 'Empleado' }}
+                  </span>
+                }
               </div>
-
-              <div>
-                <label class="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block mb-1">Rol</label>
-                <p class="text-sm font-bold text-neutral-900 uppercase">{{ usuario.rol }}</p>
-              </div>
-
-              <div>
-                <label class="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block mb-1">Creado</label>
-                <p class="text-sm text-neutral-600">{{ fechaHora(usuario.fechaCreacion) }}</p>
-              </div>
-
-              <div>
-                <label class="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block mb-1">Actualizado</label>
-                <p class="text-sm text-neutral-600">{{ fechaHora(usuario.fechaActualizacion) }}</p>
-              </div>
-
-              <div>
-                <label class="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block mb-1">Clave</label>
-                <p class="text-sm text-neutral-600">
-                  {{ usuario.requiereCambioClave ? 'Temporal, pendiente de cambio' : 'Cambiada por el usuario' }}
-                </p>
-              </div>
-
-              <div>
-                <label class="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block mb-1">Estado</label>
-                <span
-                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider"
-                  [ngClass]="usuario.estado === 1
-                    ? 'bg-[#0d6b68]/10 text-[#0d6b68] border-[#0d6b68]/20'
-                    : 'bg-[#D9182A]/10 text-[#D9182A] border-[#D9182A]/30'">
-                  {{ usuario.estado === 1 ? 'Activo' : 'Desactivado' }}
-                </span>
-              </div>
-
             </div>
           </div>
 
-          @if (cargando() || !detalle()) {
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 rounded border border-neutral-200 bg-neutral-50 p-4">
 
-            <div class="flex justify-center items-center py-10">
-              <div class="w-8 h-8 border-4 border-gray-200 border-t-[#0d6b68] rounded-full animate-spin"></div>
+            <div>
+              <label class="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block mb-1">Usuario</label>
+              <p class="font-mono text-sm font-bold text-neutral-900">{{ usuario.usuario }}</p>
             </div>
 
-          } @else {
+            <div>
+              <label class="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block mb-1">Documento</label>
+              <p class="text-sm font-bold text-neutral-900">{{ usuario.numeroDocumento }}</p>
+            </div>
 
-            @if (detalle(); as d) {
-
-              <div class="flex items-center gap-4">
-                @if (fotoUrl) {
-                  <img [src]="fotoUrl" [alt]="d.nombreCompleto" class="w-16 h-16 rounded-full object-cover border border-neutral-300 shrink-0" />
-                } @else {
-                  <div class="w-16 h-16 rounded-full bg-neutral-100 border border-neutral-300 flex items-center justify-center shrink-0">
-                    <span class="material-icons text-[#58595B] text-[30px]">person</span>
-                  </div>
+            <div class="sm:col-span-2">
+              <label class="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block mb-1">Roles</label>
+              <div class="flex flex-wrap gap-1.5">
+                @for (rol of usuario.roles; track rol.idRol) {
+                  <span class="inline-flex items-center rounded-full bg-white border border-neutral-300 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-neutral-700">
+                    {{ rol.nombre }}
+                  </span>
+                } @empty {
+                  <span class="text-sm text-neutral-500">Sin roles asignados</span>
                 }
-
-                <div class="min-w-0">
-                  <p class="text-base font-bold text-neutral-900 truncate">{{ d.nombreCompleto }}</p>
-                  <p class="text-sm text-neutral-500">{{ usuario.tipo === 'PACIENTE' ? 'Paciente' : 'Empleado' }}</p>
-                </div>
               </div>
+            </div>
 
-              <div>
-                <p class="text-[10px] uppercase font-bold text-[#D9182A] tracking-wider mb-2">Datos personales</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  @for (item of d.personales; track item.etiqueta) {
-                    <div [ngClass]="item.etiqueta === 'Dirección' ? 'sm:col-span-2' : ''">
-                      <label class="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block mb-1">{{ item.etiqueta }}</label>
-                      <p class="text-sm text-neutral-700 break-words">{{ item.valor }}</p>
-                    </div>
-                  }
-                </div>
-              </div>
+            <div>
+              <label class="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block mb-1">Estado</label>
+              <span
+                class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider"
+                [ngClass]="usuario.estado === 1
+                  ? 'bg-[#0d6b68]/10 text-[#0d6b68] border-[#0d6b68]/20'
+                  : 'bg-[#D9182A]/10 text-[#D9182A] border-[#D9182A]/30'">
+                {{ usuario.estado === 1 ? 'Activo' : 'Desactivado' }}
+              </span>
+            </div>
 
-              <div>
-                <p class="text-[10px] uppercase font-bold text-[#D9182A] tracking-wider mb-2">{{ d.tituloRegistro }}</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  @for (item of d.registro; track item.etiqueta) {
-                    <div>
-                      <label class="text-[10px] uppercase font-bold text-neutral-500 tracking-wider block mb-1">{{ item.etiqueta }}</label>
-                      <p class="text-sm text-neutral-700">{{ item.valor }}</p>
-                    </div>
-                  }
-                </div>
-              </div>
+          </div>
 
-            }
-
-          }
+          <div class="flex justify-end border-t border-neutral-200 pt-4">
+            <button
+              type="button"
+              (click)="onClose()"
+              class="px-4 py-2 border border-neutral-300 rounded text-sm font-semibold text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 transition-colors">
+              Cerrar
+            </button>
+          </div>
 
         </div>
 
