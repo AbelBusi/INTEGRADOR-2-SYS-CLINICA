@@ -31,9 +31,8 @@ public class Rol {
     @Builder.Default
     private Integer estado = 1;
 
-    @OneToMany(mappedBy = "rol", fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<UsuarioRol> usuariosRoles = new ArrayList<>();
+    @OneToMany(mappedBy = "rol",fetch = FetchType.LAZY)
+    private List<Usuario> usuarios = new ArrayList<>();
 
     @OneToMany(mappedBy = "rol", cascade = CascadeType.ALL, orphanRemoval = true,fetch = FetchType.EAGER)
     private List<RolPermiso> rolPermisos = new ArrayList<>();

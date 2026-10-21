@@ -1,7 +1,6 @@
 package com.salud.consultorio.auth.impl;
 
 import com.salud.consultorio.auth.service.IJwtServicio;
-import com.salud.consultorio.model.entity.Rol;
 import com.salud.consultorio.model.entity.Usuario;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -19,8 +18,6 @@ import java.util.Map;
 @Service
 public class JwtServicioImpl implements IJwtServicio {
 
-    private static final long EXPIRACION_SELECCION_MS = 5 * 60 * 1000L;
-
     @Value("${aplication.security.jwt.secret}")
     private String secretKey;
 
@@ -33,69 +30,53 @@ public class JwtServicioImpl implements IJwtServicio {
 
     @Override
     public String extraerUsuario(final String token) {
-        return leerClaims(token).getSubject();
+
+        final Claims jwtToken = Jwts.parser()
+                .verifyWith(getSignInKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return jwtToken.getSubject();
     }
 
     @Override
-    public String generarToken(Usuario usuario, Rol rol) {
-        return construirToken(usuario, rol, jwtExpiration, TIPO_ACCESO);
+    public String generarToken(Usuario usuario) {
+        return construirToken(usuario,jwtExpiration);
     }
 
     @Override
-    public String generarTokenRefrescado(Usuario usuario, Rol rol) {
-        return construirToken(usuario, rol, refreshExpiration, TIPO_REFRESH);
+    public String generarTokenRefrescado(Usuario usuario) {
+        return construirToken(usuario,refreshExpiration);
     }
 
     @Override
-    public String generarTokenSeleccion(Usuario usuario) {
+    public String construirToken(Usuario usuario, Integer expiration) {
 
-        long ahora = System.currentTimeMillis();
-
-        return Jwts.builder()
-                .id(usuario.getId().toString())
-                .claims(Map.of("tipo", TIPO_SELECCION))
-                .subject(usuario.getUsuario())
-                .issuedAt(new Date(ahora))
-                .expiration(new Date(ahora + EXPIRACION_SELECCION_MS))
-                .signWith(getSignInKey())
-                .compact();
-    }
-
-    private String construirToken(Usuario usuario, Rol rol, long expiracion, String tipo) {
-
-        List<String> permisos = rol.getRolPermisos().stream()
-                .map(rp -> rp.getPermiso().getCodigo())
-                .distinct()
+        List<String> permisos = usuario.getRol()
+                .getRolPermisos()
+                .stream()
+                .map(rolPermiso -> rolPermiso.getPermiso().getNombre())
                 .toList();
+
+        String rolNombre = usuario.getRol() != null && usuario.getRol().getNombre() != null
+                ? usuario.getRol().getNombre()
+                : "";
 
         Map<String, Object> extraClaims = Map.of(
                 "name", usuario.getUsuario(),
-                "tipo", tipo,
-                "authorities", permisos,
-                "role", rol.getNombre(),
-                "idRol", rol.getId()
+                "authorities",permisos,
+                "role", rolNombre
         );
-
-        long ahora = System.currentTimeMillis();
 
         return Jwts.builder()
                 .id(usuario.getId().toString())
                 .claims(extraClaims)
                 .subject(usuario.getUsuario())
-                .issuedAt(new Date(ahora))
-                .expiration(new Date(ahora + expiracion))
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis()+expiration))
                 .signWith(getSignInKey())
                 .compact();
-    }
-
-    @Override
-    public String extraerTipo(String token) {
-        return leerClaims(token).get("tipo", String.class);
-    }
-
-    @Override
-    public Integer extraerIdRol(String token) {
-        return leerClaims(token).get("idRol", Integer.class);
     }
 
     @Override
@@ -106,25 +87,37 @@ public class JwtServicioImpl implements IJwtServicio {
 
     @Override
     public boolean tokenExpirado(String token) {
-        return leerClaims(token).getExpiration().before(new Date());
+        return extractExpirado(token).before(new Date());
     }
 
-    @Override
-    public List<String> extraerPermisos(final String token) {
-        return leerClaims(token).get("authorities", List.class);
-    }
+    private Date extractExpirado(final String token){
 
-    private Claims leerClaims(final String token) {
-        return Jwts.parser()
+        final Claims jwtToken = Jwts.parser()
                 .verifyWith(getSignInKey())
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+
+        return jwtToken.getExpiration();
+
     }
 
-    public SecretKey getSignInKey() {
+
+    public SecretKey getSignInKey(){
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
+    @Override
+    public List<String> extraerPermisos(final String token) {
+        final Claims claims = Jwts.parser()
+                .verifyWith(getSignInKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        return claims.get("authorities", List.class);
+    }
+
 
 }

@@ -1,11 +1,13 @@
 package com.salud.consultorio.auth.dto.rol;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @AllArgsConstructor
 @Getter
-@Builder(toBuilder = true)
 @Setter
 @NoArgsConstructor
 @Schema(description = "DTO de respuesta de información del rol")

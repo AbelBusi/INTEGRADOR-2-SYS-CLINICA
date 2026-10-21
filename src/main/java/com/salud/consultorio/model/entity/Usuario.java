@@ -6,7 +6,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -27,6 +26,10 @@ public class Usuario {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_persona",nullable = false, unique = true)
     private Persona persona;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_rol",nullable = false)
+    private Rol rol;
 
     @Column(name = "usuario",nullable = false, length = 30)
     private String usuario;
@@ -51,9 +54,5 @@ public class Usuario {
 
     @OneToMany(mappedBy = "usuario",fetch = FetchType.LAZY)
     private List<Token> token;
-
-    @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY)
-    @Builder.Default
-    private List<UsuarioRol> usuarioRoles = new ArrayList<>();
 
 }

@@ -2,12 +2,9 @@ package com.salud.consultorio.service;
 
 import com.salud.consultorio.dto.cargo.*;
 import com.salud.consultorio.dto.tipoDocumento.TipoDocumentoResumenDTO;
-import com.salud.consultorio.model.entity.Cargo;
-import com.salud.consultorio.model.entity.Empleado;
 import com.salud.consultorio.model.enums.EntidadEstado;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface ICargoServicio {
 
@@ -26,10 +23,6 @@ public interface ICargoServicio {
     List<CargoResumenDTO> listaResumen();
 
     List<CargoMedicoResumenDTO> listaCargoMedicoResumen();
-
-    Optional<Cargo> findByIdAndEstado(Integer id, Integer estado);
-
-    Cargo entidadPorIDTransaccion(Integer id);
 
 
 }

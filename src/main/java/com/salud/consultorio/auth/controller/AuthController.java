@@ -12,8 +12,6 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("api/v1/auth")
 @RequiredArgsConstructor
@@ -23,46 +21,13 @@ public class AuthController {
     private final IRecuperacionClaveServicio recuperacionServicio;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> autenticar(
+    public ResponseEntity<TokenResponse> autenticar(
             @RequestBody final InicioSolicitud dto
     ) {
 
-        return ResponseEntity.ok(authServicio.ingresar(dto));
+        final TokenResponse token = authServicio.ingresar(dto);
 
-    }
-
-    /** Paso 2 (solo usuarios con varios perfiles): elegir con cuál ingresar. Ruta pública. */
-    @PostMapping("/seleccionar-rol")
-    public ResponseEntity<TokenResponse> seleccionarRol(
-            @Valid @RequestBody SeleccionarRolRequest dto
-    ) {
-
-        return ResponseEntity.ok(authServicio.seleccionarRol(dto));
-
-    }
-
-    @GetMapping("/perfiles")
-    public ResponseEntity<List<PerfilDTO>> perfiles(Authentication authentication) {
-
-        if (sinSesion(authentication)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        return ResponseEntity.ok(authServicio.misPerfiles(authentication.getName()));
-
-    }
-
-    @PostMapping("/cambiar-perfil")
-    public ResponseEntity<TokenResponse> cambiarPerfil(
-            Authentication authentication,
-            @Valid @RequestBody CambiarPerfilRequest dto
-    ) {
-
-        if (sinSesion(authentication)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        return ResponseEntity.ok(authServicio.cambiarPerfil(authentication.getName(), dto.idRol()));
+        return ResponseEntity.ok(token);
 
     }
 

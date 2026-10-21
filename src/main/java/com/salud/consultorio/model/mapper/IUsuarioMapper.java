@@ -13,6 +13,7 @@ public interface IUsuarioMapper {
 
     @Mapping(target = "id",ignore = true)
     @Mapping(target = "persona", ignore = true)
+    @Mapping(target = "rol",ignore = true)
     @Mapping(target = "claveAcceso",ignore = true)
     @Mapping(target = "token",ignore = true)
     Usuario toEntity(UsuarioCrearDTO dto);
