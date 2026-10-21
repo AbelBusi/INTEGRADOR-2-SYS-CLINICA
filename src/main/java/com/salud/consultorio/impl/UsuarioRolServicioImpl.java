@@ -38,56 +38,85 @@ public class UsuarioRolServicioImpl implements IUsuarioRolServicio {
         usuarioRolRepositorio.revocarSesionesPorRol(idRol);
     }
 
+
     @Transactional
     @Override
     public void asignarRol(Integer idUsuario, Integer idRol) {
 
         if (idUsuario == null || idRol == null) {
-            throw new IllegalArgumentException("El id del usuario y el id del rol son obligatorios.");
+            throw new IllegalArgumentException(
+                    "El id del usuario y el id del rol son obligatorios."
+            );
         }
 
-        Usuario usuario = usuarioRepositorio.findById(idUsuario).orElseThrow(
-                () -> new EntityNotFoundException("El usuario no existe.")
-        );
+        Usuario usuario = usuarioRepositorio.findById(idUsuario)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("El usuario no existe.")
+                );
 
         if (usuario.getEstado() == ESTADO_REVOCADO) {
-            throw new IllegalArgumentException("No se pueden asignar roles a un usuario eliminado.");
+            throw new IllegalArgumentException(
+                    "No se pueden asignar roles a un usuario eliminado."
+            );
         }
 
-        if (usuarioRepositorio.esPaciente(idUsuario)) {
-            throw new IllegalArgumentException("No se pueden asignar roles a un paciente.");
-        }
-
-        Rol rol = rolRepositorio.findById(idRol).orElseThrow(
-                () -> new EntityNotFoundException("El rol no existe.")
-        );
+        Rol rol = rolRepositorio.findById(idRol)
+                .orElseThrow(() ->
+                        new EntityNotFoundException("El rol no existe.")
+                );
 
         if (rol.getEstado() != ESTADO_ACTIVO) {
-            throw new IllegalArgumentException("El rol no se encuentra activo.");
+            throw new IllegalArgumentException(
+                    "El rol no se encuentra activo."
+            );
+        }
+
+        boolean esPaciente = usuarioRepositorio.esPaciente(idUsuario);
+        boolean esEmpleado = usuarioRepositorio.esEmpleado(idUsuario);
+
+        if (esPaciente && !esEmpleado) {
+            throw new IllegalArgumentException(
+                    "Un paciente no puede recibir roles adicionales."
+            );
         }
 
         if (ROL_PACIENTE.equalsIgnoreCase(rol.getNombre())) {
-            throw new IllegalArgumentException("No se puede asignar el rol PACIENTE a un empleado.");
+            throw new IllegalArgumentException(
+                    "No se puede asignar el rol PACIENTE mediante esta operación."
+            );
         }
 
-        Optional<UsuarioRol> existente = usuarioRolRepositorio.findByUsuario_IdAndRol_Id(idUsuario, idRol);
+        if (!esEmpleado) {
+            throw new IllegalArgumentException(
+                    "Solo se pueden asignar roles adicionales a usuarios registrados como empleados."
+            );
+        }
+
+        Optional<UsuarioRol> existente =
+                usuarioRolRepositorio.findByUsuario_IdAndRol_Id(
+                        idUsuario, idRol
+                );
 
         if (existente.isPresent()) {
 
             UsuarioRol asignacion = existente.get();
 
             if (asignacion.getEstado() == ESTADO_ACTIVO) {
-                throw new IllegalArgumentException("El usuario ya tiene asignado este rol.");
+                throw new IllegalArgumentException(
+                        "El usuario ya tiene asignado este rol."
+                );
             }
 
             asignacion.setEstado(ESTADO_ACTIVO);
             return;
         }
 
-        usuarioRolRepositorio.save(UsuarioRol.builder()
-                .usuario(usuario)
-                .rol(rol)
-                .build());
+        usuarioRolRepositorio.save(
+                UsuarioRol.builder()
+                        .usuario(usuario)
+                        .rol(rol)
+                        .build()
+        );
     }
 
     @Transactional

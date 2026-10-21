@@ -117,4 +117,16 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
             """)
     boolean esPaciente(@Param("idUsuario") Integer idUsuario);
 
+    @Query("""
+            SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END
+            FROM Empleado e
+            WHERE e.persona.id = (
+                SELECT u.persona.id
+                FROM Usuario u
+                WHERE u.id = :idUsuario
+            )
+            """)
+    boolean esEmpleado(@Param("idUsuario") Integer idUsuario);
+
+
 }

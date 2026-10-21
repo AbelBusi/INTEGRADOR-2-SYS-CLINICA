@@ -1,5 +1,6 @@
 package com.salud.consultorio.configuration;
 
+import com.salud.consultorio.auth.exception.CorreoEnvioException;
 import com.salud.consultorio.auth.exception.UsuarioInactivoException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -97,6 +98,11 @@ public class GlobalExceptionHandler {
                 "mensaje", ex.getMessage(),
                 "codigo", "USUARIO_INACTIVO"
         ));
+    }
+
+    @ExceptionHandler(CorreoEnvioException.class)
+    public ResponseEntity<Map<String, Object>> manejarCorreoEnvio(CorreoEnvioException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of("mensaje", ex.getMessage()));
     }
 
 }

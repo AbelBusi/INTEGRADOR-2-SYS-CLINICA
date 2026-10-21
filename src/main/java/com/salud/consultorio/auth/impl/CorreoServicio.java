@@ -1,7 +1,9 @@
 package com.salud.consultorio.auth.impl;
 
+import com.salud.consultorio.auth.exception.CorreoEnvioException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.MailPreparationException;
@@ -17,6 +19,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CorreoServicio {
@@ -80,7 +83,7 @@ public class CorreoServicio {
     ) {
         try {
             ClassPathResource escudo =
-                    new ClassPathResource("email/escudo-peru.png");
+                    new ClassPathResource("email/MINSA.jpg");
 
             ClassPathResource logoMins =
                     new ClassPathResource("email/logo-minsa.png");
@@ -145,11 +148,17 @@ public class CorreoServicio {
             mailSender.send(mime);
 
         } catch (Exception e) {
-            throw new MailPreparationException(
-                    "No se pudo enviar las credenciales del usuario",
+            log.error("Falló el envío de credenciales a {}", enmascarar(destino), e);
+            throw new CorreoEnvioException(
+                    "No se pudo enviar el correo con las credenciales. Verifica el correo registrado de la persona e inténtalo de nuevo.",
                     e
             );
         }
+    }
+
+    private String enmascarar(String correo) {
+        int arroba = correo == null ? -1 : correo.indexOf('@');
+        return arroba <= 1 ? "***" : correo.charAt(0) + "***" + correo.substring(arroba);
     }
 
 }

@@ -15,6 +15,7 @@ import com.salud.consultorio.dto.usuario.UsuarioCreadoDTO;
 import com.salud.consultorio.model.entity.*;
 import com.salud.consultorio.model.enums.TipoUsuario;
 import com.salud.consultorio.repository.*;
+import com.salud.consultorio.service.IUsuarioRolReglasServicio;
 import com.salud.consultorio.service.IUsuarioServicio;
 import io.jsonwebtoken.JwtException;
 import jakarta.persistence.EntityNotFoundException;
@@ -75,6 +76,7 @@ public class IAuthServicioImpl implements IAuthServicio {
     private final IPersonaRepositorio personaRepositorio;
     private final CorreoServicio correoServicio;
     private final IUsuarioRolRepositorio usuarioRolRepositorio;
+    private final IUsuarioRolReglasServicio usuarioRolReglasServicio;
 
     @Transactional
     @Override
@@ -84,7 +86,9 @@ public class IAuthServicioImpl implements IAuthServicio {
                 .orElseThrow(() -> new EntityNotFoundException("No existe la persona indicada"));
 
         if (usuarioServicio.existeUsuarioPersona(persona.getId())) {
-            throw new DataIntegrityViolationException("La persona ya tiene un usuario registrado");
+            throw new DataIntegrityViolationException(
+                    "La persona ya tiene una cuenta de usuario. Para darle otro rol, gestiona los roles de su cuenta existente"
+            );
         }
 
         String correo = persona.getCorreo();
@@ -96,6 +100,8 @@ public class IAuthServicioImpl implements IAuthServicio {
         }
 
         List<Rol> roles = resolverRoles(dto);
+
+        roles.forEach(rol -> usuarioRolReglasServicio.validarRolAsignable(persona.getId(), rol));
 
         String nombreUsuario = generarNombreUsuario(persona);
         String claveTemporal = generarClaveTemporal();
@@ -118,16 +124,10 @@ public class IAuthServicioImpl implements IAuthServicio {
 
         usuarioRolRepositorio.saveAll(asignaciones);
 
-        correoServicio.enviarCredencialesUsuario(
-                correo, nombreUsuario, claveTemporal
-        );
+        correoServicio.enviarCredencialesUsuario(correo, nombreUsuario, claveTemporal);
 
-        return new UsuarioCreadoDTO(
-                guardado.getId(), nombreUsuario, enmascararCorreo(correo)
-        );
-
+        return new UsuarioCreadoDTO(guardado.getId(), nombreUsuario, enmascararCorreo(correo));
     }
-
     @Transactional
     @Override
     public LoginResponse ingresar(InicioSolicitud request) {

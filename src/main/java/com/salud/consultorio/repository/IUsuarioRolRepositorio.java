@@ -64,4 +64,36 @@ public interface IUsuarioRolRepositorio extends JpaRepository<UsuarioRol, Intege
             """)
     int revocarSesionesPorRol(@Param("idRol") Integer idRol);
 
+    @Query("""
+            SELECT CASE WHEN COUNT(ur) > 0 THEN true ELSE false END
+            FROM UsuarioRol ur
+            WHERE ur.usuario.id = :idUsuario
+              AND ur.rol.id = :idRol
+              AND ur.estado = 1
+            """)
+    boolean existeAsignacionActiva(@Param("idUsuario") Integer idUsuario, @Param("idRol") Integer idRol);
+
+    @Query("""
+            SELECT COUNT(ur)
+            FROM UsuarioRol ur
+            WHERE ur.usuario.id = :idUsuario
+              AND ur.estado = 1
+              AND ur.rol.estado = 1
+            """)
+    long contarAsignacionesActivas(@Param("idUsuario") Integer idUsuario);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(p) > 0 THEN true ELSE false END
+            FROM Paciente p
+            WHERE p.persona.id = :idPersona AND p.estado = 1
+            """)
+    boolean personaEsPacienteActivo(@Param("idPersona") Integer idPersona);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(e) > 0 THEN true ELSE false END
+            FROM Empleado e
+            WHERE e.persona.id = :idPersona AND e.estado = 1
+            """)
+    boolean personaEsEmpleadoActivo(@Param("idPersona") Integer idPersona);
+
 }
