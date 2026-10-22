@@ -204,6 +204,24 @@ public class MedicoServicioImpl implements IMedicoServicio {
         return new DisponibilidadCodigosDTO(colegiaturaDisponible, especialidadDisponible);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<MedicoResumenDTO> listarResumenPorEspecialidad(
+            Integer idEspecialidad
+    ) {
+        if (idEspecialidad == null) {
+            throw new IllegalArgumentException("El id de la especialidad es obligatorio.");
+        }
+
+        return medicoRepositorio.listarResumenPorEspecialidad(idEspecialidad);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<MedicoResumenDTO> listarResumen() {
+        return medicoRepositorio.listarResumen();
+    }
+
     private void validarId(Integer id) {
 
         if (id == null || id <= 0) {

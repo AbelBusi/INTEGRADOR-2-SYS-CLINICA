@@ -230,6 +230,11 @@ public class PacienteServicioImpl implements IPacienteServicio {
 
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<PacienteResumenDTO> listarResumen() {
+        return pacienteRepositorio.listarResumen();
+    }
 
     private Paciente validarCambiarEstado(Integer id, EntidadEstado estado) {
 

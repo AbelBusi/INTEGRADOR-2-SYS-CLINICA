@@ -2,9 +2,12 @@ package com.salud.consultorio.repository;
 
 import com.salud.consultorio.dto.medico.MedicoDetalleDTO;
 import com.salud.consultorio.dto.medico.MedicoLeerDTO;
+import com.salud.consultorio.dto.medico.MedicoResumenDTO;
 import com.salud.consultorio.model.entity.Especialidad;
 import com.salud.consultorio.model.entity.Medico;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -117,4 +120,41 @@ public interface IMedicoRepositorio extends JpaRepository<Medico, Integer> {
     boolean existsByNumeroColegiaturaAndIdNot(String numeroColegiatura, Integer id);
 
     boolean existsByNumeroEspecialidad(String numeroEspecialidad);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT d FROM Medico d WHERE d.id = :id")
+    Optional<Medico> buscarPorIdBloqueado(@Param("id") Integer id);
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.medico.MedicoResumenDTO(
+                m.id,
+                CONCAT(e.persona.nombre, ' ', e.persona.apellidos)
+            )
+            FROM Medico m
+            JOIN m.empleado e
+            JOIN e.persona p
+            WHERE m.especialidad.id = :idEspecialidad
+              AND m.estado = 1
+              AND e.estado = 1
+              AND p.estado = 1
+            ORDER BY p.apellidos, p.nombre
+            """)
+    List<MedicoResumenDTO> listarResumenPorEspecialidad(
+            @Param("idEspecialidad") Integer idEspecialidad
+    );
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.medico.MedicoResumenDTO(
+                m.id,
+                CONCAT(p.nombre, ' ', p.apellidos)
+            )
+            FROM Medico m
+            JOIN m.empleado e
+            JOIN e.persona p
+            WHERE m.estado = 1
+              AND e.estado = 1
+              AND p.estado = 1
+            ORDER BY p.apellidos, p.nombre
+            """)
+    List<MedicoResumenDTO> listarResumen();
 }

@@ -153,4 +153,43 @@ public class MedicoController {
 
     }
 
+    @Operation(
+            summary = "Listar médicos por especialidad",
+            description = "Devuelve el ID y nombre de los médicos activos pertenecientes a la especialidad seleccionada"
+    )
+
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de médicos obtenida correctamente"),
+            @ApiResponse(responseCode = "400", description = "ID de especialidad inválido"),
+            @ApiResponse(responseCode = "404", description = "Especialidad no encontrada")
+    })
+    @GetMapping("/especialidad/{idEspecialidad}/resumen")
+    public ResponseEntity<MensajeResponse> listarResumenPorEspecialidad(
+            @Parameter(description = "ID de la especialidad", required = true)
+            @PathVariable Integer idEspecialidad) {
+
+        List<MedicoResumenDTO> lista =
+                medicoServicio.listarResumenPorEspecialidad(idEspecialidad);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("LISTA DE MEDICOS POR ESPECIALIDAD")
+                .object(lista)
+                .build(), HttpStatus.OK);
+    }
+
+    @Operation(summary = "Listar médicos activos para resumen")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de médicos obtenida correctamente"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
+    @GetMapping("/resumen")
+    public ResponseEntity<MensajeResponse> listarResumen() {
+        return ResponseEntity.ok(
+                MensajeResponse.builder()
+                        .mensaje("Lista de médicos obtenida correctamente")
+                        .object(medicoServicio.listarResumen())
+                        .build()
+        );
+    }
+
 }

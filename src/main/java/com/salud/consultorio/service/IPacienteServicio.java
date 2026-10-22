@@ -34,4 +34,6 @@ public interface IPacienteServicio{
 
     PacienteIDPorBuscarNroDocDTO pacienteIDporDni(String nroDocumento);
 
+    List<PacienteResumenDTO> listarResumen();
+
 }

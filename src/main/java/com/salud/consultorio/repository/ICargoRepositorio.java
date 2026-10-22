@@ -81,4 +81,16 @@ public interface ICargoRepositorio extends JpaRepository<Cargo, Integer> {
             """)
     List<CargoMedicoResumenDTO> listaResumenCargoMedico();
 
+    @Query("""
+            SELECT new com.salud.consultorio.dto.cargo.CargoResumenDTO(
+                c.id,
+                c.nombre
+            )
+            FROM Cargo c
+            WHERE c.estado = 1
+              AND c.esPersonalMedico = true
+            ORDER BY c.nombre
+            """)
+    List<CargoResumenDTO> listaResumenDatosMedicos();
+
 }

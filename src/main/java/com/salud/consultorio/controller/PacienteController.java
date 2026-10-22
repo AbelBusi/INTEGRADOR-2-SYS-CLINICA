@@ -198,5 +198,23 @@ public class PacienteController {
 
     }
 
+    @Operation(
+            summary = "Listar pacientes para selección",
+            description = "Devuelve el ID y nombre de los pacientes activos"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de pacientes obtenida correctamente")
+    })
+    @GetMapping("/resumen")
+    public ResponseEntity<MensajeResponse> listarResumen() {
+
+        List<PacienteResumenDTO> lista = pacienteServicio.listarResumen();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("LISTA DE PACIENTES ACTIVOS")
+                .object(lista)
+                .build(), HttpStatus.OK);
+    }
+
 
 }

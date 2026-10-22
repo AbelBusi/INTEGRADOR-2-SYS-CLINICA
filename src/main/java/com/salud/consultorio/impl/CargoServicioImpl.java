@@ -154,6 +154,12 @@ public class CargoServicioImpl implements ICargoServicio  {
     }
 
     @Transactional(readOnly = true)
+    @Override
+    public List<CargoResumenDTO> listaResumenDatos() {
+        return cargoRepositorio.listaResumenDatosMedicos();
+    }
+
+    @Transactional(readOnly = true)
     private Cargo validarCambiarEstado(Integer id, EntidadEstado estado) {
 
         if (id == null || estado == null) {

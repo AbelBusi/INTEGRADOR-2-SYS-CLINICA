@@ -138,6 +138,17 @@ public class CargoController {
 
     }
 
+    @GetMapping("resumen-medicos")
+    public ResponseEntity<MensajeResponse> listaResumenMedicos(){
+
+        List<CargoResumenDTO> lista = cargoServicio.listaResumenDatos();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Lista de cargos")
+                .object(lista).build(), HttpStatus.OK);
+
+    }
+
     @GetMapping("medicos")
     public ResponseEntity<MensajeResponse> listaCargosMedicosResumen(){
 

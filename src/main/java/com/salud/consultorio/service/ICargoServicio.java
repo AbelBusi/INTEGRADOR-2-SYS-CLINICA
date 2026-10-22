@@ -31,5 +31,6 @@ public interface ICargoServicio {
 
     Cargo entidadPorIDTransaccion(Integer id);
 
+    List<CargoResumenDTO> listaResumenDatos();
 
 }

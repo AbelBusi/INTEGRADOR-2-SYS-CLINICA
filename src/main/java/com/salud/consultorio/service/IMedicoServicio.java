@@ -23,4 +23,10 @@ public interface IMedicoServicio {
 
     DisponibilidadCodigosDTO verificarDisponibilidad(String numeroColegiatura, String numeroEspecialidad);
 
+    List<MedicoResumenDTO> listarResumenPorEspecialidad(Integer idEspecialidad);
+
+    List<MedicoResumenDTO> listarResumen();
+
+
+
 }

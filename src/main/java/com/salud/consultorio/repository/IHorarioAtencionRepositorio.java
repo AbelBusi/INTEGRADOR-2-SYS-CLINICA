@@ -60,8 +60,35 @@ public interface IHorarioAtencionRepositorio extends JpaRepository<HorarioAtenci
             )
             FROM HorarioAtencion h
             WHERE h.estado <> 0
+              AND h.empleado.estado = 1
+              AND h.empleado.persona.estado = 1
+              AND EXISTS (
+                  SELECT m.id
+                  FROM Medico m
+                  WHERE m.empleado.id = h.empleado.id
+                    AND m.estado = 1
+              )
             ORDER BY h.diaSemana, h.horaEntrada
             """)
     List<HorarioAtencionResumenDTO> obtenerTodosLosHorarios();
+
+    @Query("""
+            SELECT CASE WHEN COUNT(h) > 0 THEN true ELSE false END
+            FROM HorarioAtencion h
+            WHERE h.empleado.id = :idEmpleado
+              AND h.diaSemana = :diaSemana
+              AND h.estado = 1
+              AND h.horaEntrada <= :horaInicio
+              AND h.horaSalida >= :horaSalida
+              AND h.fechaInicio <= :fecha
+              AND h.fechaFin >= :fecha
+            """)
+    boolean existeHorarioDisponible(
+            @Param("idEmpleado") Integer idEmpleado,
+            @Param("diaSemana") Integer diaSemana,
+            @Param("horaInicio") LocalTime horaInicio,
+            @Param("horaSalida") LocalTime horaSalida,
+            @Param("fecha") LocalDate fecha
+    );
 
 }
