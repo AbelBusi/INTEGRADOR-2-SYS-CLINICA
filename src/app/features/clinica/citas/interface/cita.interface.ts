@@ -35,9 +35,34 @@ export interface CitaDTO {
   motivo: string;
 }
 
-export interface PacienteResumen {
+export interface PacienteBusqueda {
   idPaciente: number;
   nombre: string;
+  tipoDocumento: string;
+  numeroDocumento: string;
+  genero: string;
+}
+
+export interface PacienteInfo {
+  id: number;
+  codigoTipoDocumento: string;
+  numeroDocumento: string;
+  nombre: string;
+  apellidos: string;
+  fechaNacimiento: FechaApi | null;
+  genero: string;
+  telefono: string | null;
+  direccion: string | null;
+  correo: string | null;
+  nacionalidad: string;
+  codigoAsegurado: string;
+  entidadAsegurado: string;
+}
+
+export interface UsuarioRegistro {
+  id: number;
+  usuario: string;
+  nombreCompleto: string;
 }
 
 export interface MedicoResumen {
@@ -57,6 +82,14 @@ export interface MedicoInfo {
   especialidad: string;
   nombre: string;
   apellidos: string;
+  codigoTipoDocumento: string | null;
+  numeroDocumento: string | null;
+  telefono: string | null;
+  correo: string | null;
+  cargo: string | null;
+  numeroColegiatura: string | null;
+  numeroEspecialidad: string | null;
+  consejoRegional: string | null;
 }
 
 export interface InfoEstadoCita {

@@ -213,7 +213,7 @@
   <app-cita-form-modal
     [cita]="citaEditar()"
     (close)="cerrarForm()"
-    (guardado)="handleGuardado()"
+    (guardado)="handleGuardado($event)"
   ></app-cita-form-modal>
 }
 

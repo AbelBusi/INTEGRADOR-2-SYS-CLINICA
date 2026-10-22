@@ -1,5 +1,6 @@
 import { HorarioDia } from '../../horarios/interface/horario.interface';
 import {
+  MESES,
   aFechaISO,
   aHHmm,
   aMinutos,
@@ -94,4 +95,9 @@ export function huecosDisponibles(
   }
 
   return huecos;
+}
+
+export function rotuloRango(inicio: Date, fin: Date): string {
+  const mes = (fecha: Date): string => MESES[fecha.getMonth()].substring(0, 3);
+  return `${inicio.getDate()} ${mes(inicio)} - ${fin.getDate()} ${mes(fin)} ${fin.getFullYear()}`;
 }

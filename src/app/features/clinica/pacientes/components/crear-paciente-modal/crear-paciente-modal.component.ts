@@ -14,6 +14,7 @@ import {
   ENTIDAD_ASEGURADORA,
   GENEROS,
   PacienteForm,
+  PacienteRespuesta,
   TipoDocumentoResumen,
   fechaMaximaNacimiento,
   formularioACrearDto,
@@ -34,8 +35,9 @@ import { ReniecService } from '../../../../../core/services/reniec.service';
 })
 export class CrearPacienteModalComponent implements OnInit {
   @Input() isOpen = false;
+  @Input() numeroDocumentoInicial = '';
   @Output() onClose = new EventEmitter<void>();
-  @Output() onPacienteCreado = new EventEmitter<void>();
+  @Output() onPacienteCreado = new EventEmitter<PacienteRespuesta>();
 
   pacienteForm: PacienteForm = formularioVacio();
   tiposDocumento: TipoDocumentoResumen[] = [];
@@ -63,6 +65,7 @@ export class CrearPacienteModalComponent implements OnInit {
     this.pacienteService.listarTiposDocumentoResumen().subscribe({
       next: (response) => {
         this.tiposDocumento = response.object || [];
+        this.aplicarDocumentoInicial();
         this.cargandoCatalogos = false;
         this.cdr.detectChanges();
       },
@@ -73,6 +76,23 @@ export class CrearPacienteModalComponent implements OnInit {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  private aplicarDocumentoInicial(): void {
+    const documento = this.numeroDocumentoInicial.trim();
+
+    if (!/^\d{8}$/.test(documento)) {
+      return;
+    }
+
+    const dni = this.tiposDocumento.find((t) => t.codigo.toUpperCase() === 'DNI');
+
+    if (!dni) {
+      return;
+    }
+
+    this.pacienteForm.idTipoDocumento = dni.idTipoDocumento;
+    this.pacienteForm.numeroDocumento = documento;
   }
 
   get longitudDocumento(): number | null {
@@ -216,7 +236,11 @@ export class CrearPacienteModalComponent implements OnInit {
       next: (response) => {
         this.toastService.success(response?.mensaje || 'Paciente agregado con éxito');
         this.guardando = false;
-        this.onPacienteCreado.emit();
+
+        if (response?.object) {
+          this.onPacienteCreado.emit(response.object);
+        }
+
         this.handleClose();
       },
       error: (err) => {

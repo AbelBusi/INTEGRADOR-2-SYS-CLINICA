@@ -1,18 +1,50 @@
-import { Component, EventEmitter, Input, OnInit, Output, computed, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { forkJoin, map, of, switchMap } from 'rxjs';
+import {
+  Subject,
+  catchError,
+  debounceTime,
+  distinctUntilChanged,
+  forkJoin,
+  map,
+  of,
+  switchMap,
+} from 'rxjs';
 
 import { HorarioDia } from '../../../horarios/interface/horario.interface';
-import { aISO, aMinutos } from '../../../horarios/utils/calendario.util';
 import {
+  DIAS_SEMANA,
+  MESES,
+  aFechaISO,
+  aHHmm,
+  aISO,
+  aMinutos,
+  fechaDesdeISO,
+  formatearDiaLargo,
+  inicioSemana,
+  sumarDias,
+} from '../../../horarios/utils/calendario.util';
+import {
+  Cita,
   CitaDTO,
   CitaFila,
   DURACIONES,
   EspecialidadResumen,
   MedicoResumen,
-  PacienteResumen,
+  PacienteBusqueda,
 } from '../../interface/cita.interface';
 import {
   huecosDisponibles,
@@ -20,34 +52,66 @@ import {
   minutosAhora,
   normalizarCita,
   ocupadosDelDia,
+  rotuloRango,
   seCruzan,
   tramosDelDia,
 } from '../../utils/disponibilidad.util';
 import { CitaService } from '../../services/cita.service';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { ToastService } from '../../../../../core/services/toast.service';
+import { CrearPacienteModalComponent } from '../../../pacientes/components/crear-paciente-modal/crear-paciente-modal.component';
+import { PacienteRespuesta } from '../../../pacientes/interface/paciente.interface';
+
+type EstadoDia = 'pasado' | 'cerrado' | 'completo' | 'disponible';
+
+interface DiaAgenda {
+  iso: string;
+  numero: number;
+  etiquetaMes: string | null;
+  estado: EstadoDia;
+  libres: number;
+  esHoy: boolean;
+}
+
+const DIAS_POR_PAGINA = 28;
+const MAXIMO_PAGINAS = 12;
 
 @Component({
   selector: 'app-cita-form-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CrearPacienteModalComponent],
   templateUrl: './cita-form-modal.component.html',
 })
 export class CitaFormModalComponent implements OnInit {
   @Input() cita: CitaFila | null = null;
   @Output() close = new EventEmitter<void>();
-  @Output() guardado = new EventEmitter<void>();
+  @Output() guardado = new EventEmitter<Cita>();
 
   readonly duraciones = DURACIONES;
-  readonly hoyISO = aISO(new Date());
+  readonly dias = DIAS_SEMANA;
+  readonly hoy = new Date();
+  readonly hoyISO = aISO(this.hoy);
+  readonly MIN_BUSQUEDA = 3;
 
-  pacientes = signal<PacienteResumen[]>([]);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly busqueda$ = new Subject<string>();
+
   especialidades = signal<EspecialidadResumen[]>([]);
   medicos = signal<MedicoResumen[]>([]);
   horarios = signal<HorarioDia[]>([]);
   programadas = signal<CitaFila[]>([]);
 
-  idPaciente = signal<number | null>(null);
+  paciente = signal<PacienteBusqueda | null>(null);
+  textoBusqueda = signal('');
+  resultados = signal<PacienteBusqueda[]>([]);
+  buscando = signal(false);
+  busquedaCompleta = signal(false);
+  errorBusqueda = signal(false);
+
+  crearPacienteAbierto = signal(false);
+  documentoPrefill = signal('');
+  cargandoNuevoPaciente = signal(false);
+
   idEspecialidad = signal<number | null>(null);
   idMedico = signal<number | null>(null);
   fecha = signal('');
@@ -55,13 +119,77 @@ export class CitaFormModalComponent implements OnInit {
   horaInicio = signal('');
   horaSalida = signal('');
   motivo = signal('');
-
   idUsuario = signal<number | null>(null);
+  paginaAgenda = signal(0);
 
   cargandoInicial = signal(false);
   cargandoMedicos = signal(false);
   cargandoHorario = signal(false);
   guardando = signal(false);
+
+  inicioAgenda = computed(() =>
+    sumarDias(inicioSemana(this.hoy), this.paginaAgenda() * DIAS_POR_PAGINA),
+  );
+
+  rotuloAgenda = computed(() =>
+    rotuloRango(this.inicioAgenda(), sumarDias(this.inicioAgenda(), DIAS_POR_PAGINA - 1)),
+  );
+
+  patronSemanal = computed(() =>
+    DIAS_SEMANA.map((dia) => {
+      const tramos = this.horarios()
+        .filter((h) => h.diaSemana === dia.numero && aFechaISO(h.fechaFin) >= this.hoyISO)
+        .map((h) => `${aHHmm(h.horaEntrada)}-${aHHmm(h.horaSalida)}`);
+
+      return { corto: dia.corto, largo: dia.largo, tramos: [...new Set(tramos)].sort() };
+    }),
+  );
+
+  diasAgenda = computed<DiaAgenda[]>(() => {
+    const idMedico = this.idMedico();
+    const horarios = this.horarios();
+    const programadas = this.programadas();
+    const excluirId = this.cita?.id ?? null;
+    const duracion = this.duracion();
+    const inicio = this.inicioAgenda();
+
+    return Array.from({ length: DIAS_POR_PAGINA }, (_, i) => {
+      const fecha = sumarDias(inicio, i);
+      const iso = aISO(fecha);
+
+      let estado: EstadoDia = 'pasado';
+      let libres = 0;
+
+      if (iso >= this.hoyISO && idMedico !== null) {
+        const tramos = tramosDelDia(horarios, iso);
+
+        if (tramos.length === 0) {
+          estado = 'cerrado';
+        } else {
+          const ocupados = ocupadosDelDia(programadas, idMedico, iso, excluirId);
+          const minimo = iso === this.hoyISO ? minutosAhora() : 0;
+
+          libres = huecosDisponibles(tramos, ocupados, duracion, minimo).length;
+          estado = libres > 0 ? 'disponible' : 'completo';
+        }
+      }
+
+      return {
+        iso,
+        numero: fecha.getDate(),
+        etiquetaMes:
+          i === 0 || fecha.getDate() === 1 ? MESES[fecha.getMonth()].substring(0, 3) : null,
+        estado,
+        libres,
+        esHoy: iso === this.hoyISO,
+      };
+    });
+  });
+
+  fechaTexto = computed(() => {
+    const fecha = this.fecha();
+    return fecha ? formatearDiaLargo(fechaDesdeISO(fecha)) : '';
+  });
 
   tramos = computed(() =>
     this.idMedico() !== null ? tramosDelDia(this.horarios(), this.fecha()) : [],
@@ -87,12 +215,8 @@ export class CitaFormModalComponent implements OnInit {
   });
 
   mensajeDisponibilidad = computed(() => {
-    if (this.idMedico() === null || !this.fecha() || this.errorFecha() || this.cargandoHorario()) {
+    if (!this.fecha() || this.errorFecha()) {
       return null;
-    }
-
-    if (this.horarios().length === 0) {
-      return 'El médico no tiene horarios de atención registrados.';
     }
 
     if (this.tramos().length === 0) {
@@ -140,7 +264,7 @@ export class CitaFormModalComponent implements OnInit {
   formularioValido = computed(
     () =>
       this.idUsuario() !== null &&
-      this.idPaciente() !== null &&
+      this.paciente() !== null &&
       this.idMedico() !== null &&
       this.fecha() !== '' &&
       this.errorFecha() === null &&
@@ -170,6 +294,33 @@ export class CitaFormModalComponent implements OnInit {
       );
     }
 
+    this.busqueda$
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((termino) =>
+          termino.length < this.MIN_BUSQUEDA
+            ? of(null)
+            : this.citaService.buscarPacientes(termino).pipe(
+                map((response) => ({ ok: true, lista: response.object || [] })),
+                catchError(() => of({ ok: false, lista: [] as PacienteBusqueda[] })),
+              ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((resultado) => {
+        if (resultado === null) {
+          this.resultados.set([]);
+          this.buscando.set(false);
+          return;
+        }
+
+        this.resultados.set(resultado.lista);
+        this.errorBusqueda.set(!resultado.ok);
+        this.busquedaCompleta.set(true);
+        this.buscando.set(false);
+      });
+
     this.cargarInicial();
   }
 
@@ -184,29 +335,116 @@ export class CitaFormModalComponent implements OnInit {
     );
   }
 
+  claseDia(dia: DiaAgenda): string {
+    if (dia.iso === this.fecha()) {
+      return 'border-[#D9182A] bg-[#D9182A] text-white';
+    }
+
+    const marcaHoy = dia.esHoy ? ' ring-1 ring-[#58595B]' : '';
+
+    switch (dia.estado) {
+      case 'disponible':
+        return `border-[#0d6b68]/40 bg-[#0d6b68]/10 text-[#0d6b68] hover:bg-[#0d6b68]/20${marcaHoy}`;
+      case 'completo':
+        return `cursor-not-allowed border-[#D9182A]/30 bg-[#D9182A]/5 text-[#D9182A]${marcaHoy}`;
+      case 'cerrado':
+        return `cursor-not-allowed border-neutral-200 bg-neutral-50 text-neutral-400${marcaHoy}`;
+      default:
+        return 'cursor-not-allowed border-transparent bg-transparent text-neutral-300';
+    }
+  }
+
+  textoDia(dia: DiaAgenda): string {
+    switch (dia.estado) {
+      case 'disponible':
+        return `${dia.libres} libres`;
+      case 'completo':
+        return 'Completo';
+      case 'cerrado':
+        return 'No atiende';
+      default:
+        return '';
+    }
+  }
+
+  onBusquedaInput(valor: string): void {
+    const termino = valor.trim();
+
+    this.textoBusqueda.set(valor);
+    this.busquedaCompleta.set(false);
+    this.errorBusqueda.set(false);
+
+    if (termino.length < this.MIN_BUSQUEDA) {
+      this.resultados.set([]);
+      this.buscando.set(false);
+    } else {
+      this.buscando.set(true);
+    }
+
+    this.busqueda$.next(termino);
+  }
+
+  seleccionarPaciente(paciente: PacienteBusqueda): void {
+    this.paciente.set(paciente);
+    this.textoBusqueda.set('');
+    this.resultados.set([]);
+    this.busquedaCompleta.set(false);
+    this.buscando.set(false);
+  }
+
+  quitarPaciente(): void {
+    this.paciente.set(null);
+    this.textoBusqueda.set('');
+    this.resultados.set([]);
+    this.busquedaCompleta.set(false);
+  }
+
+  abrirCrearPaciente(): void {
+    const texto = this.textoBusqueda().trim();
+    this.documentoPrefill.set(/^\d{8}$/.test(texto) ? texto : '');
+    this.crearPacienteAbierto.set(true);
+  }
+
+  onPacienteCreado(creado: PacienteRespuesta): void {
+    this.cargandoNuevoPaciente.set(true);
+
+    this.citaService.obtenerPaciente(creado.id).subscribe({
+      next: (response) => {
+        const p = response.object;
+
+        this.seleccionarPaciente({
+          idPaciente: p.id,
+          nombre: `${p.nombre} ${p.apellidos}`.trim(),
+          tipoDocumento: p.codigoTipoDocumento,
+          numeroDocumento: p.numeroDocumento,
+          genero: p.genero,
+        });
+        this.cargandoNuevoPaciente.set(false);
+      },
+      error: (error) => {
+        console.error(error);
+        this.toastService.warning(
+          'El paciente fue creado, pero no se pudo cargar. Búscalo por su documento.',
+        );
+        this.cargandoNuevoPaciente.set(false);
+      },
+    });
+  }
+
   private cargarInicial(): void {
     this.cargandoInicial.set(true);
 
     forkJoin({
-      pacientes: this.citaService.listarPacientesResumen(),
       especialidades: this.citaService.listarEspecialidadesResumen(),
       programadas: this.citaService.listar(1),
     }).subscribe({
-      next: ({ pacientes, especialidades, programadas }) => {
-        const cita = this.cita;
-        const lista = pacientes.object || [];
-
-        this.pacientes.set(
-          cita && !lista.some((p) => p.idPaciente === cita.idPaciente)
-            ? [{ idPaciente: cita.idPaciente, nombre: cita.paciente }, ...lista]
-            : lista,
-        );
+      next: ({ especialidades, programadas }) => {
         this.especialidades.set(especialidades.object || []);
         this.programadas.set((programadas.object || []).map(normalizarCita));
         this.cargandoInicial.set(false);
 
-        if (cita) {
-          this.prepararEdicion(cita);
+        if (this.cita) {
+          this.prepararEdicion(this.cita);
         }
       },
       error: (error) => {
@@ -219,7 +457,13 @@ export class CitaFormModalComponent implements OnInit {
   }
 
   private prepararEdicion(cita: CitaFila): void {
-    this.idPaciente.set(cita.idPaciente);
+    this.paciente.set({
+      idPaciente: cita.idPaciente,
+      nombre: cita.paciente,
+      tipoDocumento: '',
+      numeroDocumento: '',
+      genero: '',
+    });
     this.fecha.set(cita.fecha);
     this.horaInicio.set(cita.inicio);
     this.horaSalida.set(cita.salida);
@@ -229,6 +473,13 @@ export class CitaFormModalComponent implements OnInit {
     if (DURACIONES.includes(duracion)) {
       this.duracion.set(duracion);
     }
+
+    const diferencia = Math.floor(
+      (fechaDesdeISO(cita.fecha).getTime() - inicioSemana(this.hoy).getTime()) /
+        86400000 /
+        DIAS_POR_PAGINA,
+    );
+    this.paginaAgenda.set(Math.min(Math.max(diferencia, 0), MAXIMO_PAGINAS));
 
     this.idMedico.set(cita.idMedico);
     this.cargandoMedicos.set(true);
@@ -317,6 +568,7 @@ export class CitaFormModalComponent implements OnInit {
     this.idMedico.set(null);
     this.medicos.set([]);
     this.horarios.set([]);
+    this.fecha.set('');
     this.limpiarHoras();
 
     if (id !== null) {
@@ -327,6 +579,8 @@ export class CitaFormModalComponent implements OnInit {
   onMedicoChange(id: number | null): void {
     this.idMedico.set(id);
     this.horarios.set([]);
+    this.fecha.set('');
+    this.paginaAgenda.set(0);
     this.limpiarHoras();
 
     if (id !== null) {
@@ -334,8 +588,20 @@ export class CitaFormModalComponent implements OnInit {
     }
   }
 
-  onFechaChange(valor: string): void {
-    this.fecha.set(valor);
+  paginaAnterior(): void {
+    this.paginaAgenda.update((pagina) => Math.max(pagina - 1, 0));
+  }
+
+  paginaSiguiente(): void {
+    this.paginaAgenda.update((pagina) => Math.min(pagina + 1, MAXIMO_PAGINAS));
+  }
+
+  seleccionarDia(dia: DiaAgenda): void {
+    if (dia.estado !== 'disponible') {
+      return;
+    }
+
+    this.fecha.set(dia.iso);
     this.limpiarHoras();
   }
 
@@ -355,21 +621,21 @@ export class CitaFormModalComponent implements OnInit {
 
   guardar(): void {
     const idUsuario = this.idUsuario();
-    const idPaciente = this.idPaciente();
+    const paciente = this.paciente();
     const idMedico = this.idMedico();
 
     if (
       !this.formularioValido() ||
       this.guardando() ||
       idUsuario === null ||
-      idPaciente === null ||
+      paciente === null ||
       idMedico === null
     ) {
       return;
     }
 
     const dto: CitaDTO = {
-      idPaciente,
+      idPaciente: paciente.idPaciente,
       idMedico,
       idUsuario,
       fechaCita: this.fecha(),
@@ -391,7 +657,7 @@ export class CitaFormModalComponent implements OnInit {
             (this.cita ? 'Cita actualizada con éxito' : 'Cita registrada con éxito'),
         );
         this.guardando.set(false);
-        this.guardado.emit();
+        this.guardado.emit(response.object);
       },
       error: (error: HttpErrorResponse) => {
         console.error(error);

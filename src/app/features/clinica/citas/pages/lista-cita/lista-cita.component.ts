@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { aISO, formatearFechaCorta, normalizar } from '../../../horarios/utils/calendario.util';
-import { CitaFila, OPCIONES_ESTADO, infoEstado } from '../../interface/cita.interface';
+import {  Cita, CitaFila, OPCIONES_ESTADO, infoEstado } from '../../interface/cita.interface';
 import { normalizarCita } from '../../utils/disponibilidad.util';
 import { CitaService } from '../../services/cita.service';
 import { ToastService } from '../../../../../core/services/toast.service';
@@ -63,6 +63,7 @@ export class ListaCitaComponent implements OnInit {
     () =>
       this.busqueda().trim() !== '' || this.filtroEstado() !== 'todos' || this.filtroFecha() !== '',
   );
+
 
   filas = computed(() => {
     const termino = normalizar(this.busqueda().trim());
@@ -152,9 +153,10 @@ export class ListaCitaComponent implements OnInit {
     this.citaEditar.set(null);
   }
 
-  handleGuardado(): void {
+  handleGuardado(cita: Cita): void {
     this.cerrarForm();
     this.cargar(true);
+    this.citaVer.set(normalizarCita(cita));
   }
 
   cancelar(cita: CitaFila): void {

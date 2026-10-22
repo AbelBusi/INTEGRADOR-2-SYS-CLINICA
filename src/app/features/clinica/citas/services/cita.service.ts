@@ -10,7 +10,9 @@ import {
   MedicoInfo,
   MedicoResumen,
   MensajeResponse,
-  PacienteResumen,
+  PacienteBusqueda,
+  PacienteInfo,
+  UsuarioRegistro,
 } from '../interface/cita.interface';
 
 @Injectable({
@@ -45,9 +47,21 @@ export class CitaService {
     return this.http.delete<MensajeResponse<null>>(`${this.baseUrl}/${id}`);
   }
 
-  listarPacientesResumen(): Observable<MensajeResponse<PacienteResumen[]>> {
-    return this.http.get<MensajeResponse<PacienteResumen[]>>(
-      `${environment.apiUrl}/pacientes/resumen`,
+  buscarPacientes(busqueda: string): Observable<MensajeResponse<PacienteBusqueda[]>> {
+    const params = new HttpParams().set('busqueda', busqueda);
+    return this.http.get<MensajeResponse<PacienteBusqueda[]>>(
+      `${environment.apiUrl}/pacientes/buscar`,
+      { params },
+    );
+  }
+
+  obtenerPaciente(id: number): Observable<MensajeResponse<PacienteInfo>> {
+    return this.http.get<MensajeResponse<PacienteInfo>>(`${environment.apiUrl}/pacientes/${id}`);
+  }
+
+  obtenerUsuario(id: number): Observable<MensajeResponse<UsuarioRegistro>> {
+    return this.http.get<MensajeResponse<UsuarioRegistro>>(
+      `${environment.apiUrl}/usuarios/${id}/roles`,
     );
   }
 
