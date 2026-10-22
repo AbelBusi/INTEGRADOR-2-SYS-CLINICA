@@ -87,7 +87,7 @@
         [ngModel]="filtroCargo()"
         (ngModelChange)="onCargoChange($event)"
         class="h-10 bg-white border border-gray-300 rounded-md px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
-        <option [ngValue]="null">Todos los cargos</option>
+        <option [ngValue]="null">Todos los cargos medicos</option>
         @for (cargo of cargos(); track cargo.idCargo) {
           <option [ngValue]="cargo.idCargo">{{ cargo.nombre }}</option>
         }
@@ -98,9 +98,9 @@
         [ngModel]="filtroEmpleado()"
         (ngModelChange)="onEmpleadoChange($event)"
         class="h-10 bg-white border border-gray-300 rounded-md px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
-        <option [ngValue]="null">Todos los empleados</option>
-        @for (empleado of opcionesEmpleado(); track empleado.idEmpleado) {
-          <option [ngValue]="empleado.idEmpleado">{{ empleado.nombre }}</option>
+        <option [ngValue]="null">Todos los medicos</option>
+        @for (empleado of opcionesEmpleado(); track empleado.idMedico) {
+          <option [ngValue]="empleado.idMedico">{{ empleado.nombre }}</option>
         }
       </select>
 

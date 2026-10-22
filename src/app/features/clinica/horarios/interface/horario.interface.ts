@@ -85,7 +85,7 @@ export interface EmpleadoLista {
 }
 
 export interface EmpleadoResumen {
-  idEmpleado: number;
+  idMedico: number;
   nombre: string;
 }
 

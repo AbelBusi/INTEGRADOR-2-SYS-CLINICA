@@ -44,7 +44,7 @@ export class HorarioService {
 
   listarEmpleadosResumen(): Observable<MensajeResponse<EmpleadoResumen[]>> {
     return this.http.get<MensajeResponse<EmpleadoResumen[]>>(
-      `${environment.apiUrl}/empleados/resumen`,
+      `${environment.apiUrl}/medicos/resumen`,
     );
   }
 
@@ -55,7 +55,7 @@ export class HorarioService {
   }
 
   listarCargosResumen(): Observable<MensajeResponse<CargoResumen[]>> {
-    return this.http.get<MensajeResponse<CargoResumen[]>>(`${environment.apiUrl}/cargos/resumen`);
+    return this.http.get<MensajeResponse<CargoResumen[]>>(`${environment.apiUrl}/cargos/resumen-medicos`);
   }
 
   obtenerUrlFoto(foto: string | null | undefined): string | null {

@@ -163,7 +163,7 @@ export class AgendaHorariosComponent implements OnInit {
     const idsCargo =
       this.filtroCargo() === null
         ? null
-        : new Set(this.opcionesEmpleado().map((e) => e.idEmpleado));
+        : new Set(this.opcionesEmpleado().map((e) => e.idMedico));
 
     return this.horariosActivos().filter((h) => {
       if (idEmpleado !== null && h.idEmpleado !== idEmpleado) {

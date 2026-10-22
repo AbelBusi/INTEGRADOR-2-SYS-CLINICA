@@ -27,7 +27,7 @@ export const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = 
     title: 'Gestión de Horarios',
     subtitle: 'Horarios de trabajo de doctores y recepcionistas',
   },
-  '/dashboard/citas': { title: 'Citas médicas', subtitle: 'Agenda y consultas programadas' },
+  '/dashboard/citasXD': { title: 'Citas médicas', subtitle: 'Agenda y consultas programadas' },
   '/dashboard/citas/nuevo': { title: 'Nueva cita', subtitle: 'Registrar cita médica' },
   '/dashboard/citas/por-doctor': {
     title: 'Citas por doctor',
@@ -42,6 +42,7 @@ export const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = 
   '/dashboard/usuarios': { title: 'Usuarios', subtitle: 'Usuarios disponibles' },
   '/dashboard/horarios': { title: 'Horarios', subtitle: 'Horarios disponibles' },
   '/dashboard/empleados': { title: 'Empleados', subtitle: 'Empleados disponibles' },
+  '/dashboard/citas': { title: 'Citas', subtitle: 'Citas disponibles' },
   '/dashboard/medicos': { title: 'Medicos', subtitle: 'Medicos disponibles' },
   '/dashboard/cargos': { title: 'Cargos', subtitle: 'Áreas de cargos' },
   '/dashboard/recepcionistas': { title: 'Recepcionistas', subtitle: 'Personal de recepción' },
@@ -156,6 +157,12 @@ export const MENU_BASE: NavItem[] = [
         permisos: ['ESPECIALIDAD_VER'],
       },
     ],
+  },
+  {
+    grupo: 'ATENCION MEDICA',
+    label: 'Citas Medicas',
+    icon: 'groups',
+    sub: [{ label: 'Ver Citas Medicas', route: '/dashboard/citas' }],
   },
   {
     grupo: 'ADMINISTRACION',

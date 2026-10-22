@@ -66,8 +66,8 @@
                   <option [ngValue]="null" disabled>
                     {{ cargandoEmpleados ? 'Cargando...' : 'Seleccione un empleado...' }}
                   </option>
-                  @for (empleado of empleados; track empleado.idEmpleado) {
-                    <option [ngValue]="empleado.idEmpleado">{{ empleado.nombre }}</option>
+                  @for (empleado of empleados; track empleado.idMedico) {
+                    <option [ngValue]="empleado.idMedico">{{ empleado.nombre }}</option>
                   }
                 </select>
                 @if (!cargandoEmpleados && empleados.length === 0) {

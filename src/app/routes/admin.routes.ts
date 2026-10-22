@@ -89,6 +89,13 @@ export const ADMIN_ROUTES: Routes = [
           ),
       },
       {
+        path: 'citas',
+        loadComponent: () =>
+          import('../features/clinica/citas/pages/lista-cita/lista-cita.component').then(
+            (m) => m.ListaCitaComponent,
+          ),
+      },
+      {
         canActivate: [permisoGuard],
         path: 'usuarios',
         data: { permisos: ['USUARIO_VER'] },
