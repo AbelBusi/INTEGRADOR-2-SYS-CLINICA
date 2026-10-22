@@ -236,6 +236,13 @@ public class PacienteServicioImpl implements IPacienteServicio {
         return pacienteRepositorio.listarResumen();
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public List<PacienteBusquedaDTO> listarResumen(String busqueda) {
+        return pacienteRepositorio.listarResumen(
+                busqueda == null ? null : busqueda.trim()
+        );    }
+
     private Paciente validarCambiarEstado(Integer id, EntidadEstado estado) {
 
         if (id == null || estado == null) {

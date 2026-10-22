@@ -1,9 +1,6 @@
 package com.salud.consultorio.repository;
 
-import com.salud.consultorio.dto.paciente.PacienteDetalleDTO;
-import com.salud.consultorio.dto.paciente.PacienteIDPorBuscarNroDocDTO;
-import com.salud.consultorio.dto.paciente.PacienteLeerDTO;
-import com.salud.consultorio.dto.paciente.PacienteResumenDTO;
+import com.salud.consultorio.dto.paciente.*;
 import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.entity.Paciente;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -159,5 +156,34 @@ public interface IPacienteRepositorio extends JpaRepository<Paciente, Integer> {
             ORDER BY pe.apellidos, pe.nombre
             """)
     List<PacienteResumenDTO> listarResumen();
+
+    @Query("""
+            SELECT new com.salud.consultorio.dto.paciente.PacienteBusquedaDTO(
+                pa.id,
+                CONCAT(pe.nombre, ' ', pe.apellidos),
+                td.descripcion,
+                pe.numeroDocumento,
+                pe.genero
+            )
+            FROM Paciente pa
+            JOIN pa.persona pe
+            JOIN pe.tipoDocumento td
+            WHERE pa.estado = 1
+              AND pe.estado = 1
+              AND td.estado = 1
+              AND (
+                    :busqueda IS NULL
+                    OR TRIM(:busqueda) = ''
+                    OR LOWER(pe.numeroDocumento) LIKE LOWER(CONCAT('%', :busqueda, '%'))
+                    OR LOWER(pe.nombre) LIKE LOWER(CONCAT('%', :busqueda, '%'))
+                    OR LOWER(pe.apellidos) LIKE LOWER(CONCAT('%', :busqueda, '%'))
+                    OR LOWER(CONCAT(pe.nombre, ' ', pe.apellidos))
+                       LIKE LOWER(CONCAT('%', :busqueda, '%'))
+              )
+            ORDER BY pe.apellidos, pe.nombre
+            """)
+    List<PacienteBusquedaDTO> listarResumen(
+            @Param("busqueda") String busqueda
+    );
 
 }

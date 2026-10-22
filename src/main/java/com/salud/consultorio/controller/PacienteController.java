@@ -216,5 +216,27 @@ public class PacienteController {
                 .build(), HttpStatus.OK);
     }
 
+    @Operation(
+            summary = "Buscar pacientes para selección",
+            description = "Permite buscar pacientes activos por número de documento, nombres o apellidos"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Búsqueda de pacientes realizada correctamente"
+            )
+    })
+    @GetMapping("/buscar")
+    public ResponseEntity<MensajeResponse> buscarPacientes(
+            @RequestParam(required = false) String busqueda
+    ) {
+
+        List<PacienteBusquedaDTO> lista = pacienteServicio.listarResumen(busqueda);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("BÚSQUEDA DE PACIENTES REALIZADA CORRECTAMENTE")
+                .object(lista)
+                .build(), HttpStatus.OK);
+    }
 
 }

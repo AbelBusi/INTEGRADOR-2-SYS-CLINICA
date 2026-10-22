@@ -36,4 +36,6 @@ public interface IPacienteServicio{
 
     List<PacienteResumenDTO> listarResumen();
 
+    List<PacienteBusquedaDTO> listarResumen(String busqueda);
+
 }
