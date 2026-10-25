@@ -12,6 +12,7 @@ import { VerDetalleCitaModalComponent } from '../../components/ver-detalle-cita-
 
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
+import { HistorialCitaModalComponent } from '../../components/historial-cita-modal/historial-cita-modal.component';
 
 @Component({
   selector: 'app-lista-cita',
@@ -22,6 +23,7 @@ import { TableColumn } from '../../../../../shared/components/custom-table/table
     CustomTableComponent,
     CitaFormModalComponent,
     VerDetalleCitaModalComponent,
+    HistorialCitaModalComponent,
   ],
   templateUrl: './lista-cita.component.html',
 })
@@ -37,6 +39,7 @@ export class ListaCitaComponent implements OnInit {
   filtroEstado = signal<number | 'todos'>('todos');
   filtroFecha = signal('');
   sortField = signal('');
+  citaHistorial = signal<CitaFila | null>(null);
 
   formAbierto = signal(false);
   citaEditar = signal<CitaFila | null>(null);
@@ -63,7 +66,6 @@ export class ListaCitaComponent implements OnInit {
     () =>
       this.busqueda().trim() !== '' || this.filtroEstado() !== 'todos' || this.filtroFecha() !== '',
   );
-
 
   filas = computed(() => {
     const termino = normalizar(this.busqueda().trim());

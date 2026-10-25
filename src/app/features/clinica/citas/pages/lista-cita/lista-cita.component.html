@@ -170,6 +170,11 @@
             <span class="material-icons text-[18px]">visibility</span>
           </button>
 
+          <button type="button" title="Ver historial" (click)="citaHistorial.set(row)"
+                  class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+            <span class="material-icons text-[18px]">history</span>
+          </button>
+
           @if (puedeModificar(row)) {
             <button
               type="button"
@@ -222,4 +227,8 @@
     [cita]="cita"
     (close)="citaVer.set(null)"
   ></app-ver-detalle-cita-modal>
+}
+
+@if (citaHistorial(); as cita) {
+  <app-historial-cita-modal [cita]="cita" (close)="citaHistorial.set(null)"></app-historial-cita-modal>
 }

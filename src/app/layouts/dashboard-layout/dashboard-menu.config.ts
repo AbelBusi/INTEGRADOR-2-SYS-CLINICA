@@ -42,6 +42,8 @@ export const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = 
   '/dashboard/usuarios': { title: 'Usuarios', subtitle: 'Usuarios disponibles' },
   '/dashboard/horarios': { title: 'Horarios', subtitle: 'Horarios disponibles' },
   '/dashboard/empleados': { title: 'Empleados', subtitle: 'Empleados disponibles' },
+  '/dashboard/pacientes-misCitas': { title: 'Mis citas', subtitle: 'Citas disponibles' },
+  '/dashboard/medicos-misCitas': { title: 'Mis citas', subtitle: 'Citas disponibles' },
   '/dashboard/citas': { title: 'Citas', subtitle: 'Citas disponibles' },
   '/dashboard/medicos': { title: 'Medicos', subtitle: 'Medicos disponibles' },
   '/dashboard/cargos': { title: 'Cargos', subtitle: 'Áreas de cargos' },
@@ -79,40 +81,12 @@ export const MENU_BASE: NavItem[] = [
     ],
   },
   {
-    label: 'Citas',
-    icon: 'calendar_today',
-    roles: ['ADMINISTRADORXD', 'RECEPCIONISTA'],
-    sub: [
-      { label: 'Ver citas', route: '/dashboard/citas', roles: ['ADMINISTRADOR'] },
-      {
-        label: 'Agendar cita',
-        route: '/dashboard/citas/nuevo',
-        roles: ['ADMINISTRADOR', 'RECEPCIONISTA'],
-      },
-      {
-        label: 'Historial de citas',
-        route: '/dashboard/historial-citas',
-        roles: ['RECEPCIONISTA'],
-      },
-      { label: 'Citas por doctor', route: '/dashboard/citas/por-doctor', roles: ['ADMINISTRADOR'] },
-    ],
-  },
-  {
     label: 'Mi Consultorio',
     icon: 'medical_services',
     roles: ['DOCTORXD'],
     sub: [
       { label: 'Mis citas', route: '/dashboard/mis-citas', roles: ['DOCTOR'] },
       { label: 'Mis pacientes', route: '/dashboard/mis-pacientes', roles: ['DOCTOR'] },
-    ],
-  },
-  {
-    label: 'Mi Salud',
-    icon: 'health_and_safety',
-    roles: ['PACIENTE'],
-    sub: [
-      { label: 'Mis citas', route: '/dashboard/mis-citas-paciente', roles: ['PACIENTE'] },
-      { label: 'Mi historia clínica', route: '/dashboard/mi-historia', roles: ['PACIENTE'] },
     ],
   },
   {
@@ -161,6 +135,7 @@ export const MENU_BASE: NavItem[] = [
   {
     grupo: 'ATENCION MEDICA',
     label: 'Citas Medicas',
+    permisos: ['CITA_VER'],
     icon: 'groups',
     sub: [{ label: 'Ver Citas Medicas', route: '/dashboard/citas' }],
   },
@@ -170,6 +145,21 @@ export const MENU_BASE: NavItem[] = [
     icon: 'local_hospital',
     permisos: ['CARGO_VER'],
     sub: [{ label: 'Ver Cargos', route: '/dashboard/cargos', permisos: ['CARGO_VER'] }],
+  },
+  {
+    grupo: 'ATENCION MEDICA',
+    label: 'Mis citas',
+    roles: ['PACIENTE'],
+    permisos: ['CITA_PACIENTE_VER'],
+    icon: 'local_hospital',
+    sub: [{ label: 'Mis citas', route: '/dashboard/pacientes-misCitas' }],
+  },
+  {
+    grupo: 'ATENCION MEDICA',
+    label: 'Mis Citas Asignadas',
+    roles: ['MEDICO'],
+    icon: 'local_hospital',
+    sub: [{ label: 'Mis citas', route: '/dashboard/medicos-misCitas' }],
   },
   {
     grupo: 'ADMINISTRACION',

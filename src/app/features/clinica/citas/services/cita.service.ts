@@ -7,6 +7,7 @@ import {
   Cita,
   CitaDTO,
   EspecialidadResumen,
+  HistorialCita,
   MedicoInfo,
   MedicoResumen,
   MensajeResponse,
@@ -39,8 +40,12 @@ export class CitaService {
     return this.http.put<MensajeResponse<Cita>>(`${this.baseUrl}/${id}`, dto);
   }
 
-  cancelar(id: number): Observable<MensajeResponse<null>> {
-    return this.http.patch<MensajeResponse<null>>(`${this.baseUrl}/${id}/cancelar`, null);
+  cancelar(id: number, observacion?: string): Observable<MensajeResponse<null>> {
+    const texto = observacion?.trim();
+    return this.http.patch<MensajeResponse<null>>(
+      `${this.baseUrl}/${id}/cancelar`,
+      texto ? { observacion: texto } : null,
+    );
   }
 
   eliminar(id: number): Observable<MensajeResponse<null>> {
@@ -93,5 +98,33 @@ export class CitaService {
             : throwError(() => error),
         ),
       );
+  }
+
+  listarMisCitasMedico(estado?: number): Observable<MensajeResponse<Cita[]>> {
+    return this.http.get<MensajeResponse<Cita[]>>(`${this.baseUrl}/mis-citas/medico`, {
+      params: this.paramsEstado(estado),
+    });
+  }
+
+  listarMisCitasPaciente(estado?: number): Observable<MensajeResponse<Cita[]>> {
+    return this.http.get<MensajeResponse<Cita[]>>(`${this.baseUrl}/mis-citas/paciente`, {
+      params: this.paramsEstado(estado),
+    });
+  }
+
+  atender(id: number, observacion?: string): Observable<MensajeResponse<null>> {
+    const texto = observacion?.trim();
+    return this.http.patch<MensajeResponse<null>>(
+      `${this.baseUrl}/${id}/atender`,
+      texto ? { observacion: texto } : null,
+    );
+  }
+
+  historial(idCita: number): Observable<MensajeResponse<HistorialCita[]>> {
+    return this.http.get<MensajeResponse<HistorialCita[]>>(`${this.baseUrl}/${idCita}/historial`);
+  }
+
+  private paramsEstado(estado?: number): HttpParams {
+    return estado !== undefined ? new HttpParams().set('estado', estado) : new HttpParams();
   }
 }

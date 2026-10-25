@@ -48,7 +48,7 @@ export class ListaMedicoComponent implements OnInit {
     { header: 'Colegiatura', field: 'numeroColegiatura', type: 'text' },
     { header: 'Teléfono', field: 'telefono', type: 'custom' },
     { header: 'Estado', field: 'estado', type: 'custom' },
-    { header: 'Acciones', field: 'id', type: 'custom' },
+    { header: 'Acciones', field: 'id', type: 'custom' , align: 'center' },
   ];
 
   constructor(

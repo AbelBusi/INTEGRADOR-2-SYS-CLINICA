@@ -138,3 +138,34 @@ export const DURACIONES = [15, 20, 30, 45, 60];
 export function infoEstado(estado: number): InfoEstadoCita {
   return ESTADOS_CITA[estado] ?? ESTADOS_CITA[0];
 }
+
+export type AccionHistorial =
+  'CREADA' | 'MODIFICADA' | 'REPROGRAMADA' | 'CANCELADA' | 'ATENDIDA' | 'ELIMINADA';
+
+export interface HistorialCita {
+  id: number;
+  idCita: number;
+  accion: AccionHistorial;
+  fechaEvento: string | number[];
+  idUsuario: number;
+  usuario: string;
+  nombreUsuario: string;
+  observacion: string | null;
+  datosAnteriores: Record<string, unknown> | null;
+  datosNuevos: Record<string, unknown> | null;
+}
+
+export interface InfoAccionHistorial {
+  texto: string;
+  icono: string;
+  punto: string;
+}
+
+export const ACCIONES_HISTORIAL: Record<AccionHistorial, InfoAccionHistorial> = {
+  CREADA: { texto: 'Cita registrada', icono: 'event', punto: 'bg-[#0d6b68]' },
+  MODIFICADA: { texto: 'Datos modificados', icono: 'edit', punto: 'bg-[#58595B]' },
+  REPROGRAMADA: { texto: 'Cita reprogramada', icono: 'update', punto: 'bg-amber-500' },
+  CANCELADA: { texto: 'Cita cancelada', icono: 'event_busy', punto: 'bg-[#D9182A]' },
+  ATENDIDA: { texto: 'Atención médica registrada', icono: 'task_alt', punto: 'bg-[#0d6b68]' },
+  ELIMINADA: { texto: 'Cita eliminada', icono: 'delete', punto: 'bg-neutral-400' },
+};
