@@ -128,5 +128,13 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
             """)
     boolean esEmpleado(@Param("idUsuario") Integer idUsuario);
 
-
+    @Query("""
+        SELECT CASE WHEN COUNT(ur) > 0 THEN true ELSE false END
+        FROM UsuarioRol ur
+        WHERE ur.usuario.id = :idUsuario
+          AND ur.estado = 1
+          AND ur.rol.estado = 1
+          AND UPPER(ur.rol.nombre) = :nombreRol
+        """)
+    boolean tieneRolActivo(@Param("idUsuario") Integer idUsuario, @Param("nombreRol") String nombreRol);
 }

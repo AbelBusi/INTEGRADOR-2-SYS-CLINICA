@@ -157,4 +157,7 @@ public interface IMedicoRepositorio extends JpaRepository<Medico, Integer> {
             ORDER BY p.apellidos, p.nombre
             """)
     List<MedicoResumenDTO> listarResumen();
+
+    Optional<Medico> findByEmpleado_Persona_Id(Integer idPersona);
+
 }

@@ -186,4 +186,6 @@ public interface IPacienteRepositorio extends JpaRepository<Paciente, Integer> {
             @Param("busqueda") String busqueda
     );
 
+    Optional<Paciente> findByPersona_Id(Integer idPersona);
+
 }

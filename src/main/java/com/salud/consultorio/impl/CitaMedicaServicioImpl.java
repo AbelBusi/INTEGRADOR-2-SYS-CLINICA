@@ -1,27 +1,35 @@
 package com.salud.consultorio.impl;
 
+import com.salud.consultorio.auth.UsuarioAutenticadoProvider;
 import com.salud.consultorio.dto.citaMedica.CitaMedicaActualizarDTO;
 import com.salud.consultorio.dto.citaMedica.CitaMedicaCrearDTO;
 import com.salud.consultorio.dto.citaMedica.CitaMedicaRespuestaDTO;
 import com.salud.consultorio.model.entity.CitaMedica;
+import com.salud.consultorio.model.entity.Empleado;
 import com.salud.consultorio.model.entity.Medico;
 import com.salud.consultorio.model.entity.Paciente;
 import com.salud.consultorio.model.entity.Usuario;
+import com.salud.consultorio.model.enums.AccionHistorialCita;
 import com.salud.consultorio.repository.ICitaMedicaRepositorio;
 import com.salud.consultorio.repository.IHorarioAtencionRepositorio;
 import com.salud.consultorio.repository.IMedicoRepositorio;
 import com.salud.consultorio.repository.IPacienteRepositorio;
 import com.salud.consultorio.repository.IUsuarioRepositorio;
 import com.salud.consultorio.service.ICitaMedicaServicio;
+import com.salud.consultorio.service.IHistorialCitaServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -35,11 +43,19 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
     private static final int ENTIDAD_ACTIVA = 1;
 
+    private static final String ROL_MEDICO = "MEDICO";
+
     private final ICitaMedicaRepositorio citaMedicaRepositorio;
     private final IPacienteRepositorio pacienteRepositorio;
     private final IMedicoRepositorio medicoRepositorio;
     private final IUsuarioRepositorio usuarioRepositorio;
     private final IHorarioAtencionRepositorio horarioAtencionRepositorio;
+    private final IHistorialCitaServicio historialCitaServicio;
+    private final UsuarioAutenticadoProvider usuarioAutenticadoProvider;
+
+    // ---------------------------------------------------------------------
+    // Consultas
+    // ---------------------------------------------------------------------
 
     @Transactional(readOnly = true)
     @Override
@@ -56,6 +72,30 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
     @Transactional(readOnly = true)
     @Override
+    public List<CitaMedicaRespuestaDTO> listaMisCitasMedico(Integer estado) {
+
+        validarEstadoConsulta(estado);
+
+        Medico medico = obtenerMedicoAutenticado();
+
+        return citaMedicaRepositorio.listaPorMedico(medico.getId(), estado);
+
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<CitaMedicaRespuestaDTO> listaMisCitasPaciente(Integer estado) {
+
+        validarEstadoConsulta(estado);
+
+        Paciente paciente = obtenerPacienteAutenticado();
+
+        return citaMedicaRepositorio.listaPorPaciente(paciente.getId(), estado);
+
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public CitaMedicaRespuestaDTO entidadPorID(Integer id) {
 
         return citaMedicaRepositorio.buscarDetallePorId(id).orElseThrow(
@@ -63,6 +103,10 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         );
 
     }
+
+    // ---------------------------------------------------------------------
+    // Operaciones
+    // ---------------------------------------------------------------------
 
     @Transactional
     @Override
@@ -87,7 +131,11 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
                 .estado(CITA_PROGRAMADA)
                 .build();
 
-        return toDto(citaMedicaRepositorio.save(cita));
+        CitaMedica guardada = citaMedicaRepositorio.save(cita);
+
+        historialCitaServicio.registrar(guardada, AccionHistorialCita.CREADA, null, snapshot(guardada), null);
+
+        return toDto(guardada);
 
     }
 
@@ -95,9 +143,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
     @Override
     public CitaMedicaRespuestaDTO actualizar(CitaMedicaActualizarDTO dto, Integer id) {
 
-        CitaMedica cita = citaMedicaRepositorio.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("No se encuentra la cita médica")
-        );
+        CitaMedica cita = obtenerCitaBloqueada(id);
 
         validarCitaProgramada(cita, "editar");
 
@@ -106,8 +152,37 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         Paciente paciente = obtenerPacienteActivo(dto.idPaciente());
         Medico medico = obtenerMedicoActivoBloqueado(dto.idMedico());
         Usuario usuario = obtenerUsuarioActivo(dto.idUsuario());
+        String motivo = dto.motivo().trim();
 
-        validarDisponibilidadMedico(medico, dto.fechaCita(), dto.horaInicio(), dto.horaSalida(), cita.getId());
+        boolean cambioAgenda = !Objects.equals(cita.getMedico().getId(), medico.getId())
+                || !cita.getFechaCita().equals(dto.fechaCita())
+                || !cita.getHoraInicio().equals(dto.horaInicio())
+                || !cita.getHoraSalida().equals(dto.horaSalida());
+
+        boolean cambioAdministrativo = !Objects.equals(cita.getPaciente().getId(), paciente.getId())
+                || !Objects.equals(cita.getUsuario().getId(), usuario.getId())
+                || !cita.getMotivo().equals(motivo);
+
+        // Sin cambios reales: no se modifica la cita ni se genera evento
+        if (!cambioAgenda && !cambioAdministrativo) {
+            return toDto(cita);
+        }
+
+        // Reprogramar exige disponibilidad del médico y ausencia de solapamientos
+        if (cambioAgenda) {
+            validarDisponibilidadMedico(medico, dto.fechaCita(), dto.horaInicio(), dto.horaSalida(), cita.getId());
+        }
+
+        Map<String, Object> anteriores = new LinkedHashMap<>();
+        Map<String, Object> nuevos = new LinkedHashMap<>();
+
+        registrarCambio("idPaciente", cita.getPaciente().getId(), paciente.getId(), anteriores, nuevos);
+        registrarCambio("idMedico", cita.getMedico().getId(), medico.getId(), anteriores, nuevos);
+        registrarCambio("idUsuario", cita.getUsuario().getId(), usuario.getId(), anteriores, nuevos);
+        registrarCambio("fechaCita", cita.getFechaCita().toString(), dto.fechaCita().toString(), anteriores, nuevos);
+        registrarCambio("horaInicio", cita.getHoraInicio().toString(), dto.horaInicio().toString(), anteriores, nuevos);
+        registrarCambio("horaSalida", cita.getHoraSalida().toString(), dto.horaSalida().toString(), anteriores, nuevos);
+        registrarCambio("motivo", cita.getMotivo(), motivo, anteriores, nuevos);
 
         cita.setPaciente(paciente);
         cita.setMedico(medico);
@@ -115,7 +190,13 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         cita.setFechaCita(dto.fechaCita());
         cita.setHoraInicio(dto.horaInicio());
         cita.setHoraSalida(dto.horaSalida());
-        cita.setMotivo(dto.motivo().trim());
+        cita.setMotivo(motivo);
+
+        AccionHistorialCita accion = cambioAgenda
+                ? AccionHistorialCita.REPROGRAMADA
+                : AccionHistorialCita.MODIFICADA;
+
+        historialCitaServicio.registrar(cita, accion, anteriores, nuevos, null);
 
         return toDto(cita);
 
@@ -123,15 +204,36 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
     @Transactional
     @Override
-    public void cancelar(Integer id) {
+    public void cancelar(Integer id, String observacion) {
 
-        CitaMedica cita = citaMedicaRepositorio.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("No se encuentra la cita médica")
-        );
+        CitaMedica cita = obtenerCitaBloqueada(id);
 
         validarCitaProgramada(cita, "cancelar");
 
+        String detalle = normalizarObservacion(observacion);
+
         cita.setEstado(CITA_CANCELADA);
+
+        historialCitaServicio.registrar(cita, AccionHistorialCita.CANCELADA,
+                Map.of("estado", CITA_PROGRAMADA), Map.of("estado", CITA_CANCELADA), detalle);
+
+    }
+
+    @Transactional
+    @Override
+    public void atender(Integer id, String observacion) {
+
+        CitaMedica cita = obtenerCitaBloqueada(id);
+
+        // Solo una cita programada puede atenderse (no canceladas, ya atendidas, etc.)
+        validarCitaProgramada(cita, "atender");
+
+        String detalle = normalizarObservacion(observacion);
+
+        cita.setEstado(CITA_ATENDIDA);
+
+        historialCitaServicio.registrar(cita, AccionHistorialCita.ATENDIDA,
+                Map.of("estado", CITA_PROGRAMADA), Map.of("estado", CITA_ATENDIDA), detalle);
 
     }
 
@@ -139,15 +241,135 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
     @Override
     public void eliminarPorId(Integer id) {
 
-        CitaMedica cita = citaMedicaRepositorio.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("No se encuentra la cita médica")
-        );
+        CitaMedica cita = obtenerCitaBloqueada(id);
 
         if (cita.getEstado() == CITA_ELIMINADA) {
             throw new IllegalArgumentException("La cita médica ya se encuentra eliminada.");
         }
 
+        Integer estadoAnterior = cita.getEstado();
+
         cita.setEstado(CITA_ELIMINADA);
+
+        historialCitaServicio.registrar(cita, AccionHistorialCita.ELIMINADA,
+                Map.of("estado", estadoAnterior), Map.of("estado", CITA_ELIMINADA), null);
+
+    }
+
+    // ---------------------------------------------------------------------
+    // Identidad del usuario autenticado
+    // ---------------------------------------------------------------------
+
+    private Medico obtenerMedicoAutenticado() {
+
+        Usuario usuario = usuarioAutenticadoProvider.obtener();
+
+        if (usuario.getEstado() != ENTIDAD_ACTIVA) {
+            throw new AccessDeniedException("El usuario autenticado no se encuentra activo.");
+        }
+
+        if (!usuarioRepositorio.tieneRolActivo(usuario.getId(), ROL_MEDICO)) {
+            throw new AccessDeniedException("El usuario autenticado no tiene el rol MEDICO activo.");
+        }
+
+        Medico medico = medicoRepositorio.findByEmpleado_Persona_Id(usuario.getPersona().getId()).orElseThrow(
+                () -> new AccessDeniedException("El usuario autenticado no está asociado a un médico.")
+        );
+
+        Empleado empleado = medico.getEmpleado();
+
+        if (medico.getEstado() != ENTIDAD_ACTIVA
+                || empleado.getEstado() != ENTIDAD_ACTIVA
+                || empleado.getPersona().getEstado() != ENTIDAD_ACTIVA) {
+            throw new AccessDeniedException("El médico asociado al usuario no se encuentra activo.");
+        }
+
+        return medico;
+
+    }
+
+    private Paciente obtenerPacienteAutenticado() {
+
+        Usuario usuario = usuarioAutenticadoProvider.obtener();
+
+        if (usuario.getEstado() != ENTIDAD_ACTIVA) {
+            throw new AccessDeniedException("El usuario autenticado no se encuentra activo.");
+        }
+
+        Paciente paciente = pacienteRepositorio.findByPersona_Id(usuario.getPersona().getId()).orElseThrow(
+                () -> new AccessDeniedException("El usuario autenticado no está asociado a un paciente.")
+        );
+
+        if (paciente.getEstado() != ENTIDAD_ACTIVA || paciente.getPersona().getEstado() != ENTIDAD_ACTIVA) {
+            throw new AccessDeniedException("El paciente asociado al usuario no se encuentra activo.");
+        }
+
+        return paciente;
+
+    }
+
+    // ---------------------------------------------------------------------
+    // Validaciones y utilidades privadas
+    // ---------------------------------------------------------------------
+
+    private void validarEstadoConsulta(Integer estado) {
+
+        if (estado != null && (estado < CITA_PROGRAMADA || estado > CITA_REPROGRAMADA)) {
+            throw new IllegalArgumentException(
+                    "El estado debe ser 1 (programada), 2 (cancelada), 3 (atendida) o 4 (reprogramada)."
+            );
+        }
+
+    }
+
+    private CitaMedica obtenerCitaBloqueada(Integer id) {
+
+        return citaMedicaRepositorio.buscarPorIdBloqueado(id).orElseThrow(
+                () -> new EntityNotFoundException("No se encuentra la cita médica")
+        );
+
+    }
+
+    private String normalizarObservacion(String observacion) {
+
+        if (observacion == null || observacion.isBlank()) {
+            return null;
+        }
+
+        String limpia = observacion.trim();
+
+        if (limpia.length() > 300) {
+            throw new IllegalArgumentException("La observación no puede superar los 300 caracteres.");
+        }
+
+        return limpia;
+
+    }
+
+    private Map<String, Object> snapshot(CitaMedica c) {
+
+        Map<String, Object> datos = new LinkedHashMap<>();
+
+        datos.put("idPaciente", c.getPaciente().getId());
+        datos.put("idMedico", c.getMedico().getId());
+        datos.put("idUsuario", c.getUsuario().getId());
+        datos.put("fechaCita", c.getFechaCita().toString());
+        datos.put("horaInicio", c.getHoraInicio().toString());
+        datos.put("horaSalida", c.getHoraSalida().toString());
+        datos.put("motivo", c.getMotivo());
+        datos.put("estado", c.getEstado());
+
+        return datos;
+
+    }
+
+    private void registrarCambio(String campo, Object anterior, Object nuevo,
+                                 Map<String, Object> anteriores, Map<String, Object> nuevos) {
+
+        if (!Objects.equals(anterior, nuevo)) {
+            anteriores.put(campo, anterior);
+            nuevos.put(campo, nuevo);
+        }
 
     }
 
