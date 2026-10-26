@@ -3,13 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { aISO, formatearFechaCorta, normalizar } from '../../../horarios/utils/calendario.util';
-import {  Cita, CitaFila, OPCIONES_ESTADO, infoEstado } from '../../interface/cita.interface';
+import { Cita, CitaFila, OPCIONES_ESTADO, infoEstado } from '../../interface/cita.interface';
 import { normalizarCita } from '../../utils/disponibilidad.util';
 import { CitaService } from '../../services/cita.service';
 import { ToastService } from '../../../../../core/services/toast.service';
-import { CitaFormModalComponent } from '../../components/cita-form-modal/cita-form-modal.component';
 import { VerDetalleCitaModalComponent } from '../../components/ver-detalle-cita-modal/ver-detalle-cita-modal.component';
-
+import { CitaCrearModalComponent } from '../../components/cita-crear-modal/cita-crear-modal.component';
+import { CitaEditarModalComponent } from '../../components/cita-editar-modal/cita-editar-modal.component';
+import { RegularizarCitaModalComponent } from '../../components/regularizar-cita-modal/regularizar-cita-modal.component';
+import { puedeCancelarCita, MOTIVO_NO_CANCELABLE } from '../../utils/ventana-cita.util';
+import { ResolucionRegularizacion } from '../../interface/cita.interface';
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
 import { HistorialCitaModalComponent } from '../../components/historial-cita-modal/historial-cita-modal.component';
@@ -21,9 +24,11 @@ import { HistorialCitaModalComponent } from '../../components/historial-cita-mod
     CommonModule,
     FormsModule,
     CustomTableComponent,
-    CitaFormModalComponent,
+    CitaCrearModalComponent,
+    CitaEditarModalComponent,
     VerDetalleCitaModalComponent,
     HistorialCitaModalComponent,
+    RegularizarCitaModalComponent,
   ],
   templateUrl: './lista-cita.component.html',
 })
@@ -41,6 +46,65 @@ export class ListaCitaComponent implements OnInit {
   sortField = signal('');
   citaHistorial = signal<CitaFila | null>(null);
 
+  idsPendientes = signal<Set<number>>(new Set());
+  soloPendientes = signal(false);
+  citaRegularizar = signal<CitaFila | null>(null);
+
+  totalPendientes = computed(
+    () => this.citas().filter((c) => this.idsPendientes().has(c.id)).length,
+  );
+
+  readonly motivoNoCancelable = MOTIVO_NO_CANCELABLE;
+
+  estaPendiente(cita: CitaFila): boolean {
+    return this.idsPendientes().has(cita.id);
+  }
+
+  puedeCancelar(cita: CitaFila): boolean {
+    return puedeCancelarCita(cita);
+  }
+
+  cerrarRegularizar(): void {
+    if (!this.procesando()) {
+      this.citaRegularizar.set(null);
+    }
+  }
+
+  confirmarRegularizacion(datos: {
+    resolucion: ResolucionRegularizacion;
+    observacion: string;
+  }): void {
+    const cita = this.citaRegularizar();
+
+    if (!cita || this.procesando()) {
+      return;
+    }
+
+    this.procesando.set(true);
+
+    this.citaService.regularizar(cita.id, datos.resolucion, datos.observacion).subscribe({
+      next: (response) => {
+        this.toastService.success(response?.mensaje || 'Cita regularizada con éxito');
+        this.procesando.set(false);
+        this.citaRegularizar.set(null);
+        this.cargar(true);
+      },
+      error: (error) => {
+        console.error(error);
+        this.toastService.error(error.error?.mensaje || 'No se pudo regularizar la cita');
+        this.procesando.set(false);
+      },
+    });
+  }
+
+  private cargarPendientes(): void {
+    // En lista-cita: this.citaService.listarPendientesRegularizacion()
+    // En mis-citas-medico: this.citaService.listarMisPendientesRegularizacionMedico()
+    this.citaService.listarPendientesRegularizacion().subscribe({
+      next: (response) => this.idsPendientes.set(new Set((response.object || []).map((c) => c.id))),
+      error: (error) => console.error('No se pudieron cargar las citas pendientes:', error),
+    });
+  }
   formAbierto = signal(false);
   citaEditar = signal<CitaFila | null>(null);
   citaVer = signal<CitaFila | null>(null);
@@ -52,7 +116,7 @@ export class ListaCitaComponent implements OnInit {
     { header: 'Horario', field: 'inicio', type: 'custom' },
     { header: 'Motivo', field: 'motivo', type: 'custom' },
     { header: 'Estado', field: 'estado', type: 'custom' },
-    { header: 'Acciones', field: 'id', type: 'custom',align:'center' },
+    { header: 'Acciones', field: 'id', type: 'custom', align: 'center' },
   ];
 
   totalHoy = computed(
@@ -64,7 +128,10 @@ export class ListaCitaComponent implements OnInit {
 
   hayFiltros = computed(
     () =>
-      this.busqueda().trim() !== '' || this.filtroEstado() !== 'todos' || this.filtroFecha() !== '',
+      this.busqueda().trim() !== '' ||
+      this.filtroEstado() !== 'todos' ||
+      this.filtroFecha() !== '' ||
+      this.soloPendientes(),
   );
 
   filas = computed(() => {
@@ -77,6 +144,9 @@ export class ListaCitaComponent implements OnInit {
         return false;
       }
       if (fecha && c.fecha !== fecha) {
+        return false;
+      }
+      if (this.soloPendientes() && !this.idsPendientes().has(c.id)) {
         return false;
       }
       if (termino && !normalizar(`${c.paciente} ${c.medico} ${c.motivo}`).includes(termino)) {
@@ -108,6 +178,7 @@ export class ListaCitaComponent implements OnInit {
     this.citaService.listar().subscribe({
       next: (response) => {
         this.citas.set((response.object || []).map(normalizarCita));
+        this.cargarPendientes();
         this.cargando.set(false);
       },
       error: (error) => {
@@ -134,6 +205,7 @@ export class ListaCitaComponent implements OnInit {
     this.busqueda.set('');
     this.filtroEstado.set('todos');
     this.filtroFecha.set('');
+    this.soloPendientes.set(false);
   }
 
   handleSort(field: string): void {

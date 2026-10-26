@@ -13,6 +13,7 @@ import {
   MensajeResponse,
   PacienteBusqueda,
   PacienteInfo,
+  ResolucionRegularizacion,
   UsuarioRegistro,
 } from '../interface/cita.interface';
 
@@ -126,5 +127,26 @@ export class CitaService {
 
   private paramsEstado(estado?: number): HttpParams {
     return estado !== undefined ? new HttpParams().set('estado', estado) : new HttpParams();
+  }
+
+  listarPendientesRegularizacion(): Observable<MensajeResponse<Cita[]>> {
+    return this.http.get<MensajeResponse<Cita[]>>(`${this.baseUrl}/pendientes-regularizacion`);
+  }
+
+  listarMisPendientesRegularizacionMedico(): Observable<MensajeResponse<Cita[]>> {
+    return this.http.get<MensajeResponse<Cita[]>>(
+      `${this.baseUrl}/mis-citas/medico/pendientes-regularizacion`,
+    );
+  }
+
+  regularizar(
+    id: number,
+    resolucion: ResolucionRegularizacion,
+    observacion: string,
+  ): Observable<MensajeResponse<null>> {
+    return this.http.patch<MensajeResponse<null>>(`${this.baseUrl}/${id}/regularizar`, {
+      resolucion,
+      observacion: observacion.trim(),
+    });
   }
 }

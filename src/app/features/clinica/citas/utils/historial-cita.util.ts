@@ -112,18 +112,27 @@ function calcularDescripcion(evento: HistorialCita, nombres: NombresHistorial): 
 export function describirEvento(evento: HistorialCita, nombres: NombresHistorial): EventoVista {
   const info = ACCIONES_HISTORIAL[evento.accion];
   const fecha = parsearFechaEvento(evento.fechaEvento);
+  const regularizada = evento.datosNuevos?.['regularizacion'] === true;
 
   return {
     id: evento.id,
-    etiqueta: info.texto,
+    etiqueta: regularizada ? 'Cita regularizada' : info.texto,
     icono: info.icono,
     punto: info.punto,
     fecha: fecha.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }),
     hora: fecha.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
     responsable: evento.nombreUsuario?.trim() || evento.usuario,
-    descripcion: calcularDescripcion(evento, nombres),
+    descripcion: regularizada
+      ? evento.accion === 'ATENDIDA'
+        ? 'La cita venció sin resolverse y se regularizó como atendida.'
+        : 'La cita venció sin resolverse y se regularizó como no realizada (cancelada).'
+      : calcularDescripcion(evento, nombres),
     cambios: calcularCambios(evento, nombres),
     observacion: evento.observacion,
-    etiquetaObservacion: evento.accion === 'CANCELADA' ? 'Motivo de cancelación' : 'Observación',
+    etiquetaObservacion: regularizada
+      ? 'Justificación'
+      : evento.accion === 'CANCELADA'
+        ? 'Motivo de cancelación'
+        : 'Observación',
   };
 }

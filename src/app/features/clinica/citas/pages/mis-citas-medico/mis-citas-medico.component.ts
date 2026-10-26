@@ -10,6 +10,9 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { VerDetalleCitaModalComponent } from '../../components/ver-detalle-cita-modal/ver-detalle-cita-modal.component';
 import { HistorialCitaModalComponent } from '../../components/historial-cita-modal/historial-cita-modal.component';
 import { ObservacionCitaModalComponent } from '../../components/observacion-cita-modal/observacion-cita-modal.component';
+import { RegularizarCitaModalComponent } from '../../components/regularizar-cita-modal/regularizar-cita-modal.component';
+import { puedeCancelarCita, MOTIVO_NO_CANCELABLE } from '../../utils/ventana-cita.util';
+import { ResolucionRegularizacion } from '../../interface/cita.interface';
 
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
@@ -26,6 +29,7 @@ type TipoAccion = 'atender' | 'cancelar';
     VerDetalleCitaModalComponent,
     HistorialCitaModalComponent,
     ObservacionCitaModalComponent,
+    RegularizarCitaModalComponent,
   ],
   templateUrl: './mis-citas-medico.component.html',
 })
@@ -47,6 +51,64 @@ export class MisCitasMedicoComponent implements OnInit {
   citaHistorial = signal<CitaFila | null>(null);
   citaAccion = signal<{ cita: CitaFila; tipo: TipoAccion } | null>(null);
 
+  idsPendientes = signal<Set<number>>(new Set());
+  soloPendientes = signal(false);
+  citaRegularizar = signal<CitaFila | null>(null);
+
+  totalPendientes = computed(
+    () => this.citas().filter((c) => this.idsPendientes().has(c.id)).length,
+  );
+
+  readonly motivoNoCancelable = MOTIVO_NO_CANCELABLE;
+
+  estaPendiente(cita: CitaFila): boolean {
+    return this.idsPendientes().has(cita.id);
+  }
+
+  puedeCancelar(cita: CitaFila): boolean {
+    return puedeCancelarCita(cita);
+  }
+
+  cerrarRegularizar(): void {
+    if (!this.procesando()) {
+      this.citaRegularizar.set(null);
+    }
+  }
+
+  confirmarRegularizacion(datos: {
+    resolucion: ResolucionRegularizacion;
+    observacion: string;
+  }): void {
+    const cita = this.citaRegularizar();
+
+    if (!cita || this.procesando()) {
+      return;
+    }
+
+    this.procesando.set(true);
+
+    this.citaService.regularizar(cita.id, datos.resolucion, datos.observacion).subscribe({
+      next: (response) => {
+        this.toastService.success(response?.mensaje || 'Cita regularizada con éxito');
+        this.procesando.set(false);
+        this.citaRegularizar.set(null);
+        this.cargar(true);
+      },
+      error: (error) => {
+        console.error(error);
+        this.toastService.error(error.error?.mensaje || 'No se pudo regularizar la cita');
+        this.procesando.set(false);
+      },
+    });
+  }
+
+  private cargarPendientes(): void {
+    this.citaService.listarMisPendientesRegularizacionMedico().subscribe({
+      next: (response) => this.idsPendientes.set(new Set((response.object || []).map((c) => c.id))),
+      error: (error) => console.error('No se pudieron cargar las citas pendientes:', error),
+    });
+  }
+
   columns: TableColumn<CitaFila>[] = [
     { header: 'Paciente', field: 'paciente', type: 'custom' },
     { header: 'Fecha', field: 'fecha', sortable: true, type: 'custom' },
@@ -65,7 +127,10 @@ export class MisCitasMedicoComponent implements OnInit {
 
   hayFiltros = computed(
     () =>
-      this.busqueda().trim() !== '' || this.filtroEstado() !== 'todos' || this.filtroFecha() !== '',
+      this.busqueda().trim() !== '' ||
+      this.filtroEstado() !== 'todos' ||
+      this.filtroFecha() !== '' ||
+      this.soloPendientes,
   );
 
   filas = computed(() => {
@@ -81,6 +146,9 @@ export class MisCitasMedicoComponent implements OnInit {
         return false;
       }
       if (termino && !normalizar(`${c.paciente} ${c.motivo}`).includes(termino)) {
+        return false;
+      }
+      if (this.soloPendientes() && !this.idsPendientes().has(c.id)) {
         return false;
       }
       return true;
@@ -109,6 +177,7 @@ export class MisCitasMedicoComponent implements OnInit {
 
     this.citaService.listarMisCitasMedico().subscribe({
       next: (response) => {
+        this.cargarPendientes();
         this.citas.set((response.object || []).map(normalizarCita));
         this.cargando.set(false);
       },

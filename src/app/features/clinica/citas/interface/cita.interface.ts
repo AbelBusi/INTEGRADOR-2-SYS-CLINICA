@@ -1,4 +1,5 @@
 import { FechaApi, HoraApi } from '../../horarios/interface/horario.interface';
+export type ResolucionRegularizacion = 'ATENDIDA' | 'CANCELADA';
 
 export interface MensajeResponse<T> {
   mensaje: string;

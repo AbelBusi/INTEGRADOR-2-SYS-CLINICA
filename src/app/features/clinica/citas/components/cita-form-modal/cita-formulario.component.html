@@ -1,0 +1,476 @@
+@if (form.cargandoInicial()) {
+
+  <div class="flex items-center justify-center py-20">
+    <div class="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#0d6b68]"></div>
+  </div>
+
+} @else {
+
+  <form (ngSubmit)="form.guardar()" class="max-h-[82vh] overflow-y-auto p-6">
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+
+      <div class="space-y-4">
+
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Paciente</label>
+
+          @if (form.cargandoNuevoPaciente()) {
+
+            <div class="flex items-center gap-2 rounded border border-neutral-200 bg-neutral-50 px-3 py-3 text-xs font-medium text-neutral-500">
+              <span class="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-[#D9182A]"></span>
+              Cargando el paciente creado...
+            </div>
+
+          } @else if (form.paciente(); as p) {
+
+            <div class="flex items-center justify-between gap-3 rounded border border-[#0d6b68]/30 bg-[#0d6b68]/[0.05] px-3 py-2.5">
+              <div class="flex min-w-0 items-center gap-3">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white">
+                  <span class="material-icons text-[19px] text-[#58595B]">person</span>
+                </div>
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-bold text-neutral-900">{{ p.nombre }}</p>
+                  @if (p.numeroDocumento) {
+                    <p class="text-xs text-neutral-500">
+                      {{ p.tipoDocumento }} {{ p.numeroDocumento }}{{ p.genero ? ' · ' + p.genero : '' }}
+                    </p>
+                  }
+                </div>
+              </div>
+              <button
+                type="button"
+                (click)="form.quitarPaciente()"
+                class="shrink-0 rounded border border-neutral-300 bg-white px-2.5 py-1 text-xs font-semibold text-neutral-600 transition-colors hover:border-[#58595B] hover:bg-neutral-50">
+                Cambiar
+              </button>
+            </div>
+
+          } @else {
+
+            <div
+              class="flex items-center gap-2 rounded border border-neutral-300 bg-white px-3 transition-colors focus-within:border-[#58595B]">
+              <span class="material-icons text-[20px] text-neutral-400">search</span>
+              <input
+                type="text"
+                name="busquedaPaciente"
+                [ngModel]="form.textoBusqueda()"
+                (ngModelChange)="form.onBusquedaInput($event)"
+                autocomplete="off"
+                placeholder="Buscar por DNI, nombres o apellidos..."
+                class="w-full bg-transparent py-2 text-sm text-neutral-800 outline-none placeholder-neutral-400"
+              />
+              @if (form.buscando()) {
+                <span class="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-neutral-300 border-t-[#D9182A]"></span>
+              }
+            </div>
+
+            @if (form.textoBusqueda().trim().length >= form.MIN_BUSQUEDA) {
+
+              <div class="rounded border border-neutral-200">
+
+                @if (form.buscando()) {
+                  <p class="px-3 py-3 text-xs font-medium text-neutral-500">Buscando pacientes...</p>
+                } @else if (form.errorBusqueda()) {
+                  <p class="px-3 py-3 text-xs font-medium text-[#D9182A]">No se pudo realizar la búsqueda. Inténtalo de nuevo.</p>
+                } @else if (form.resultados().length > 0) {
+                  <ul class="max-h-52 divide-y divide-neutral-100 overflow-y-auto">
+                    @for (resultado of form.resultados(); track resultado.idPaciente) {
+                      <li>
+                        <button
+                          type="button"
+                          (click)="form.seleccionarPaciente(resultado)"
+                          class="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-neutral-50">
+                          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-100">
+                            <span class="material-icons text-[18px] text-[#58595B]">person</span>
+                          </div>
+                          <div class="min-w-0">
+                            <p class="truncate text-sm font-semibold text-neutral-800">{{ resultado.nombre }}</p>
+                            <p class="text-xs text-neutral-500">
+                              {{ resultado.tipoDocumento }} {{ resultado.numeroDocumento }}{{ resultado.genero ? ' · ' + resultado.genero : '' }}
+                            </p>
+                          </div>
+                        </button>
+                      </li>
+                    }
+                  </ul>
+                } @else if (form.busquedaCompleta()) {
+                  <div class="space-y-2.5 px-3 py-3">
+                    <p class="text-xs font-medium text-neutral-600">
+                      No se encontró ningún paciente con "{{ form.textoBusqueda().trim() }}".
+                    </p>
+                    <button
+                      type="button"
+                      (click)="form.abrirCrearPaciente()"
+                      class="inline-flex items-center gap-1.5 rounded border border-[#D9182A]/40 bg-white px-3 py-1.5 text-xs font-semibold text-[#D9182A] transition-colors hover:bg-[#D9182A]/10">
+                      <span class="material-icons text-[16px]">person_add</span>
+                      Crear paciente nuevo
+                    </button>
+                  </div>
+                }
+
+              </div>
+
+            } @else {
+              <p class="text-[11px] font-medium text-neutral-500">
+                Escribe al menos {{ form.MIN_BUSQUEDA }} caracteres del DNI, nombre o apellido.
+              </p>
+            }
+
+          }
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Especialidad</label>
+          <select
+            name="idEspecialidad"
+            [ngModel]="form.idEspecialidad()"
+            (ngModelChange)="form.onEspecialidadChange($event)"
+            class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]">
+            <option [ngValue]="null" disabled>Seleccione una especialidad...</option>
+            @for (especialidad of form.especialidades(); track especialidad.idEspecialidad) {
+              <option [ngValue]="especialidad.idEspecialidad">{{ especialidad.nombre }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Médico</label>
+          <select
+            name="idMedico"
+            [ngModel]="form.idMedico()"
+            (ngModelChange)="form.onMedicoChange($event)"
+            [disabled]="form.idEspecialidad() === null || form.cargandoMedicos()"
+            class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B] disabled:bg-neutral-100">
+            <option [ngValue]="null" disabled>
+              {{
+                form.idEspecialidad() === null
+                  ? 'Primero elige una especialidad'
+                  : form.cargandoMedicos()
+                    ? 'Cargando médicos...'
+                    : form.medicos().length === 0
+                      ? 'No hay médicos en esta especialidad'
+                      : 'Seleccione un médico...'
+              }}
+            </option>
+            @for (medico of form.medicos(); track medico.idMedico) {
+              <option [ngValue]="medico.idMedico">{{ medico.nombre }}</option>
+            }
+          </select>
+          @if (form.mismaPersona()) {
+            <p class="text-[11px] font-medium text-[#D9182A]">
+              El paciente y el médico no pueden ser la misma persona.
+            </p>
+          }
+        </div>
+
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Motivo</label>
+            <span
+              class="text-[11px] font-medium text-neutral-400"
+              [class.text-[#D9182A]]="form.motivo().length >= 200">
+              {{ form.motivo().length }}/200
+            </span>
+          </div>
+          <textarea
+            name="motivo"
+            [ngModel]="form.motivo()"
+            (ngModelChange)="form.motivo.set($event)"
+            maxlength="200"
+            rows="3"
+            class="w-full resize-none rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"
+            placeholder="Motivo de la consulta..."></textarea>
+        </div>
+
+      </div>
+
+      <div class="self-start rounded border border-neutral-200">
+
+        <div class="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5">
+          <span class="material-icons text-[18px] text-[#58595B]">calendar_month</span>
+          <p class="text-sm font-bold text-neutral-800">Agenda del médico</p>
+        </div>
+
+        <div class="space-y-5 p-4">
+
+          @if (form.idMedico() === null) {
+
+            <div class="flex flex-col items-center justify-center py-10 text-center">
+              <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
+                <span class="material-icons text-2xl text-gray-400">event_available</span>
+              </div>
+              <p class="max-w-[16rem] text-sm font-medium text-gray-500">
+                Selecciona un médico para ver qué días atiende y cuáles tiene disponibles.
+              </p>
+            </div>
+
+          } @else if (form.cargandoHorario()) {
+
+            <div class="flex items-center justify-center py-14">
+              <div class="h-7 w-7 animate-spin rounded-full border-4 border-gray-200 border-t-[#0d6b68]"></div>
+            </div>
+
+          } @else if (form.horarios().length === 0) {
+
+            <div class="flex items-start gap-2 rounded border border-amber-300 bg-amber-50 px-3 py-2.5">
+              <span class="material-icons mt-px text-[18px] text-amber-700">info</span>
+              <p class="text-xs leading-5 text-amber-800">El médico no tiene horarios de atención registrados.</p>
+            </div>
+
+          } @else {
+
+            <div>
+              <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Días de atención</p>
+              <div class="grid grid-cols-7 gap-1.5">
+                @for (patron of form.patronSemanal(); track patron.corto) {
+                  <div
+                    class="rounded border px-1 py-1.5 text-center"
+                    [ngClass]="patron.tramos.length
+                      ? 'border-[#0d6b68]/30 bg-[#0d6b68]/[0.06]'
+                      : 'border-neutral-200 bg-neutral-50'">
+                    <p
+                      class="text-[10px] font-bold"
+                      [ngClass]="patron.tramos.length ? 'text-[#0d6b68]' : 'text-neutral-400'">
+                      {{ patron.corto }}
+                    </p>
+                    @for (tramo of patron.tramos; track tramo) {
+                      <p class="text-[9px] font-medium leading-3 text-neutral-600">{{ tramo }}</p>
+                    } @empty {
+                      <p class="text-[9px] leading-3 text-neutral-400">No atiende</p>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+
+            <div>
+              <div class="mb-2 flex items-center justify-between">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Elige un día</p>
+
+                <div class="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    (click)="form.paginaAnterior()"
+                    [disabled]="form.paginaAgenda() === 0"
+                    aria-label="Semanas anteriores"
+                    class="flex h-7 w-7 items-center justify-center rounded border border-neutral-300 bg-white text-neutral-600 transition-colors hover:border-[#58595B] hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40">
+                    <span class="material-icons text-[18px]">chevron_left</span>
+                  </button>
+                  <span class="min-w-[9.5rem] text-center text-xs font-semibold text-neutral-700">{{ form.rotuloAgenda() }}</span>
+                  <button
+                    type="button"
+                    (click)="form.paginaSiguiente()"
+                    aria-label="Semanas siguientes"
+                    class="flex h-7 w-7 items-center justify-center rounded border border-neutral-300 bg-white text-neutral-600 transition-colors hover:border-[#58595B] hover:bg-neutral-50">
+                    <span class="material-icons text-[18px]">chevron_right</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-7 gap-1.5">
+                @for (dia of form.dias; track dia.numero) {
+                  <div class="pb-0.5 text-center text-[10px] font-bold uppercase tracking-wider text-neutral-400">{{ dia.corto }}</div>
+                }
+
+                @for (dia of form.diasAgenda(); track dia.iso) {
+                  <button
+                    type="button"
+                    (click)="form.seleccionarDia(dia)"
+                    [disabled]="dia.estado !== 'disponible'"
+                    class="relative flex h-14 flex-col items-center justify-center rounded border transition-colors"
+                    [ngClass]="form.claseDia(dia)">
+                    @if (dia.etiquetaMes) {
+                      <span class="absolute left-1 top-0.5 text-[9px] font-bold uppercase opacity-70">{{ dia.etiquetaMes }}</span>
+                    }
+                    <span class="text-sm font-bold leading-4">{{ dia.numero }}</span>
+                    <span class="text-[9px] font-semibold uppercase leading-3">{{ form.textoDia(dia) }}</span>
+                  </button>
+                }
+              </div>
+
+              <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-neutral-600">
+                  <span class="h-2.5 w-2.5 rounded-sm border border-[#0d6b68]/40 bg-[#0d6b68]/20"></span>Disponible
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-neutral-600">
+                  <span class="h-2.5 w-2.5 rounded-sm border border-[#D9182A]/30 bg-[#D9182A]/10"></span>Completo
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-neutral-600">
+                  <span class="h-2.5 w-2.5 rounded-sm border border-neutral-200 bg-neutral-100"></span>No atiende
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-neutral-600">
+                  <span class="h-2.5 w-2.5 rounded-sm bg-[#D9182A]"></span>Seleccionado
+                </span>
+              </div>
+            </div>
+
+            @if (form.fecha()) {
+
+              <div class="space-y-4 border-t border-neutral-200 pt-4">
+
+                <div>
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Fecha seleccionada</p>
+                  <p class="mt-0.5 text-sm font-bold text-neutral-900">{{ form.fechaTexto() }}</p>
+                  @if (form.errorFecha()) {
+                    <p class="mt-1 text-[11px] font-medium text-[#D9182A]">{{ form.errorFecha() }}</p>
+                  }
+                  @if (form.mensajeDisponibilidad()) {
+                    <p class="mt-1 text-[11px] font-medium text-amber-700">{{ form.mensajeDisponibilidad() }}</p>
+                  }
+                </div>
+
+                @if (form.tramos().length > 0) {
+
+                  <div>
+                    <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Jornada del día</p>
+                    <div class="flex flex-wrap gap-1.5">
+                      @for (tramo of form.tramos(); track tramo.inicio) {
+                        <span class="rounded-sm border-l-2 border-[#0d6b68] bg-[#0d6b68]/10 px-2 py-0.5 text-xs font-semibold text-neutral-800">
+                          {{ form.hora(tramo.inicio) }} - {{ form.hora(tramo.fin) }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Duración de la cita</label>
+                    <select
+                      name="duracion"
+                      [ngModel]="form.duracion()"
+                      (ngModelChange)="form.onDuracionChange($event)"
+                      class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]">
+                      @for (minutos of form.duraciones; track minutos) {
+                        <option [ngValue]="minutos">{{ minutos }} minutos</option>
+                      }
+                    </select>
+                  </div>
+
+                  <div>
+                    <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Horarios disponibles</p>
+
+                    @if (form.slots().length > 0) {
+                      <div class="flex flex-wrap gap-2">
+                        @for (slot of form.slots(); track slot) {
+                          <button
+                            type="button"
+                            (click)="form.seleccionarSlot(slot)"
+                            class="rounded border px-3 py-1.5 text-sm font-semibold transition-colors"
+                            [ngClass]="form.slotSeleccionado(slot)
+                              ? 'border-[#D9182A] bg-[#D9182A] text-white'
+                              : 'border-neutral-300 bg-white text-neutral-700 hover:border-[#58595B] hover:bg-neutral-50'">
+                            {{ form.hora(slot) }}
+                          </button>
+                        }
+                      </div>
+                    } @else {
+                      <p class="text-xs font-medium text-neutral-500">
+                        No hay horarios libres este día con una duración de {{ form.duracion() }} minutos.
+                      </p>
+                    }
+                  </div>
+
+                  @if (form.ocupados().length > 0) {
+                    <div>
+                      <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-500">Médico ya ocupado</p>
+                      <div class="flex flex-wrap gap-1.5">
+                        @for (ocupado of form.ocupados(); track ocupado.inicio) {
+                          <span class="rounded-sm border-l-2 border-[#D9182A] bg-[#D9182A]/10 px-2 py-0.5 text-xs font-semibold text-neutral-700">
+                            {{ form.hora(ocupado.inicio) }} - {{ form.hora(ocupado.fin) }}
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  }
+
+                  @if (form.ocupadosPaciente().length > 0) {
+                    <div>
+                      <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-700">El paciente ya tiene citas este día</p>
+                      <div class="flex flex-wrap gap-1.5">
+                        @for (ocupado of form.ocupadosPaciente(); track ocupado.inicio) {
+                          <span class="rounded-sm border-l-2 border-amber-500 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-neutral-700">
+                            {{ form.hora(ocupado.inicio) }} - {{ form.hora(ocupado.fin) }}
+                          </span>
+                        }
+                      </div>
+                    </div>
+                  }
+
+                  <div class="grid grid-cols-2 gap-3 border-t border-neutral-200 pt-4">
+                    <div>
+                      <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Hora de inicio</label>
+                      <input
+                        type="time"
+                        name="horaInicio"
+                        [ngModel]="form.horaInicio()"
+                        (ngModelChange)="form.horaInicio.set($event)"
+                        class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"
+                      />
+                    </div>
+
+                    <div>
+                      <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Hora de salida</label>
+                      <input
+                        type="time"
+                        name="horaSalida"
+                        [ngModel]="form.horaSalida()"
+                        (ngModelChange)="form.horaSalida.set($event)"
+                        class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"
+                      />
+                    </div>
+                  </div>
+
+                  @if (form.errorHorario()) {
+                    <p class="text-[11px] font-medium text-[#D9182A]">{{ form.errorHorario() }}</p>
+                  }
+
+                }
+
+              </div>
+
+            } @else {
+
+              <p class="border-t border-neutral-200 pt-4 text-xs font-medium text-neutral-500">
+                Toca un día disponible del calendario para ver sus horarios.
+              </p>
+
+            }
+
+          }
+
+        </div>
+      </div>
+
+    </div>
+
+    <div class="mt-6 flex flex-col-reverse items-stretch justify-end gap-2 border-t border-neutral-200 pt-4 sm:flex-row sm:items-center">
+      <button
+        type="button"
+        (click)="form.onClose()"
+        [disabled]="form.guardando()"
+        class="rounded border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-50">
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        [disabled]="!form.formularioValido() || form.guardando()"
+        class="flex items-center justify-center gap-2 rounded bg-[#D9182A] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:opacity-50">
+        @if (form.guardando()) {
+          <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+        }
+        {{ textoGuardar }}
+      </button>
+    </div>
+
+  </form>
+
+}
+
+@if (form.crearPacienteAbierto()) {
+  <app-crear-paciente-modal
+    [isOpen]="true"
+    [numeroDocumentoInicial]="form.documentoPrefill()"
+    (onClose)="form.crearPacienteAbierto.set(false)"
+    (onPacienteCreado)="form.onPacienteCreado($event)"
+  ></app-crear-paciente-modal>
+}
