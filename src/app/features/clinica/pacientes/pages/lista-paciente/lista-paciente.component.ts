@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -9,6 +9,9 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { VerDetallePacienteModalComponent } from '../../components/ver-detalle-paciente-modal/ver-detalle-paciente-modal.component';
 import { CrearPacienteModalComponent } from '../../components/crear-paciente-modal/crear-paciente-modal.component';
 import { EditarPacienteModalComponent } from '../../components/editar-paciente-modal/editar-paciente-modal.component';
+import { ExportModalComponent } from '../../../../../shared/components/export-modal/export-modal.component';
+import { ExportDataSource } from '../../../../../shared/export/interface/export.interface';
+import { crearPacienteExportConfig } from '../../export/paciente-export.config';
 
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
@@ -29,6 +32,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     CrearPacienteModalComponent,
     EditarPacienteModalComponent,
     TienePermisoDirective,
+    ExportModalComponent,
     BuscarEmpleadoModalComponent,
   ],
   templateUrl: './lista-paciente.component.html',
@@ -54,6 +58,29 @@ export class ListaPacienteComponent implements OnInit {
     { header: 'Estado', field: 'estado', type: 'custom' },
     { header: 'Acciones', field: 'id', type: 'custom', align: 'center' },
   ];
+
+  @ViewChild(CustomTableComponent) tabla?: CustomTableComponent<Paciente>;
+  isExportOpen = false;
+
+  readonly exportConfig = crearPacienteExportConfig(() => this.filtrosExportacion());
+  readonly exportDataSource: ExportDataSource<Paciente> = {
+    getPageRows: () => this.tabla?.paginatedData() ?? [],
+    getFilteredRows: () => this.pacientesFiltrados,
+  };
+
+  private filtrosExportacion(): string[] {
+    const estados: Record<FiltroEstado, string> = {
+      todos: 'Todos',
+      activo: 'Activos',
+      inactivo: 'Inactivos',
+    };
+    const filtros = [`Estado: ${estados[this.filtroEstado]}`];
+    if (this.search.trim()) {
+      filtros.push('Búsqueda por texto aplicada');
+    }
+    return filtros;
+  }
+
   constructor(
     private readonly pacienteService: PacienteService,
     private readonly toastService: ToastService,

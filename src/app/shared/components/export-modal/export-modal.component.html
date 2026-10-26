@@ -1,0 +1,315 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+  (click)="cancel()"
+>
+  <div
+    class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg border border-gray-200 bg-white"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="export-modal-title"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Encabezado -->
+    <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#58595B]">
+          <span class="material-icons text-[22px] text-white">file_download</span>
+        </div>
+        <div>
+          <h2 id="export-modal-title" class="text-base font-bold text-gray-900">Exportar reporte</h2>
+          <p class="text-xs text-gray-500">{{ config().title }}</p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        aria-label="Cerrar"
+        [disabled]="processing()"
+        (click)="cancel()"
+        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-50 hover:text-[#58595B] disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        <span class="material-icons text-[20px]">close</span>
+      </button>
+    </div>
+
+    <!-- Contenido -->
+    <div class="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4">
+      <!-- Nombres -->
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label for="export-report-name" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Nombre del reporte
+          </label>
+          <input
+            id="export-report-name"
+            type="text"
+            maxlength="120"
+            [ngModel]="reportName()"
+            (ngModelChange)="reportName.set($event)"
+            class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]"
+          />
+        </div>
+
+        <div>
+          <label for="export-file-name" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Nombre del archivo
+          </label>
+          <div class="flex">
+            <input
+              id="export-file-name"
+              type="text"
+              maxlength="100"
+              [ngModel]="fileName()"
+              (ngModelChange)="fileName.set($event)"
+              class="h-10 w-full min-w-0 rounded-l-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]"
+            />
+            <span class="inline-flex h-10 items-center rounded-r-md border border-l-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">
+              .{{ formatMeta[format()].extension }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formato -->
+      <div>
+        <p class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">Formato</p>
+        <div class="grid gap-2" [class.grid-cols-3]="formats().length >= 3" [class.grid-cols-2]="formats().length === 2" [class.grid-cols-1]="formats().length === 1">
+          @for (item of formats(); track item) {
+            <button
+              type="button"
+              [disabled]="processing()"
+              (click)="format.set(item)"
+              [ngClass]="
+                format() === item
+                  ? 'border-[#D9182A] bg-[#D9182A]/5 text-[#D9182A]'
+                  : 'border-gray-300 bg-white text-gray-700 hover:border-[#58595B] hover:bg-gray-50'
+              "
+              class="inline-flex h-10 items-center justify-center gap-2 rounded-md border text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <span class="material-icons text-[20px]">{{ formatMeta[item].icon }}</span>
+              {{ formatMeta[item].label }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Alcance -->
+      @if (scopes().length > 1) {
+        <div>
+          <p class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">Registros a exportar</p>
+          <div class="space-y-2">
+            @if (dataSource().getPageRows) {
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+                <input type="radio" name="export-scope" class="h-4 w-4 accent-[#D9182A]" [checked]="scope() === 'page'" (change)="scope.set('page')" />
+                Solo la página actual
+              </label>
+            }
+            @if (dataSource().getFilteredRows) {
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+                <input type="radio" name="export-scope" class="h-4 w-4 accent-[#D9182A]" [checked]="scope() === 'filtered'" (change)="scope.set('filtered')" />
+                Todos los resultados filtrados
+              </label>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Columnas -->
+      @if (allowColumnSelection()) {
+        <div>
+          <div class="mb-1.5 flex items-center justify-between">
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Columnas ({{ selectedCount() }}/{{ config().columns.length }})
+            </p>
+            <div class="flex items-center gap-3 text-xs font-semibold">
+              <button type="button" (click)="selectAllColumns()" class="text-[#58595B] hover:text-[#D9182A]">Todas</button>
+              <button type="button" (click)="clearColumns()" class="text-[#58595B] hover:text-[#D9182A]">Ninguna</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 gap-x-4 gap-y-2 rounded-md border border-gray-200 bg-gray-50 p-3 sm:grid-cols-2">
+            @for (column of config().columns; track column.key) {
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  class="h-4 w-4 accent-[#D9182A]"
+                  [checked]="isSelected(column.key)"
+                  [disabled]="column.required"
+                  (change)="toggleColumn(column.key)"
+                />
+                {{ column.header }}
+              </label>
+            }
+          </div>
+
+          @if (selectedCount() === 0) {
+            <p class="mt-1.5 text-xs font-medium text-[#D9182A]">Selecciona al menos una columna.</p>
+          }
+        </div>
+      }
+
+      <!-- Opciones por formato -->
+      @switch (format()) {
+        @case ('pdf') {
+          <div class="space-y-4 rounded-md border border-gray-200 p-4">
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Opciones de PDF</p>
+
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label for="pdf-page-size" class="mb-1.5 block text-xs font-semibold text-gray-600">Tamaño de página</label>
+                <select
+                  id="pdf-page-size"
+                  [ngModel]="pdf().pageSize"
+                  (ngModelChange)="setPdf('pageSize', $event)"
+                  class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]"
+                >
+                  @for (size of pageSizes; track size.value) {
+                    <option [ngValue]="size.value">{{ size.label }}</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <p class="mb-1.5 text-xs font-semibold text-gray-600">Orientación</p>
+                <div class="grid grid-cols-2 gap-2">
+                  @for (item of orientations; track item.value) {
+                    <button
+                      type="button"
+                      (click)="setPdf('orientation', item.value)"
+                      [ngClass]="
+                        pdf().orientation === item.value
+                          ? 'border-[#D9182A] bg-[#D9182A]/5 text-[#D9182A]'
+                          : 'border-gray-300 bg-white text-gray-700 hover:border-[#58595B] hover:bg-gray-50'
+                      "
+                      class="inline-flex h-10 items-center justify-center gap-1.5 rounded-md border text-sm font-medium transition-colors"
+                    >
+                      <span class="material-icons text-[18px]">{{ item.icon }}</span>
+                      {{ item.label }}
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <div>
+                <label for="pdf-margin" class="mb-1.5 block text-xs font-semibold text-gray-600">Márgenes</label>
+                <select
+                  id="pdf-margin"
+                  [ngModel]="pdf().margin"
+                  (ngModelChange)="setPdf('margin', $event)"
+                  class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]"
+                >
+                  @for (value of marginOptions; track value) {
+                    <option [ngValue]="value">{{ value }} mm</option>
+                  }
+                </select>
+              </div>
+
+              <div>
+                <label for="pdf-font-size" class="mb-1.5 block text-xs font-semibold text-gray-600">Tamaño de fuente</label>
+                <select
+                  id="pdf-font-size"
+                  [ngModel]="pdf().fontSize"
+                  (ngModelChange)="setPdf('fontSize', $event)"
+                  class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]"
+                >
+                  @for (value of fontSizeOptions; track value) {
+                    <option [ngValue]="value">{{ value }} pt</option>
+                  }
+                </select>
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+                <input type="checkbox" class="h-4 w-4 accent-[#D9182A]" [checked]="pdf().pageNumbers" (change)="setPdf('pageNumbers', !pdf().pageNumbers)" />
+                Numerar las páginas
+              </label>
+              <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+                <input type="checkbox" class="h-4 w-4 accent-[#D9182A]" [checked]="pdf().showFilters" (change)="setPdf('showFilters', !pdf().showFilters)" />
+                Mostrar los filtros aplicados en el encabezado
+              </label>
+            </div>
+
+            <p class="text-xs text-gray-500">
+              Las columnas se ajustan al ancho disponible y el encabezado de la tabla se repite en cada página.
+            </p>
+          </div>
+        }
+
+        @case ('excel') {
+          <div class="space-y-2 rounded-md border border-gray-200 p-4">
+            <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500">Opciones de Excel</p>
+            <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" class="h-4 w-4 accent-[#D9182A]" [checked]="excel().autoFilter" (change)="setExcel('autoFilter', !excel().autoFilter)" />
+              Activar filtros de Excel en el encabezado
+            </label>
+            <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" class="h-4 w-4 accent-[#D9182A]" [checked]="excel().freezeHeader" (change)="setExcel('freezeHeader', !excel().freezeHeader)" />
+              Inmovilizar la fila de encabezado
+            </label>
+          </div>
+        }
+
+        @case ('csv') {
+          <div class="space-y-3 rounded-md border border-gray-200 p-4">
+            <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Opciones de CSV</p>
+            <div>
+              <label for="csv-delimiter" class="mb-1.5 block text-xs font-semibold text-gray-600">Separador</label>
+              <select
+                id="csv-delimiter"
+                [ngModel]="csv().delimiter"
+                (ngModelChange)="setCsv('delimiter', $event)"
+                class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B] sm:w-80"
+              >
+                <option value=";">Punto y coma (;) — recomendado para Excel en español</option>
+                <option value=",">Coma (,)</option>
+              </select>
+            </div>
+            <p class="text-xs text-gray-500">Codificación UTF-8 con soporte de acentos y caracteres especiales.</p>
+          </div>
+        }
+      }
+
+      <!-- Metadatos -->
+      <div class="space-y-2">
+        @if (format() !== 'csv') {
+          <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" class="h-4 w-4 accent-[#D9182A]" [checked]="includeGeneratedDate()" (change)="includeGeneratedDate.set(!includeGeneratedDate())" />
+            Incluir la fecha de generación en el reporte
+          </label>
+        }
+        <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+          <input type="checkbox" class="h-4 w-4 accent-[#D9182A]" [checked]="appendDateToFileName()" (change)="appendDateToFileName.set(!appendDateToFileName())" />
+          Agregar la fecha al nombre del archivo
+        </label>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="flex flex-col-reverse gap-3 border-t border-gray-200 bg-[#fafafa] px-5 py-3 sm:flex-row sm:justify-end">
+      <button
+        type="button"
+        [disabled]="processing()"
+        (click)="cancel()"
+        class="inline-flex h-10 items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="button"
+        [disabled]="!canExport()"
+        (click)="generate()"
+        class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#D9182A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        @if (processing()) {
+          <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+          Generando...
+        } @else {
+          <span class="material-icons text-[20px]">download</span>
+          Generar reporte
+        }
+      </button>
+    </div>
+  </div>
+</div>
