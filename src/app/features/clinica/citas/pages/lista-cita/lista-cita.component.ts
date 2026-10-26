@@ -52,7 +52,7 @@ export class ListaCitaComponent implements OnInit {
     { header: 'Horario', field: 'inicio', type: 'custom' },
     { header: 'Motivo', field: 'motivo', type: 'custom' },
     { header: 'Estado', field: 'estado', type: 'custom' },
-    { header: 'Acciones', field: 'id', type: 'custom' },
+    { header: 'Acciones', field: 'id', type: 'custom',align:'center' },
   ];
 
   totalHoy = computed(

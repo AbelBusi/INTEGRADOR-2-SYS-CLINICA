@@ -187,6 +187,11 @@
                       <option [ngValue]="medico.idMedico">{{ medico.nombre }}</option>
                     }
                   </select>
+                  @if (mismaPersona()) {
+                    <p class="text-[11px] font-medium text-[#D9182A]">
+                      El paciente y el médico no pueden ser la misma persona.
+                    </p>
+                  }
                 </div>
 
                 <div class="space-y-1.5">

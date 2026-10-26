@@ -22,6 +22,7 @@ import {
   map,
   of,
   switchMap,
+  tap,
 } from 'rxjs';
 
 import { HorarioDia } from '../../../horarios/interface/horario.interface';
@@ -92,6 +93,7 @@ export class CitaFormModalComponent implements OnInit {
   readonly hoy = new Date();
   readonly hoyISO = aISO(this.hoy);
   readonly MIN_BUSQUEDA = 3;
+  documentoMedico = signal<string | null>(null);
 
   private readonly destroyRef = inject(DestroyRef);
   private readonly busqueda$ = new Subject<string>();
@@ -261,11 +263,19 @@ export class CitaFormModalComponent implements OnInit {
     return null;
   });
 
+  mismaPersona = computed(() => {
+    const documentoMedico = this.documentoMedico();
+    const documentoPaciente = this.paciente()?.numeroDocumento;
+
+    return !!documentoMedico && !!documentoPaciente && documentoMedico === documentoPaciente;
+  });
+
   formularioValido = computed(
     () =>
       this.idUsuario() !== null &&
       this.paciente() !== null &&
       this.idMedico() !== null &&
+      !this.mismaPersona() &&
       this.fecha() !== '' &&
       this.errorFecha() === null &&
       !this.cargandoHorario() &&
@@ -488,7 +498,7 @@ export class CitaFormModalComponent implements OnInit {
     this.citaService.obtenerMedico(cita.idMedico).subscribe({
       next: (response) => {
         const info = response.object;
-
+        this.documentoMedico.set(info.numeroDocumento);
         this.idEspecialidad.set(info.idEspecialidad);
         this.cargarMedicos(info.idEspecialidad, { idMedico: cita.idMedico, nombre: cita.medico });
         this.cargarHorarios(cita.idMedico, info.idEmpleado);
@@ -534,8 +544,14 @@ export class CitaFormModalComponent implements OnInit {
     const idEmpleado$ =
       idEmpleadoConocido !== undefined
         ? of(idEmpleadoConocido)
-        : this.citaService.obtenerMedico(idMedico).pipe(map((r) => r.object.idEmpleado));
-
+        : this.citaService.obtenerMedico(idMedico).pipe(
+            tap((r) => {
+              if (this.idMedico() === idMedico) {
+                this.documentoMedico.set(r.object.numeroDocumento);
+              }
+            }),
+            map((r) => r.object.idEmpleado),
+          );
     idEmpleado$.pipe(switchMap((id) => this.citaService.obtenerHorarios(id))).subscribe({
       next: (response) => {
         if (this.idMedico() === idMedico) {
@@ -578,6 +594,7 @@ export class CitaFormModalComponent implements OnInit {
 
   onMedicoChange(id: number | null): void {
     this.idMedico.set(id);
+    this.documentoMedico.set(null);
     this.horarios.set([]);
     this.fecha.set('');
     this.paginaAgenda.set(0);

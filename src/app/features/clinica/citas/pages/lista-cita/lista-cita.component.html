@@ -166,13 +166,18 @@
             type="button"
             title="Ver detalle"
             (click)="citaVer.set(row)"
-            class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+            class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
             <span class="material-icons text-[18px]">visibility</span>
+            <span>Ver detalle</span>
           </button>
 
-          <button type="button" title="Ver historial" (click)="citaHistorial.set(row)"
-                  class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+          <button
+            type="button"
+            title="Ver historial"
+            (click)="citaHistorial.set(row)"
+            class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
             <span class="material-icons text-[18px]">history</span>
+            <span>Ver historial</span>
           </button>
 
           @if (puedeModificar(row)) {
@@ -181,8 +186,9 @@
               title="Editar"
               (click)="abrirEditar(row)"
               [disabled]="procesando()"
-              class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
+              class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
               <span class="material-icons text-[18px]">edit</span>
+              <span>Editar</span>
             </button>
 
             <button
@@ -190,8 +196,9 @@
               title="Cancelar cita"
               (click)="cancelar(row)"
               [disabled]="procesando()"
-              class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 transition-colors hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 disabled:cursor-not-allowed disabled:opacity-50">
+              class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 disabled:cursor-not-allowed disabled:opacity-50">
               <span class="material-icons text-[18px]">event_busy</span>
+              <span>Cancelar cita</span>
             </button>
           }
 
@@ -200,8 +207,9 @@
             title="Eliminar"
             (click)="eliminar(row)"
             [disabled]="procesando()"
-            class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 transition-colors hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] disabled:cursor-not-allowed disabled:opacity-50">
+            class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] disabled:cursor-not-allowed disabled:opacity-50">
             <span class="material-icons text-[18px]">delete</span>
+            <span>Eliminar</span>
           </button>
 
         </div>
