@@ -1,198 +1,226 @@
 @if (form.cargandoInicial()) {
 
-  <div class="flex items-center justify-center py-20">
+  <div class="flex flex-1 items-center justify-center py-20">
     <div class="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#0d6b68]"></div>
   </div>
 
 } @else {
 
-  <form (ngSubmit)="form.guardar()" class="max-h-[82vh] overflow-y-auto p-6">
+  <form (ngSubmit)="form.guardar()" class="flex min-h-0 flex-1 flex-col">
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+    <div class="relative min-h-0 flex-1 overflow-y-auto lg:overflow-hidden">
+      <div class="grid grid-cols-1 lg:absolute lg:inset-0 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:grid-rows-[minmax(0,1fr)] lg:divide-x lg:divide-neutral-200">
 
-      <div class="space-y-4">
+        <!-- PASO 1: PACIENTE Y MÉDICO -->
+        <section class="space-y-4 p-4 sm:p-6 lg:overflow-y-auto">
 
-        <div class="space-y-1.5">
-          <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Paciente</label>
-
-          @if (form.cargandoNuevoPaciente()) {
-
-            <div class="flex items-center gap-2 rounded border border-neutral-200 bg-neutral-50 px-3 py-3 text-xs font-medium text-neutral-500">
-              <span class="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-[#D9182A]"></span>
-              Cargando el paciente creado...
-            </div>
-
-          } @else if (form.paciente(); as p) {
-
-            <div class="flex items-center justify-between gap-3 rounded border border-[#0d6b68]/30 bg-[#0d6b68]/[0.05] px-3 py-2.5">
-              <div class="flex min-w-0 items-center gap-3">
-                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white">
-                  <span class="material-icons text-[19px] text-[#58595B]">person</span>
-                </div>
-                <div class="min-w-0">
-                  <p class="truncate text-sm font-bold text-neutral-900">{{ p.nombre }}</p>
-                  @if (p.numeroDocumento) {
-                    <p class="text-xs text-neutral-500">
-                      {{ p.tipoDocumento }} {{ p.numeroDocumento }}{{ p.genero ? ' · ' + p.genero : '' }}
-                    </p>
-                  }
-                </div>
-              </div>
-              <button
-                type="button"
-                (click)="form.quitarPaciente()"
-                class="shrink-0 rounded border border-neutral-300 bg-white px-2.5 py-1 text-xs font-semibold text-neutral-600 transition-colors hover:border-[#58595B] hover:bg-neutral-50">
-                Cambiar
-              </button>
-            </div>
-
-          } @else {
-
-            <div
-              class="flex items-center gap-2 rounded border border-neutral-300 bg-white px-3 transition-colors focus-within:border-[#58595B]">
-              <span class="material-icons text-[20px] text-neutral-400">search</span>
-              <input
-                type="text"
-                name="busquedaPaciente"
-                [ngModel]="form.textoBusqueda()"
-                (ngModelChange)="form.onBusquedaInput($event)"
-                autocomplete="off"
-                placeholder="Buscar por DNI, nombres o apellidos..."
-                class="w-full bg-transparent py-2 text-sm text-neutral-800 outline-none placeholder-neutral-400"
-              />
-              @if (form.buscando()) {
-                <span class="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-neutral-300 border-t-[#D9182A]"></span>
+          <div class="flex items-center gap-3 border-b border-neutral-200 pb-3">
+            <span
+              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+              [ngClass]="paso1Completo ? 'bg-[#0d6b68]' : 'bg-[#58595B]'">
+              @if (paso1Completo) {
+                <span class="material-icons text-[16px]">check</span>
+              } @else {
+                1
               }
+            </span>
+            <div class="min-w-0">
+              <h4 class="text-sm font-bold text-neutral-900">Paciente y médico</h4>
+              <p class="text-xs text-neutral-500">Indica quién será atendido, con qué médico y el motivo.</p>
             </div>
+          </div>
 
-            @if (form.textoBusqueda().trim().length >= form.MIN_BUSQUEDA) {
+          <div class="space-y-1.5">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Paciente</label>
 
-              <div class="rounded border border-neutral-200">
+            @if (form.cargandoNuevoPaciente()) {
 
-                @if (form.buscando()) {
-                  <p class="px-3 py-3 text-xs font-medium text-neutral-500">Buscando pacientes...</p>
-                } @else if (form.errorBusqueda()) {
-                  <p class="px-3 py-3 text-xs font-medium text-[#D9182A]">No se pudo realizar la búsqueda. Inténtalo de nuevo.</p>
-                } @else if (form.resultados().length > 0) {
-                  <ul class="max-h-52 divide-y divide-neutral-100 overflow-y-auto">
-                    @for (resultado of form.resultados(); track resultado.idPaciente) {
-                      <li>
-                        <button
-                          type="button"
-                          (click)="form.seleccionarPaciente(resultado)"
-                          class="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-neutral-50">
-                          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-100">
-                            <span class="material-icons text-[18px] text-[#58595B]">person</span>
-                          </div>
-                          <div class="min-w-0">
-                            <p class="truncate text-sm font-semibold text-neutral-800">{{ resultado.nombre }}</p>
-                            <p class="text-xs text-neutral-500">
-                              {{ resultado.tipoDocumento }} {{ resultado.numeroDocumento }}{{ resultado.genero ? ' · ' + resultado.genero : '' }}
-                            </p>
-                          </div>
-                        </button>
-                      </li>
-                    }
-                  </ul>
-                } @else if (form.busquedaCompleta()) {
-                  <div class="space-y-2.5 px-3 py-3">
-                    <p class="text-xs font-medium text-neutral-600">
-                      No se encontró ningún paciente con "{{ form.textoBusqueda().trim() }}".
-                    </p>
-                    <button
-                      type="button"
-                      (click)="form.abrirCrearPaciente()"
-                      class="inline-flex items-center gap-1.5 rounded border border-[#D9182A]/40 bg-white px-3 py-1.5 text-xs font-semibold text-[#D9182A] transition-colors hover:bg-[#D9182A]/10">
-                      <span class="material-icons text-[16px]">person_add</span>
-                      Crear paciente nuevo
-                    </button>
+              <div class="flex items-center gap-2 rounded border border-neutral-200 bg-neutral-50 px-3 py-3 text-xs font-medium text-neutral-500">
+                <span class="h-4 w-4 animate-spin rounded-full border-2 border-neutral-300 border-t-[#D9182A]"></span>
+                Cargando el paciente creado...
+              </div>
+
+            } @else if (form.paciente(); as p) {
+
+              <div class="flex items-center justify-between gap-3 rounded border border-[#0d6b68]/30 bg-[#0d6b68]/[0.05] px-3 py-2.5">
+                <div class="flex min-w-0 items-center gap-3">
+                  <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white">
+                    <span class="material-icons text-[19px] text-[#58595B]">person</span>
                   </div>
-                }
-
+                  <div class="min-w-0">
+                    <p class="truncate text-sm font-bold text-neutral-900">{{ p.nombre }}</p>
+                    @if (p.numeroDocumento) {
+                      <p class="text-xs text-neutral-500">
+                        {{ p.tipoDocumento }} {{ p.numeroDocumento }}{{ p.genero ? ' · ' + p.genero : '' }}
+                      </p>
+                    }
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  (click)="form.quitarPaciente()"
+                  class="shrink-0 rounded border border-neutral-300 bg-white px-2.5 py-1 text-xs font-semibold text-neutral-600 transition-colors hover:border-[#58595B] hover:bg-neutral-50">
+                  Cambiar
+                </button>
               </div>
 
             } @else {
-              <p class="text-[11px] font-medium text-neutral-500">
-                Escribe al menos {{ form.MIN_BUSQUEDA }} caracteres del DNI, nombre o apellido.
+
+              <div
+                class="flex items-center gap-2 rounded border border-neutral-300 bg-white px-3 transition-colors focus-within:border-[#58595B]">
+                <span class="material-icons text-[20px] text-neutral-400">search</span>
+                <input
+                  type="text"
+                  name="busquedaPaciente"
+                  [ngModel]="form.textoBusqueda()"
+                  (ngModelChange)="form.onBusquedaInput($event)"
+                  autocomplete="off"
+                  placeholder="Buscar por DNI, nombres o apellidos..."
+                  class="w-full bg-transparent py-2 text-sm text-neutral-800 outline-none placeholder-neutral-400"
+                />
+                @if (form.buscando()) {
+                  <span class="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-neutral-300 border-t-[#D9182A]"></span>
+                }
+              </div>
+
+              @if (form.textoBusqueda().trim().length >= form.MIN_BUSQUEDA) {
+
+                <div class="rounded border border-neutral-200">
+
+                  @if (form.buscando()) {
+                    <p class="px-3 py-3 text-xs font-medium text-neutral-500">Buscando pacientes...</p>
+                  } @else if (form.errorBusqueda()) {
+                    <p class="px-3 py-3 text-xs font-medium text-[#D9182A]">No se pudo realizar la búsqueda. Inténtalo de nuevo.</p>
+                  } @else if (form.resultados().length > 0) {
+                    <ul class="max-h-52 divide-y divide-neutral-100 overflow-y-auto">
+                      @for (resultado of form.resultados(); track resultado.idPaciente) {
+                        <li>
+                          <button
+                            type="button"
+                            (click)="form.seleccionarPaciente(resultado)"
+                            class="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-neutral-50">
+                            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-100">
+                              <span class="material-icons text-[18px] text-[#58595B]">person</span>
+                            </div>
+                            <div class="min-w-0">
+                              <p class="truncate text-sm font-semibold text-neutral-800">{{ resultado.nombre }}</p>
+                              <p class="text-xs text-neutral-500">
+                                {{ resultado.tipoDocumento }} {{ resultado.numeroDocumento }}{{ resultado.genero ? ' · ' + resultado.genero : '' }}
+                              </p>
+                            </div>
+                          </button>
+                        </li>
+                      }
+                    </ul>
+                  } @else if (form.busquedaCompleta()) {
+                    <div class="space-y-2.5 px-3 py-3">
+                      <p class="text-xs font-medium text-neutral-600">
+                        No se encontró ningún paciente con "{{ form.textoBusqueda().trim() }}".
+                      </p>
+                      <button
+                        type="button"
+                        (click)="form.abrirCrearPaciente()"
+                        class="inline-flex items-center gap-1.5 rounded border border-[#D9182A]/40 bg-white px-3 py-1.5 text-xs font-semibold text-[#D9182A] transition-colors hover:bg-[#D9182A]/10">
+                        <span class="material-icons text-[16px]">person_add</span>
+                        Crear paciente nuevo
+                      </button>
+                    </div>
+                  }
+
+                </div>
+
+              } @else {
+                <p class="text-[11px] font-medium text-neutral-500">
+                  Escribe al menos {{ form.MIN_BUSQUEDA }} caracteres del DNI, nombre o apellido.
+                </p>
+              }
+
+            }
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Especialidad</label>
+            <select
+              name="idEspecialidad"
+              [ngModel]="form.idEspecialidad()"
+              (ngModelChange)="form.onEspecialidadChange($event)"
+              class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]">
+              <option [ngValue]="null" disabled>Seleccione una especialidad...</option>
+              @for (especialidad of form.especialidades(); track especialidad.idEspecialidad) {
+                <option [ngValue]="especialidad.idEspecialidad">{{ especialidad.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Médico</label>
+            <select
+              name="idMedico"
+              [ngModel]="form.idMedico()"
+              (ngModelChange)="form.onMedicoChange($event)"
+              [disabled]="form.idEspecialidad() === null || form.cargandoMedicos()"
+              class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B] disabled:bg-neutral-100">
+              <option [ngValue]="null" disabled>
+                {{
+                  form.idEspecialidad() === null
+                    ? 'Primero elige una especialidad'
+                    : form.cargandoMedicos()
+                      ? 'Cargando médicos...'
+                      : form.medicos().length === 0
+                        ? 'No hay médicos en esta especialidad'
+                        : 'Seleccione un médico...'
+                }}
+              </option>
+              @for (medico of form.medicos(); track medico.idMedico) {
+                <option [ngValue]="medico.idMedico">{{ medico.nombre }}</option>
+              }
+            </select>
+            @if (form.mismaPersona()) {
+              <p class="text-[11px] font-medium text-[#D9182A]">
+                El paciente y el médico no pueden ser la misma persona.
               </p>
             }
-
-          }
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Especialidad</label>
-          <select
-            name="idEspecialidad"
-            [ngModel]="form.idEspecialidad()"
-            (ngModelChange)="form.onEspecialidadChange($event)"
-            class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]">
-            <option [ngValue]="null" disabled>Seleccione una especialidad...</option>
-            @for (especialidad of form.especialidades(); track especialidad.idEspecialidad) {
-              <option [ngValue]="especialidad.idEspecialidad">{{ especialidad.nombre }}</option>
-            }
-          </select>
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Médico</label>
-          <select
-            name="idMedico"
-            [ngModel]="form.idMedico()"
-            (ngModelChange)="form.onMedicoChange($event)"
-            [disabled]="form.idEspecialidad() === null || form.cargandoMedicos()"
-            class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B] disabled:bg-neutral-100">
-            <option [ngValue]="null" disabled>
-              {{
-                form.idEspecialidad() === null
-                  ? 'Primero elige una especialidad'
-                  : form.cargandoMedicos()
-                    ? 'Cargando médicos...'
-                    : form.medicos().length === 0
-                      ? 'No hay médicos en esta especialidad'
-                      : 'Seleccione un médico...'
-              }}
-            </option>
-            @for (medico of form.medicos(); track medico.idMedico) {
-              <option [ngValue]="medico.idMedico">{{ medico.nombre }}</option>
-            }
-          </select>
-          @if (form.mismaPersona()) {
-            <p class="text-[11px] font-medium text-[#D9182A]">
-              El paciente y el médico no pueden ser la misma persona.
-            </p>
-          }
-        </div>
-
-        <div class="space-y-1.5">
-          <div class="flex items-center justify-between">
-            <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Motivo</label>
-            <span
-              class="text-[11px] font-medium text-neutral-400"
-              [class.text-[#D9182A]]="form.motivo().length >= 200">
-              {{ form.motivo().length }}/200
-            </span>
           </div>
-          <textarea
-            name="motivo"
-            [ngModel]="form.motivo()"
-            (ngModelChange)="form.motivo.set($event)"
-            maxlength="200"
-            rows="3"
-            class="w-full resize-none rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"
-            placeholder="Motivo de la consulta..."></textarea>
-        </div>
 
-      </div>
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Motivo</label>
+              <span
+                class="text-[11px] font-medium text-neutral-400"
+                [class.text-[#D9182A]]="form.motivo().length >= 200">
+                {{ form.motivo().length }}/200
+              </span>
+            </div>
+            <textarea
+              name="motivo"
+              [ngModel]="form.motivo()"
+              (ngModelChange)="form.motivo.set($event)"
+              maxlength="200"
+              rows="3"
+              class="w-full resize-none rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"
+              placeholder="Motivo de la consulta..."></textarea>
+          </div>
 
-      <div class="self-start rounded border border-neutral-200">
+        </section>
 
-        <div class="flex items-center gap-2 border-b border-neutral-200 bg-neutral-50 px-4 py-2.5">
-          <span class="material-icons text-[18px] text-[#58595B]">calendar_month</span>
-          <p class="text-sm font-bold text-neutral-800">Agenda del médico</p>
-        </div>
+        <!-- PASO 2: FECHA Y HORARIO -->
+        <section class="space-y-5 border-t border-neutral-200 p-4 sm:p-6 lg:overflow-y-auto lg:border-t-0">
 
-        <div class="space-y-5 p-4">
+          <div class="flex items-center gap-3 border-b border-neutral-200 pb-3">
+            <span
+              class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+              [ngClass]="paso2Completo ? 'bg-[#0d6b68]' : 'bg-[#58595B]'">
+              @if (paso2Completo) {
+                <span class="material-icons text-[16px]">check</span>
+              } @else {
+                2
+              }
+            </span>
+            <div class="min-w-0">
+              <h4 class="text-sm font-bold text-neutral-900">Fecha y horario</h4>
+              <p class="text-xs text-neutral-500">Elige un día disponible y luego la hora de la cita.</p>
+            </div>
+          </div>
 
           @if (form.idMedico() === null) {
 
@@ -201,7 +229,7 @@
                 <span class="material-icons text-2xl text-gray-400">event_available</span>
               </div>
               <p class="max-w-[16rem] text-sm font-medium text-gray-500">
-                Selecciona un médico para ver qué días atiende y cuáles tiene disponibles.
+                Primero elige al médico en el paso 1 para ver su agenda.
               </p>
             </div>
 
@@ -221,32 +249,22 @@
           } @else {
 
             <div>
-              <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Días de atención</p>
-              <div class="grid grid-cols-7 gap-1.5">
+              <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Días en que atiende</p>
+              <div class="flex flex-wrap gap-1.5">
                 @for (patron of form.patronSemanal(); track patron.corto) {
-                  <div
-                    class="rounded border px-1 py-1.5 text-center"
-                    [ngClass]="patron.tramos.length
-                      ? 'border-[#0d6b68]/30 bg-[#0d6b68]/[0.06]'
-                      : 'border-neutral-200 bg-neutral-50'">
-                    <p
-                      class="text-[10px] font-bold"
-                      [ngClass]="patron.tramos.length ? 'text-[#0d6b68]' : 'text-neutral-400'">
-                      {{ patron.corto }}
-                    </p>
-                    @for (tramo of patron.tramos; track tramo) {
-                      <p class="text-[9px] font-medium leading-3 text-neutral-600">{{ tramo }}</p>
-                    } @empty {
-                      <p class="text-[9px] leading-3 text-neutral-400">No atiende</p>
-                    }
-                  </div>
+                  @if (patron.tramos.length > 0) {
+                    <span class="inline-flex items-center gap-1.5 rounded-sm border-l-2 border-[#0d6b68] bg-[#0d6b68]/10 px-2 py-1 text-xs text-neutral-800">
+                      <b class="font-bold">{{ patron.corto }}</b>
+                      {{ patron.tramos.join(' · ') }}
+                    </span>
+                  }
                 }
               </div>
             </div>
 
             <div>
-              <div class="mb-2 flex items-center justify-between">
-                <p class="text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Elige un día</p>
+              <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Elige el día</p>
 
                 <div class="flex items-center gap-1.5">
                   <button
@@ -257,7 +275,7 @@
                     class="flex h-7 w-7 items-center justify-center rounded border border-neutral-300 bg-white text-neutral-600 transition-colors hover:border-[#58595B] hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-40">
                     <span class="material-icons text-[18px]">chevron_left</span>
                   </button>
-                  <span class="min-w-[9.5rem] text-center text-xs font-semibold text-neutral-700">{{ form.rotuloAgenda() }}</span>
+                  <span class="min-w-[8.5rem] text-center text-xs font-semibold text-neutral-700 sm:min-w-[9.5rem]">{{ form.rotuloAgenda() }}</span>
                   <button
                     type="button"
                     (click)="form.paginaSiguiente()"
@@ -268,7 +286,7 @@
                 </div>
               </div>
 
-              <div class="grid grid-cols-7 gap-1.5">
+              <div class="grid grid-cols-7 gap-1 sm:gap-1.5">
                 @for (dia of form.dias; track dia.numero) {
                   <div class="pb-0.5 text-center text-[10px] font-bold uppercase tracking-wider text-neutral-400">{{ dia.corto }}</div>
                 }
@@ -278,13 +296,16 @@
                     type="button"
                     (click)="form.seleccionarDia(dia)"
                     [disabled]="dia.estado !== 'disponible'"
-                    class="relative flex h-14 flex-col items-center justify-center rounded border transition-colors"
+                    class="relative flex h-12 flex-col items-center justify-center rounded border transition-colors sm:h-14"
                     [ngClass]="form.claseDia(dia)">
                     @if (dia.etiquetaMes) {
-                      <span class="absolute left-1 top-0.5 text-[9px] font-bold uppercase opacity-70">{{ dia.etiquetaMes }}</span>
+                      <span class="absolute left-0.5 top-0.5 text-[8px] font-bold uppercase opacity-70 sm:left-1 sm:text-[9px]">{{ dia.etiquetaMes }}</span>
                     }
                     <span class="text-sm font-bold leading-4">{{ dia.numero }}</span>
-                    <span class="text-[9px] font-semibold uppercase leading-3">{{ form.textoDia(dia) }}</span>
+                    <span class="hidden text-[9px] font-semibold uppercase leading-3 sm:block">{{ form.textoDia(dia) }}</span>
+                    @if (dia.estado === 'disponible') {
+                      <span class="text-[9px] font-semibold leading-3 sm:hidden">{{ dia.libres }}</span>
+                    }
                   </button>
                 }
               </div>
@@ -305,12 +326,12 @@
               </div>
             </div>
 
-            @if (form.fecha()) {
+            <div class="space-y-4 border-t border-neutral-200 pt-4">
 
-              <div class="space-y-4 border-t border-neutral-200 pt-4">
+              @if (form.fecha()) {
 
                 <div>
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Fecha seleccionada</p>
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Día elegido</p>
                   <p class="mt-0.5 text-sm font-bold text-neutral-900">{{ form.fechaTexto() }}</p>
                   @if (form.errorFecha()) {
                     <p class="mt-1 text-[11px] font-medium text-[#D9182A]">{{ form.errorFecha() }}</p>
@@ -323,7 +344,7 @@
                 @if (form.tramos().length > 0) {
 
                   <div>
-                    <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Jornada del día</p>
+                    <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Jornada del médico ese día</p>
                     <div class="flex flex-wrap gap-1.5">
                       @for (tramo of form.tramos(); track tramo.inicio) {
                         <span class="rounded-sm border-l-2 border-[#0d6b68] bg-[#0d6b68]/10 px-2 py-0.5 text-xs font-semibold text-neutral-800">
@@ -339,7 +360,7 @@
                       name="duracion"
                       [ngModel]="form.duracion()"
                       (ngModelChange)="form.onDuracionChange($event)"
-                      class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]">
+                      class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B] sm:max-w-xs">
                       @for (minutos of form.duraciones; track minutos) {
                         <option [ngValue]="minutos">{{ minutos }} minutos</option>
                       }
@@ -347,7 +368,7 @@
                   </div>
 
                   <div>
-                    <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Horarios disponibles</p>
+                    <p class="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Elige la hora</p>
 
                     @if (form.slots().length > 0) {
                       <div class="flex flex-wrap gap-2">
@@ -355,7 +376,7 @@
                           <button
                             type="button"
                             (click)="form.seleccionarSlot(slot)"
-                            class="rounded border px-3 py-1.5 text-sm font-semibold transition-colors"
+                            class="min-w-[4.5rem] rounded border px-3 py-1.5 text-center text-sm font-semibold transition-colors"
                             [ngClass]="form.slotSeleccionado(slot)
                               ? 'border-[#D9182A] bg-[#D9182A] text-white'
                               : 'border-neutral-300 bg-white text-neutral-700 hover:border-[#58595B] hover:bg-neutral-50'">
@@ -369,6 +390,15 @@
                       </p>
                     }
                   </div>
+
+                  @if (form.horaInicio() && form.horaSalida()) {
+                    <div class="flex items-center gap-2 rounded border border-[#0d6b68]/30 bg-[#0d6b68]/[0.06] px-3 py-2.5">
+                      <span class="material-icons text-[18px] text-[#0d6b68]">event_available</span>
+                      <p class="text-sm font-semibold text-neutral-900">
+                        {{ form.fechaTexto() }} · {{ form.horaInicio() }} - {{ form.horaSalida() }}
+                      </p>
+                    </div>
+                  }
 
                   @if (form.ocupados().length > 0) {
                     <div>
@@ -396,29 +426,34 @@
                     </div>
                   }
 
-                  <div class="grid grid-cols-2 gap-3 border-t border-neutral-200 pt-4">
-                    <div>
-                      <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Hora de inicio</label>
-                      <input
-                        type="time"
-                        name="horaInicio"
-                        [ngModel]="form.horaInicio()"
-                        (ngModelChange)="form.horaInicio.set($event)"
-                        class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"
-                      />
-                    </div>
+                  <details class="rounded border border-neutral-200" [attr.open]="form.errorHorario() ? '' : null">
+                    <summary class="cursor-pointer select-none px-3 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50">
+                      Ajustar la hora manualmente
+                    </summary>
+                    <div class="grid grid-cols-1 gap-3 border-t border-neutral-200 p-3 sm:grid-cols-2">
+                      <div>
+                        <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Hora de inicio</label>
+                        <input
+                          type="time"
+                          name="horaInicio"
+                          [ngModel]="form.horaInicio()"
+                          (ngModelChange)="form.horaInicio.set($event)"
+                          class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"
+                        />
+                      </div>
 
-                    <div>
-                      <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Hora de salida</label>
-                      <input
-                        type="time"
-                        name="horaSalida"
-                        [ngModel]="form.horaSalida()"
-                        (ngModelChange)="form.horaSalida.set($event)"
-                        class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"
-                      />
+                      <div>
+                        <label class="mb-1.5 block text-[10px] font-bold uppercase tracking-wider text-[#D9182A]">Hora de salida</label>
+                        <input
+                          type="time"
+                          name="horaSalida"
+                          [ngModel]="form.horaSalida()"
+                          (ngModelChange)="form.horaSalida.set($event)"
+                          class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"
+                        />
+                      </div>
                     </div>
-                  </div>
+                  </details>
 
                   @if (form.errorHorario()) {
                     <p class="text-[11px] font-medium text-[#D9182A]">{{ form.errorHorario() }}</p>
@@ -426,40 +461,58 @@
 
                 }
 
-              </div>
+              } @else {
 
-            } @else {
+                <p class="text-xs font-medium text-neutral-500">
+                  Toca un día disponible del calendario para ver sus horarios.
+                </p>
 
-              <p class="border-t border-neutral-200 pt-4 text-xs font-medium text-neutral-500">
-                Toca un día disponible del calendario para ver sus horarios.
-              </p>
+              }
 
-            }
+            </div>
 
           }
 
-        </div>
-      </div>
+        </section>
 
+      </div>
     </div>
 
-    <div class="mt-6 flex flex-col-reverse items-stretch justify-end gap-2 border-t border-neutral-200 pt-4 sm:flex-row sm:items-center">
-      <button
-        type="button"
-        (click)="form.onClose()"
-        [disabled]="form.guardando()"
-        class="rounded border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-50">
-        Cancelar
-      </button>
-      <button
-        type="submit"
-        [disabled]="!form.formularioValido() || form.guardando()"
-        class="flex items-center justify-center gap-2 rounded bg-[#D9182A] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:opacity-50">
-        @if (form.guardando()) {
-          <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+    <div class="shrink-0 border-t border-neutral-200 bg-white px-4 py-3 sm:px-6">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+        @if (form.formularioValido()) {
+          <p class="flex items-center gap-1.5 text-xs font-semibold text-[#0d6b68]">
+            <span class="material-icons text-[16px]">check_circle</span>
+            Todo listo para guardar.
+          </p>
+        } @else {
+          <p class="flex items-start gap-1.5 text-xs font-medium text-neutral-600">
+            <span class="material-icons text-[16px] text-[#58595B]">info</span>
+            <span>{{ mensajeFaltante }}</span>
+          </p>
         }
-        {{ textoGuardar }}
-      </button>
+
+        <div class="flex flex-col-reverse items-stretch gap-2 sm:flex-row sm:items-center">
+          <button
+            type="button"
+            (click)="form.onClose()"
+            [disabled]="form.guardando()"
+            class="rounded border border-neutral-300 px-4 py-2 text-sm font-semibold text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 disabled:opacity-50">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="!form.formularioValido() || form.guardando()"
+            class="flex items-center justify-center gap-2 rounded bg-[#D9182A] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:opacity-50">
+            @if (form.guardando()) {
+              <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+            }
+            {{ textoGuardar }}
+          </button>
+        </div>
+
+      </div>
     </div>
 
   </form>

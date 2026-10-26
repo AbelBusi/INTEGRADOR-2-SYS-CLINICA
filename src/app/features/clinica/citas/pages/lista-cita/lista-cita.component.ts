@@ -49,10 +49,23 @@ export class ListaCitaComponent implements OnInit {
   idsPendientes = signal<Set<number>>(new Set());
   soloPendientes = signal(false);
   citaRegularizar = signal<CitaFila | null>(null);
-
+  menuAbierto = signal<any | null>(null);
   totalPendientes = computed(
     () => this.citas().filter((c) => this.idsPendientes().has(c.id)).length,
   );
+
+  modalAccionesAbierto = signal<boolean>(false);
+  citaSeleccionada = signal<any | null>(null);
+
+  abrirModalAcciones(row: any) {
+    this.citaSeleccionada.set(row);
+    this.modalAccionesAbierto.set(true);
+  }
+
+  cerrarModalAcciones() {
+    this.modalAccionesAbierto.set(false);
+    this.citaSeleccionada.set(null);
+  }
 
   readonly motivoNoCancelable = MOTIVO_NO_CANCELABLE;
 

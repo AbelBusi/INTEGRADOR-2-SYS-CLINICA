@@ -57,21 +57,25 @@
     </div>
   }
 
+
   @if (totalPendientes() > 0) {
-    <div class="flex flex-wrap items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
-      <span class="material-icons text-[20px] text-amber-700">pending_actions</span>
-      <p class="flex-1 text-sm font-semibold text-amber-800">
+    <div class="flex flex-wrap items-center gap-3 rounded-lg border border-[#D9182A]/30 bg-white px-4 py-3">
+      <span class="material-icons text-[20px] text-[#D9182A]">pending_actions</span>
+
+      <p class="flex-1 text-sm font-semibold text-[#58595B]">
         {{ totalPendientes() }}
         {{ totalPendientes() === 1 ? 'cita vencida sin regularizar' : 'citas vencidas sin regularizar' }}
       </p>
+
       <button
         type="button"
         (click)="soloPendientes.set(!soloPendientes())"
-        class="rounded-md border border-amber-400 bg-white px-3 py-1 text-xs font-semibold text-amber-800 transition-colors hover:bg-amber-100">
+        class="rounded-md border border-[#D9182A] bg-white px-3 py-1.5 text-xs font-semibold text-[#D9182A] transition-colors hover:bg-[#D9182A] hover:text-white">
         {{ soloPendientes() ? 'Ver todas' : 'Ver pendientes' }}
       </button>
     </div>
   }
+
 
   <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_auto_auto]">
 
@@ -202,14 +206,19 @@
 
           @if (puedeGestionar(row)) {
             @if (estaPendiente(row)) {
+
+
               <button
                 type="button"
                 title="Regularizar cita vencida"
                 (click)="citaRegularizar.set(row)"
                 [disabled]="procesando()"
-                class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 transition-colors hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 disabled:cursor-not-allowed disabled:opacity-50">
+                class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-[#D9182A] bg-white px-3 text-sm font-medium text-[#D9182A] transition-colors hover:bg-[#D9182A] hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
                 <span class="material-icons text-[18px]">fact_check</span>
+                <span>Regularizar</span>
               </button>
+
+
             } @else {
 
               <button

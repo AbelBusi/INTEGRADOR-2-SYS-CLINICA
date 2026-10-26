@@ -99,33 +99,36 @@ export interface InfoEstadoCita {
   punto: string;
 }
 
+
+
 export const ESTADOS_CITA: Record<number, InfoEstadoCita> = {
   0: {
     texto: 'Eliminada',
-    clases: 'bg-neutral-100 text-neutral-500 border-neutral-300',
-    punto: 'bg-neutral-400',
+    clases: 'bg-gray-100 text-gray-500 border-gray-300 rounded-sm',
+    punto: 'bg-gray-400',
   },
   1: {
     texto: 'Programada',
-    clases: 'bg-[#0d6b68]/10 text-[#0d6b68] border-[#0d6b68]/20',
-    punto: 'bg-[#0d6b68]',
+    clases: 'bg-gray-100 text-[#58595B] border-gray-300 rounded-sm',
+    punto: 'bg-[#58595B]',
   },
   2: {
     texto: 'Cancelada',
-    clases: 'bg-[#D9182A]/10 text-[#D9182A] border-[#D9182A]/20',
+    clases: 'bg-white text-[#D9182A] border-[#D9182A] rounded-sm',
     punto: 'bg-[#D9182A]',
   },
   3: {
     texto: 'Atendida',
-    clases: 'bg-neutral-100 text-[#58595B] border-neutral-300',
+    clases: 'bg-gray-100 text-[#58595B] border-gray-300 rounded-sm',
     punto: 'bg-[#58595B]',
   },
   4: {
     texto: 'Reprogramada',
-    clases: 'bg-amber-50 text-amber-700 border-amber-300',
-    punto: 'bg-amber-500',
+    clases: 'bg-white text-[#D9182A] border-[#D9182A] rounded-sm',
+    punto: 'bg-[#D9182A]',
   },
 };
+
 
 export const OPCIONES_ESTADO = [
   { valor: 1, texto: 'Programadas' },
