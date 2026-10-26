@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -10,6 +10,9 @@ import { VerDetalleEmpleadoModalComponent } from '../../components/ver-detalle-e
 import { CrearEmpleadoModalComponent } from '../../components/crear-empleado-modal/crear-empleado-modal.component';
 import { EditarEmpleadoModalComponent } from '../../components/editar-empleado-modal/editar-empleado-modal.component';
 import { BuscarPacienteModalComponent } from '../../components/buscar-paciente-modal/buscar-paciente-modal.component';
+import { ExportModalComponent } from '../../../../../shared/components/export-modal/export-modal.component';
+import { ExportDataSource } from '../../../../../shared/export/interface/export.interface';
+import { crearEmpleadoExportConfig } from '../../export/empleado-export.config';
 
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
@@ -27,6 +30,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     VerDetalleEmpleadoModalComponent,
     CrearEmpleadoModalComponent,
     EditarEmpleadoModalComponent,
+    ExportModalComponent,
     TienePermisoDirective,
     BuscarPacienteModalComponent,
   ],
@@ -43,6 +47,28 @@ export class ListaEmpleadoComponent implements OnInit {
   sortField = 'nombreCompleto';
   filtroEstado: FiltroEstado = 'todos';
   isBuscarOpen = false;
+
+  @ViewChild(CustomTableComponent) tabla?: CustomTableComponent<Empleado>;
+  isExportOpen = false;
+
+  readonly exportConfig = crearEmpleadoExportConfig(() => this.filtrosExportacion());
+  readonly exportDataSource: ExportDataSource<Empleado> = {
+    getPageRows: () => this.tabla?.paginatedData() ?? [],
+    getFilteredRows: () => this.empleadosFiltrados,
+  };
+
+  private filtrosExportacion(): string[] {
+    const estados: Record<FiltroEstado, string> = {
+      todos: 'Todos',
+      activo: 'Activos',
+      inactivo: 'Inactivos',
+    };
+    const filtros = [`Estado: ${estados[this.filtroEstado]}`];
+    if (this.search.trim()) {
+      filtros.push('Búsqueda por texto aplicada');
+    }
+    return filtros;
+  }
 
   columns: TableColumn<Empleado>[] = [
     { header: 'Empleado', field: 'nombreCompleto', sortable: true, type: 'custom' },

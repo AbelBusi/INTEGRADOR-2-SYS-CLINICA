@@ -1,4 +1,7 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { ExportModalComponent } from '../../../../../shared/components/export-modal/export-modal.component';
+import { ExportDataSource } from '../../../../../shared/export/interface/export.interface';
+import { crearEspecialidadExportConfig } from '../../export/especialidad-export.config';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -25,6 +28,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     CrearEspecialidadModalComponent,
     EditarEspecialidadModalComponent,
     TienePermisoDirective,
+    ExportModalComponent,
   ],
   templateUrl: './lista-especialidad.component.html',
 })
@@ -45,6 +49,15 @@ export class ListaEspecialidadComponent implements OnInit {
     { header: 'Estado', field: 'estado', type: 'custom' },
     { header: 'Acciones', field: 'id', type: 'custom', align: 'center' },
   ];
+
+  @ViewChild(CustomTableComponent) tabla?: CustomTableComponent<Especialidad>;
+  isExportOpen = false;
+
+  readonly exportConfig = crearEspecialidadExportConfig(() => this.filtrosExportacion());
+  readonly exportDataSource: ExportDataSource<Especialidad> = {
+    getPageRows: () => this.tabla?.paginatedData() ?? [],
+    getFilteredRows: () => this.especialidadesFiltradas,
+  };
 
   constructor(
     private readonly especialidadService: EspecialidadService,
@@ -97,6 +110,19 @@ export class ListaEspecialidadComponent implements OnInit {
   filtrarEstado(): void {
     this.especialidadSeleccionada = null;
     this.cargarEspecialidades();
+  }
+
+  private filtrosExportacion(): string[] {
+    const estados: Record<FiltroEstado, string> = {
+      todos: 'Todos',
+      activo: 'Activos',
+      inactivo: 'Inactivos',
+    };
+    const filtros = [`Estado: ${estados[this.filtroEstado]}`];
+    if (this.search.trim()) {
+      filtros.push('Búsqueda por texto aplicada');
+    }
+    return filtros;
   }
 
   handleSort(field: string): void {

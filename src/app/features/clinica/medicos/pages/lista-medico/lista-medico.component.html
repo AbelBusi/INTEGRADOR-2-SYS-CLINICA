@@ -41,14 +41,22 @@
       <option value="inactivo">Inactivos</option>
     </select>
 
-    <button
-      type="button"
-      *appTienePermiso="'MEDICO_CREAR'"
-      (click)="isCrearOpen = true"
-      class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 h-10 rounded-md bg-[#D9182A] hover:bg-[#B81424] text-white text-sm font-semibold transition-colors">
-      <span class="material-icons text-[20px]">add</span>
-      Nuevo médico
-    </button>
+    <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+      <button type="button" [disabled]="cargando" (click)="isExportOpen = true"
+              class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 h-10 rounded-md border border-gray-300 bg-white hover:border-[#58595B] hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-colors disabled:opacity-60">
+        <span class="material-icons text-[20px]">file_download</span>
+        Exportar
+      </button>
+
+      <button
+        type="button"
+        *appTienePermiso="'MEDICO_CREAR'"
+        (click)="isCrearOpen = true"
+        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 h-10 rounded-md bg-[#D9182A] hover:bg-[#B81424] text-white text-sm font-semibold transition-colors">
+        <span class="material-icons text-[20px]">add</span>
+        Nuevo médico
+      </button>
+    </div>
 
   </div>
 
@@ -203,4 +211,12 @@
     [medico]="medicoVer"
     (close)="medicoVer = null"
   ></app-ver-detalle-medico-modal>
+}
+
+@if (isExportOpen) {
+  <app-export-modal
+    [config]="exportConfig"
+    [dataSource]="exportDataSource"
+    (onClose)="isExportOpen = false"
+  ></app-export-modal>
 }

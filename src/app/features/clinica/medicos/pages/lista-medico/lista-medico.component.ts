@@ -1,4 +1,7 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { ExportModalComponent } from '../../../../../shared/components/export-modal/export-modal.component';
+import { ExportDataSource } from '../../../../../shared/export/interface/export.interface';
+import { crearMedicoExportConfig } from '../../export/medico-export.config';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -25,6 +28,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     CustomTableComponent,
     VerDetalleMedicoModalComponent,
     CrearMedicoModalComponent,
+    ExportModalComponent,
     EditarMedicoModalComponent,
     TienePermisoDirective,
   ],
@@ -41,6 +45,15 @@ export class ListaMedicoComponent implements OnInit {
   sortField = 'nombreCompleto';
   filtroEstado: FiltroEstado = 'todos';
 
+  @ViewChild(CustomTableComponent) tabla?: CustomTableComponent<Medico>;
+  isExportOpen = false;
+
+  readonly exportConfig = crearMedicoExportConfig(() => this.filtrosExportacion());
+  readonly exportDataSource: ExportDataSource<Medico> = {
+    getPageRows: () => this.tabla?.paginatedData() ?? [],
+    getFilteredRows: () => this.medicosFiltrados,
+  };
+
   columns: TableColumn<Medico>[] = [
     { header: 'Médico', field: 'nombreCompleto', sortable: true, type: 'custom' },
     { header: 'Cargo', field: 'cargo', type: 'text' },
@@ -48,7 +61,7 @@ export class ListaMedicoComponent implements OnInit {
     { header: 'Colegiatura', field: 'numeroColegiatura', type: 'text' },
     { header: 'Teléfono', field: 'telefono', type: 'custom' },
     { header: 'Estado', field: 'estado', type: 'custom' },
-    { header: 'Acciones', field: 'id', type: 'custom' , align: 'center' },
+    { header: 'Acciones', field: 'id', type: 'custom', align: 'center' },
   ];
 
   constructor(
@@ -104,6 +117,19 @@ export class ListaMedicoComponent implements OnInit {
 
   fotoUrl(foto: string | null): string | null {
     return this.medicoService.obtenerUrlFoto(foto);
+  }
+
+  private filtrosExportacion(): string[] {
+    const estados: Record<FiltroEstado, string> = {
+      todos: 'Todos',
+      activo: 'Activos',
+      inactivo: 'Inactivos',
+    };
+    const filtros = [`Estado: ${estados[this.filtroEstado]}`];
+    if (this.search.trim()) {
+      filtros.push('Búsqueda por texto aplicada');
+    }
+    return filtros;
   }
 
   filtrarEstado(): void {

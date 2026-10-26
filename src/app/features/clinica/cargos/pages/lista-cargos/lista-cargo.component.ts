@@ -1,4 +1,7 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
+import { ExportModalComponent } from '../../../../../shared/components/export-modal/export-modal.component';
+import { ExportDataSource } from '../../../../../shared/export/interface/export.interface';
+import { crearCargoExportConfig } from '../../export/cargo-export.config';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -27,6 +30,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     CrearCargoModalComponent,
     EditarCargoModalComponent,
     TienePermisoDirective,
+    ExportModalComponent,
   ],
   templateUrl: './lista-cargo.component.html',
 })
@@ -48,6 +52,15 @@ export class ListaCargoComponent implements OnInit {
     { header: 'Estado', field: 'estado', type: 'custom' },
     { header: 'Acciones', field: 'id', type: 'custom', align: 'center' },
   ];
+
+  @ViewChild(CustomTableComponent) tabla?: CustomTableComponent<cargo>;
+  isExportOpen = false;
+
+  readonly exportConfig = crearCargoExportConfig(() => this.filtrosExportacion());
+  readonly exportDataSource: ExportDataSource<cargo> = {
+    getPageRows: () => this.tabla?.paginatedData() ?? [],
+    getFilteredRows: () => this.cargosFiltrados,
+  };
 
   constructor(
     private readonly cargoService: CargoService,
@@ -99,6 +112,19 @@ export class ListaCargoComponent implements OnInit {
   filtrarEstado(): void {
     this.cargoSeleccionado = null;
     this.cargarCargos();
+  }
+
+  private filtrosExportacion(): string[] {
+    const estados: Record<FiltroEstado, string> = {
+      todos: 'Todos',
+      activo: 'Activos',
+      inactivo: 'Inactivos',
+    };
+    const filtros = [`Estado: ${estados[this.filtroEstado]}`];
+    if (this.search.trim()) {
+      filtros.push('Búsqueda por texto aplicada');
+    }
+    return filtros;
   }
 
   handleSort(field: string): void {
