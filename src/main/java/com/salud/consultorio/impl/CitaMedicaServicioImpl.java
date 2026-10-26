@@ -10,6 +10,7 @@ import com.salud.consultorio.model.entity.Medico;
 import com.salud.consultorio.model.entity.Paciente;
 import com.salud.consultorio.model.entity.Usuario;
 import com.salud.consultorio.model.enums.AccionHistorialCita;
+import com.salud.consultorio.model.enums.ResolucionRegularizacion;
 import com.salud.consultorio.repository.ICitaMedicaRepositorio;
 import com.salud.consultorio.repository.IHorarioAtencionRepositorio;
 import com.salud.consultorio.repository.IMedicoRepositorio;
@@ -24,8 +25,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.*;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,7 +52,8 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
     private final IHorarioAtencionRepositorio horarioAtencionRepositorio;
     private final IHistorialCitaServicio historialCitaServicio;
     private final UsuarioAutenticadoProvider usuarioAutenticadoProvider;
-
+    private static final Duration LIMITE_CANCELACION = Duration.ofHours(2);
+    private final Clock clock;
     @Transactional(readOnly = true)
     @Override
     public List<CitaMedicaRespuestaDTO> lista(Integer estado) {
@@ -112,6 +113,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
         validarPacienteDistintoDeMedico(paciente, medico);
         validarDisponibilidadMedico(medico, dto.fechaCita(), dto.horaInicio(), dto.horaSalida(), 0);
+        validarDisponibilidadPaciente(paciente, dto.fechaCita(), dto.horaInicio(), dto.horaSalida(), 0);
 
         CitaMedica cita = CitaMedica.builder()
                 .paciente(paciente)
@@ -157,12 +159,18 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
                 || !Objects.equals(cita.getUsuario().getId(), usuario.getId())
                 || !cita.getMotivo().equals(motivo);
 
+        boolean cambioPaciente = !Objects.equals(cita.getPaciente().getId(), paciente.getId());
+
         if (!cambioAgenda && !cambioAdministrativo) {
             return toDto(cita);
         }
 
         if (cambioAgenda) {
             validarDisponibilidadMedico(medico, dto.fechaCita(), dto.horaInicio(), dto.horaSalida(), cita.getId());
+        }
+
+        if (cambioAgenda || cambioPaciente) {
+            validarDisponibilidadPaciente(paciente, dto.fechaCita(), dto.horaInicio(), dto.horaSalida(), cita.getId());
         }
 
         Map<String, Object> anteriores = new LinkedHashMap<>();
@@ -201,13 +209,11 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         CitaMedica cita = obtenerCitaBloqueada(id);
 
         validarCitaProgramada(cita, "cancelar");
+        validarVentanaCancelacion(cita);
 
         String detalle = normalizarObservacion(observacion);
 
-        cita.setEstado(CITA_CANCELADA);
-
-        historialCitaServicio.registrar(cita, AccionHistorialCita.CANCELADA,
-                Map.of("estado", CITA_PROGRAMADA), Map.of("estado", CITA_CANCELADA), detalle);
+        aplicarResolucion(cita, CITA_CANCELADA, AccionHistorialCita.CANCELADA, detalle, false);
 
     }
 
@@ -221,10 +227,60 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
         String detalle = normalizarObservacion(observacion);
 
-        cita.setEstado(CITA_ATENDIDA);
+        aplicarResolucion(cita, CITA_ATENDIDA, AccionHistorialCita.ATENDIDA, detalle, false);
 
-        historialCitaServicio.registrar(cita, AccionHistorialCita.ATENDIDA,
-                Map.of("estado", CITA_PROGRAMADA), Map.of("estado", CITA_ATENDIDA), detalle);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<CitaMedicaRespuestaDTO> listaPendientesRegularizacion() {
+
+        LocalDateTime ahora = LocalDateTime.now(clock);
+
+        return citaMedicaRepositorio.listaPendientesRegularizacion(null, ahora.toLocalDate(), ahora.toLocalTime());
+
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<CitaMedicaRespuestaDTO> listaMisPendientesRegularizacionMedico() {
+
+        Medico medico = obtenerMedicoAutenticado();
+        LocalDateTime ahora = LocalDateTime.now(clock);
+
+        return citaMedicaRepositorio.listaPendientesRegularizacion(
+                medico.getId(), ahora.toLocalDate(), ahora.toLocalTime());
+
+    }
+
+    @Transactional
+    @Override
+    public void regularizar(Integer id, ResolucionRegularizacion resolucion, String observacion) {
+
+        CitaMedica cita = obtenerCitaBloqueada(id);
+
+        validarCitaProgramada(cita, "regularizar");
+
+        if (!horarioFinalizado(cita, LocalDateTime.now(clock))) {
+            throw new IllegalArgumentException(
+                    "La cita aún no ha finalizado, por lo que no está pendiente de regularización.");
+        }
+
+        String justificacion = normalizarObservacion(observacion);
+
+        if (justificacion == null) {
+            throw new IllegalArgumentException("La justificación es obligatoria para regularizar una cita vencida.");
+        }
+
+        if (resolucion == null) {
+            throw new IllegalArgumentException("La resolución es obligatoria.");
+        }
+
+        if (resolucion == ResolucionRegularizacion.ATENDIDA) {
+            aplicarResolucion(cita, CITA_ATENDIDA, AccionHistorialCita.ATENDIDA, justificacion, true);
+        } else {
+            aplicarResolucion(cita, CITA_CANCELADA, AccionHistorialCita.CANCELADA, justificacion, true);
+        }
 
     }
 
@@ -379,7 +435,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
             throw new IllegalArgumentException("La fecha, la hora de inicio y la hora de salida son obligatorias.");
         }
 
-        if (fecha.isBefore(LocalDate.now())) {
+        if (fecha.isBefore(LocalDate.now(clock))) {
             throw new IllegalArgumentException("La fecha de la cita no puede ser una fecha pasada.");
         }
 
@@ -496,6 +552,59 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         if (Objects.equals(idPersonaPaciente, idPersonaMedico)) {
             throw new IllegalArgumentException("El paciente y el médico no pueden ser la misma persona.");
         }
+
+    }
+
+    private void validarDisponibilidadPaciente(Paciente paciente, LocalDate fecha,
+                                               LocalTime horaInicio, LocalTime horaSalida,
+                                               Integer idExcluir) {
+
+        if (citaMedicaRepositorio.existeCrucePaciente(paciente.getId(), fecha, horaInicio, horaSalida, idExcluir)) {
+            throw new DataIntegrityViolationException(
+                    "El paciente ya tiene una cita programada que se cruza con ese horario."
+            );
+        }
+
+    }
+
+    private void validarVentanaCancelacion(CitaMedica cita) {
+
+        LocalDateTime ahora = LocalDateTime.now(clock);
+
+        if (horarioFinalizado(cita, ahora)) {
+            throw new IllegalArgumentException(
+                    "No se puede cancelar una cita cuyo horario de atención ya finalizó. Debe regularizarse indicando lo ocurrido.");
+        }
+
+        LocalDateTime inicio = LocalDateTime.of(cita.getFechaCita(), cita.getHoraInicio());
+
+        if (!ahora.isBefore(inicio.minus(LIMITE_CANCELACION))) {
+            throw new IllegalArgumentException(
+                    "No se puede cancelar una cita cuando faltan dos horas o menos para su inicio.");
+        }
+
+    }
+
+    private boolean horarioFinalizado(CitaMedica cita, LocalDateTime ahora) {
+        return !ahora.isBefore(LocalDateTime.of(cita.getFechaCita(), cita.getHoraSalida()));
+    }
+
+    private void aplicarResolucion(CitaMedica cita, int estadoNuevo, AccionHistorialCita accion,
+                                   String observacion, boolean regularizacion) {
+
+        Map<String, Object> anteriores = new LinkedHashMap<>();
+        anteriores.put("estado", cita.getEstado());
+
+        Map<String, Object> nuevos = new LinkedHashMap<>();
+        nuevos.put("estado", estadoNuevo);
+
+        if (regularizacion) {
+            nuevos.put("regularizacion", true);
+        }
+
+        cita.setEstado(estadoNuevo);
+
+        historialCitaServicio.registrar(cita, accion, anteriores, nuevos, observacion);
 
     }
 

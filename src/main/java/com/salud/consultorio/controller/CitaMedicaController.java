@@ -1,9 +1,6 @@
 package com.salud.consultorio.controller;
 
-import com.salud.consultorio.dto.citaMedica.CitaMedicaActualizarDTO;
-import com.salud.consultorio.dto.citaMedica.CitaMedicaCrearDTO;
-import com.salud.consultorio.dto.citaMedica.CitaMedicaObservacionDTO;
-import com.salud.consultorio.dto.citaMedica.CitaMedicaRespuestaDTO;
+import com.salud.consultorio.dto.citaMedica.*;
 import com.salud.consultorio.dto.historialCita.HistorialCitaRespuestaDTO;
 import com.salud.consultorio.model.payload.MensajeResponse;
 import com.salud.consultorio.service.ICitaMedicaServicio;
@@ -251,6 +248,68 @@ public class CitaMedicaController {
 
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Cita medica eliminada con exito")
+                .build(), HttpStatus.OK);
+
+    }
+
+
+    @Operation(
+            summary = "Listar citas vencidas sin regularizar",
+            description = "Citas en estado 1 (programada) cuyo horario de finalización ya pasó según la zona horaria " +
+                    "del servidor. No se modifican automáticamente: deben resolverse con /regularizar."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista obtenida correctamente (puede ser vacía)")
+    })
+    @GetMapping("/pendientes-regularizacion")
+    public ResponseEntity<MensajeResponse> listarPendientesRegularizacion() {
+
+        List<CitaMedicaRespuestaDTO> lista = citaMedicaServicio.listaPendientesRegularizacion();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("CITAS PENDIENTES DE REGULARIZACION")
+                .object(lista).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(
+            summary = "Listar mis citas vencidas sin regularizar (médico autenticado)",
+            description = "Igual que /pendientes-regularizacion pero solo con las citas del médico autenticado."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista obtenida correctamente (puede ser vacía)"),
+            @ApiResponse(responseCode = "403", description = "El usuario no es un médico activo con rol MEDICO activo")
+    })
+    @GetMapping("/mis-citas/medico/pendientes-regularizacion")
+    public ResponseEntity<MensajeResponse> listarMisPendientesRegularizacionMedico() {
+
+        List<CitaMedicaRespuestaDTO> lista = citaMedicaServicio.listaMisPendientesRegularizacionMedico();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("MIS CITAS PENDIENTES DE REGULARIZACION")
+                .object(lista).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(
+            summary = "Regularizar cita vencida",
+            description = "Resuelve una cita programada cuyo horario ya finalizó: ATENDIDA (estado 3) o CANCELADA (estado 2, " +
+                    "incluye inasistencias). La justificación es obligatoria y queda en el historial."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Cita regularizada correctamente"),
+            @ApiResponse(responseCode = "400", description = "La cita no está pendiente de regularización o falta la justificación"),
+            @ApiResponse(responseCode = "404", description = "Cita médica no encontrada")
+    })
+    @PatchMapping("/{id}/regularizar")
+    public ResponseEntity<MensajeResponse> regularizarCita(
+            @PathVariable Integer id,
+            @Valid @RequestBody CitaMedicaRegularizarDTO dto) {
+
+        citaMedicaServicio.regularizar(id, dto.resolucion(), dto.observacion());
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Cita medica regularizada con exito")
                 .build(), HttpStatus.OK);
 
     }

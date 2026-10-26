@@ -3,7 +3,9 @@ package com.salud.consultorio.repository;
 import com.salud.consultorio.dto.paciente.*;
 import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.model.entity.Paciente;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -187,5 +189,9 @@ public interface IPacienteRepositorio extends JpaRepository<Paciente, Integer> {
     );
 
     Optional<Paciente> findByPersona_Id(Integer idPersona);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Paciente p WHERE p.id = :id")
+    Optional<Paciente> buscarPorIdBloqueado(@Param("id") Integer id);
 
 }
