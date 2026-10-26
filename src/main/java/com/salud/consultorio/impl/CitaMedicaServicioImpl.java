@@ -53,10 +53,6 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
     private final IHistorialCitaServicio historialCitaServicio;
     private final UsuarioAutenticadoProvider usuarioAutenticadoProvider;
 
-    // ---------------------------------------------------------------------
-    // Consultas
-    // ---------------------------------------------------------------------
-
     @Transactional(readOnly = true)
     @Override
     public List<CitaMedicaRespuestaDTO> lista(Integer estado) {
@@ -104,10 +100,6 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
     }
 
-    // ---------------------------------------------------------------------
-    // Operaciones
-    // ---------------------------------------------------------------------
-
     @Transactional
     @Override
     public CitaMedicaRespuestaDTO crear(CitaMedicaCrearDTO dto) {
@@ -118,6 +110,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         Medico medico = obtenerMedicoActivoBloqueado(dto.idMedico());
         Usuario usuario = obtenerUsuarioActivo(dto.idUsuario());
 
+        validarPacienteDistintoDeMedico(paciente, medico);
         validarDisponibilidadMedico(medico, dto.fechaCita(), dto.horaInicio(), dto.horaSalida(), 0);
 
         CitaMedica cita = CitaMedica.builder()
@@ -152,6 +145,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         Paciente paciente = obtenerPacienteActivo(dto.idPaciente());
         Medico medico = obtenerMedicoActivoBloqueado(dto.idMedico());
         Usuario usuario = obtenerUsuarioActivo(dto.idUsuario());
+        validarPacienteDistintoDeMedico(paciente, medico);
         String motivo = dto.motivo().trim();
 
         boolean cambioAgenda = !Objects.equals(cita.getMedico().getId(), medico.getId())
@@ -163,12 +157,10 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
                 || !Objects.equals(cita.getUsuario().getId(), usuario.getId())
                 || !cita.getMotivo().equals(motivo);
 
-        // Sin cambios reales: no se modifica la cita ni se genera evento
         if (!cambioAgenda && !cambioAdministrativo) {
             return toDto(cita);
         }
 
-        // Reprogramar exige disponibilidad del médico y ausencia de solapamientos
         if (cambioAgenda) {
             validarDisponibilidadMedico(medico, dto.fechaCita(), dto.horaInicio(), dto.horaSalida(), cita.getId());
         }
@@ -225,7 +217,6 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
         CitaMedica cita = obtenerCitaBloqueada(id);
 
-        // Solo una cita programada puede atenderse (no canceladas, ya atendidas, etc.)
         validarCitaProgramada(cita, "atender");
 
         String detalle = normalizarObservacion(observacion);
@@ -255,10 +246,6 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
                 Map.of("estado", estadoAnterior), Map.of("estado", CITA_ELIMINADA), null);
 
     }
-
-    // ---------------------------------------------------------------------
-    // Identidad del usuario autenticado
-    // ---------------------------------------------------------------------
 
     private Medico obtenerMedicoAutenticado() {
 
@@ -307,10 +294,6 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         return paciente;
 
     }
-
-    // ---------------------------------------------------------------------
-    // Validaciones y utilidades privadas
-    // ---------------------------------------------------------------------
 
     private void validarEstadoConsulta(Integer estado) {
 
@@ -502,6 +485,17 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
                 c.getMotivo(),
                 c.getEstado()
         );
+
+    }
+
+    private void validarPacienteDistintoDeMedico(Paciente paciente, Medico medico) {
+
+        Integer idPersonaPaciente = paciente.getPersona().getId();
+        Integer idPersonaMedico = medico.getEmpleado().getPersona().getId();
+
+        if (Objects.equals(idPersonaPaciente, idPersonaMedico)) {
+            throw new IllegalArgumentException("El paciente y el médico no pueden ser la misma persona.");
+        }
 
     }
 
