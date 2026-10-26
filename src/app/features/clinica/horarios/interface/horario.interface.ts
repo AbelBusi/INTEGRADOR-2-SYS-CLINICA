@@ -101,3 +101,10 @@ export interface EmpleadoAgenda {
   foto: string | null;
   color: string;
 }
+
+export interface MedicoAgenda {
+  idEmpleado: number;
+  nombre: string;
+  idCargo: number;
+  cargo: string;
+}

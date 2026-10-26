@@ -13,6 +13,7 @@ import {
   HorarioDia,
   HorarioResumen,
   MensajeResponse,
+  MedicoAgenda,
 } from '../interface/horario.interface';
 
 @Injectable({
@@ -78,4 +79,9 @@ export class HorarioService {
   eliminar(idHorario: number): Observable<MensajeResponse<null>> {
     return this.http.delete<MensajeResponse<null>>(`${this.baseUrl}/${idHorario}`);
   }
+
+  listarMedicosAgenda(): Observable<MensajeResponse<MedicoAgenda[]>> {
+    return this.http.get<MensajeResponse<MedicoAgenda[]>>(`${this.baseUrl}/medicos`);
+  }
+
 }

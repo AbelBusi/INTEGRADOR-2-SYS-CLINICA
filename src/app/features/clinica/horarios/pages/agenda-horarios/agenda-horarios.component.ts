@@ -1,4 +1,13 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  OnInit,
+  ViewChild,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -6,15 +15,12 @@ import { forkJoin } from 'rxjs';
 import {
   CargoResumen,
   EmpleadoAgenda,
-  EmpleadoLista,
-  EmpleadoResumen,
   HorarioResumen,
+  MedicoAgenda,
   VistaCalendario,
 } from '../../interface/horario.interface';
 import {
   ALTURA_HORA,
-  COLORES_CARGO,
-  COLOR_SIN_CARGO,
   DIAS_SEMANA,
   aFechaISO,
   aHHmm,
@@ -37,6 +43,21 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { CrearHorarioModalComponent } from '../../components/crear-horario-modal/crear-horario-modal.component';
 import { VerHorarioEmpleadoModalComponent } from '../../components/ver-horario-empleado-modal/ver-horario-empleado-modal.component';
 import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
+
+// Paleta sobria (verdes y grises). El rojo queda reservado para "hoy" y acciones.
+const PALETA_CARGO = [
+  '#0d6b68',
+  '#58595B',
+  '#3f8f8c',
+  '#8a8b8e',
+  '#0a4f4d',
+  '#6f7072',
+  '#2f7f7c',
+  '#a3a4a6',
+];
+const COLOR_SIN_CARGO = '#8a8b8e';
+const ANCHO_COLUMNA_SEMANA = 108;
+const ANCHO_GUTTER = 56;
 
 interface HorarioVista {
   horario: HorarioResumen;
@@ -77,6 +98,7 @@ interface CeldaMes {
   fecha: Date;
   delMes: boolean;
   esHoy: boolean;
+  total: number;
   chips: ChipMes[];
   extra: number;
 }
@@ -98,38 +120,84 @@ export class AgendaHorariosComponent implements OnInit {
   readonly dias = DIAS_SEMANA;
   readonly hoy = new Date();
   readonly hoyISO = aISO(this.hoy);
-  readonly opcionesVista: { valor: VistaCalendario; etiqueta: string }[] = [
-    { valor: 'mes', etiqueta: 'Mes' },
-    { valor: 'semana', etiqueta: 'Semana' },
-    { valor: 'dia', etiqueta: 'Día' },
-  ];
+
+  private readonly destroyRef = inject(DestroyRef);
+  private grilla: HTMLElement | null = null;
+
+  @ViewChild('grilla')
+  set grillaRef(ref: ElementRef<HTMLElement> | undefined) {
+    this.grilla = ref?.nativeElement ?? null;
+    if (this.grilla) {
+      this.programarScroll();
+    }
+  }
 
   cargando = signal(false);
   errorCarga = signal(false);
   horarios = signal<HorarioResumen[]>([]);
-  empleados = signal<EmpleadoLista[]>([]);
-  cargos = signal<CargoResumen[]>([]);
-  opcionesEmpleado = signal<EmpleadoResumen[]>([]);
+  medicos = signal<MedicoAgenda[]>([]);
 
   busqueda = signal('');
   filtroCargo = signal<number | null>(null);
-  filtroEmpleado = signal<number | null>(null);
+  filtroMedico = signal<number | null>(null);
 
+  esMovil = signal(false);
   vista = signal<VistaCalendario>('semana');
   fechaRef = signal(new Date());
 
   modalCrear = signal(false);
   empleadoVer = signal<EmpleadoAgenda | null>(null);
 
-  cargoPorEmpleado = computed(() => new Map(this.empleados().map((e) => [e.id, e.cargo])));
-
-  nombresCargo = computed(() =>
-    [...new Set(this.empleados().map((e) => e.cargo))].sort((a, b) => a.localeCompare(b)),
+  opcionesVista = computed<{ valor: VistaCalendario; etiqueta: string }[]>(() =>
+    this.esMovil()
+      ? [
+          { valor: 'mes', etiqueta: 'Mes' },
+          { valor: 'dia', etiqueta: 'Día' },
+        ]
+      : [
+          { valor: 'mes', etiqueta: 'Mes' },
+          { valor: 'semana', etiqueta: 'Semana' },
+          { valor: 'dia', etiqueta: 'Día' },
+        ],
   );
 
-  horariosActivos = computed(() => this.horarios().filter((h) => h.estado === 1));
+  // Cargos que realmente tienen médicos activos
+  cargos = computed<CargoResumen[]>(() => {
+    const mapa = new Map<number, string>();
+    this.medicos().forEach((m) => mapa.set(m.idCargo, m.cargo));
 
-  personalActivo = computed(() => this.empleados().filter((e) => e.estado === 1).length);
+    return [...mapa]
+      .map(([idCargo, nombre]) => ({ idCargo, nombre }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  });
+
+  nombresCargo = computed(() => this.cargos().map((c) => c.nombre));
+
+  cargoPorMedico = computed(() => new Map(this.medicos().map((m) => [m.idEmpleado, m.cargo])));
+
+  idsMedico = computed(() => new Set(this.medicos().map((m) => m.idEmpleado)));
+
+  cargoSeleccionado = computed(() => {
+    const id = this.filtroCargo();
+    return id === null ? null : (this.cargos().find((c) => c.idCargo === id)?.nombre ?? null);
+  });
+
+  // Médicos del cargo elegido (o todos)
+  opcionesMedico = computed(() => {
+    const idCargo = this.filtroCargo();
+
+    return this.medicos()
+      .filter((m) => idCargo === null || m.idCargo === idCargo)
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+  });
+
+  // Solo horarios vigentes de médicos activos
+  horariosActivos = computed(() => {
+    const ids = this.idsMedico();
+    return this.horarios().filter((h) => h.estado === 1 && ids.has(h.idEmpleado));
+  });
+
+  totalMedicos = computed(() => this.medicos().length);
 
   vigentesHoy = computed(() =>
     this.horariosActivos().filter((h) => {
@@ -138,38 +206,33 @@ export class AgendaHorariosComponent implements OnInit {
     }),
   );
 
-  empleadosConHorario = computed(() => {
-    const ids = new Set(this.vigentesHoy().map((h) => h.idEmpleado));
-    return this.empleados().filter((e) => e.estado === 1 && ids.has(e.id)).length;
+  medicosConHorario = computed(() => {
+    const conHorario = new Set(this.vigentesHoy().map((h) => h.idEmpleado));
+    return this.medicos().filter((m) => conHorario.has(m.idEmpleado)).length;
   });
 
-  sinHorario = computed(() => Math.max(this.personalActivo() - this.empleadosConHorario(), 0));
+  sinHorario = computed(() => Math.max(this.totalMedicos() - this.medicosConHorario(), 0));
 
   cobertura = computed(() => {
-    const total = this.personalActivo();
-    return total ? Math.round((this.empleadosConHorario() / total) * 100) : 0;
+    const total = this.totalMedicos();
+    return total ? Math.round((this.medicosConHorario() / total) * 100) : 0;
   });
 
   hayFiltros = computed(
     () =>
-      this.busqueda().trim() !== '' ||
-      this.filtroCargo() !== null ||
-      this.filtroEmpleado() !== null,
+      this.busqueda().trim() !== '' || this.filtroCargo() !== null || this.filtroMedico() !== null,
   );
 
   horariosFiltrados = computed(() => {
     const termino = normalizar(this.busqueda().trim());
-    const idEmpleado = this.filtroEmpleado();
-    const idsCargo =
-      this.filtroCargo() === null
-        ? null
-        : new Set(this.opcionesEmpleado().map((e) => e.idMedico));
+    const idMedico = this.filtroMedico();
+    const cargo = this.cargoSeleccionado();
 
     return this.horariosActivos().filter((h) => {
-      if (idEmpleado !== null && h.idEmpleado !== idEmpleado) {
+      if (idMedico !== null && h.idEmpleado !== idMedico) {
         return false;
       }
-      if (idsCargo && !idsCargo.has(h.idEmpleado)) {
+      if (cargo && this.cargoDe(h.idEmpleado) !== cargo) {
         return false;
       }
       if (termino && !normalizar(h.empleado).includes(termino)) {
@@ -207,7 +270,7 @@ export class AgendaHorariosComponent implements OnInit {
       .filter((v) => v.inicio <= hasta && v.fin >= desde);
   });
 
-  horaInicio = computed(() => {
+  horaDesde = computed(() => {
     const minimo = this.horariosEnRango().reduce(
       (acumulado, v) => Math.min(acumulado, Math.floor(v.entradaMin / 60)),
       7,
@@ -215,7 +278,7 @@ export class AgendaHorariosComponent implements OnInit {
     return Math.max(minimo, 0);
   });
 
-  horaFin = computed(() => {
+  horaHasta = computed(() => {
     const maximo = this.horariosEnRango().reduce(
       (acumulado, v) => Math.max(acumulado, Math.ceil(v.salidaMin / 60)),
       19,
@@ -224,7 +287,7 @@ export class AgendaHorariosComponent implements OnInit {
   });
 
   horas = computed(() =>
-    Array.from({ length: this.horaFin() - this.horaInicio() }, (_, i) => this.horaInicio() + i),
+    Array.from({ length: this.horaHasta() - this.horaDesde() }, (_, i) => this.horaDesde() + i),
   );
 
   alturaTotal = computed(() => this.horas().length * ALTURA_HORA);
@@ -232,8 +295,8 @@ export class AgendaHorariosComponent implements OnInit {
   lineaAhora = computed(() => {
     const ahora = new Date();
     const minutos = ahora.getHours() * 60 + ahora.getMinutes();
-    const desde = this.horaInicio() * 60;
-    const hasta = this.horaFin() * 60;
+    const desde = this.horaDesde() * 60;
+    const hasta = this.horaHasta() * 60;
     return minutos >= desde && minutos <= hasta ? ((minutos - desde) * ALTURA_HORA) / 60 : null;
   });
 
@@ -266,7 +329,7 @@ export class AgendaHorariosComponent implements OnInit {
       this.vista() === 'dia'
         ? [referencia]
         : Array.from({ length: 7 }, (_, i) => sumarDias(inicioSemana(referencia), i));
-    const inicioMinutos = this.horaInicio() * 60;
+    const inicioMinutos = this.horaDesde() * 60;
     const visibles = this.horariosEnRango();
 
     return fechas.map((fecha) => {
@@ -288,7 +351,7 @@ export class AgendaHorariosComponent implements OnInit {
           color: this.colorDeCargo(cargo),
           vigencia: `${formatearFechaCorta(b.item.inicio)} - ${formatearFechaCorta(b.item.fin)}`,
           top: ((b.inicio - inicioMinutos) * ALTURA_HORA) / 60,
-          alto: Math.max(((b.fin - b.inicio) * ALTURA_HORA) / 60 - 2, 22),
+          alto: Math.max(((b.fin - b.inicio) * ALTURA_HORA) / 60 - 2, 24),
           izquierda: (b.carril / b.carriles) * 100,
           ancho: 100 / b.carriles,
         };
@@ -302,6 +365,15 @@ export class AgendaHorariosComponent implements OnInit {
       };
     });
   });
+
+  plantillaColumnas = computed(() => {
+    const minimo = this.vista() === 'semana' ? `${ANCHO_COLUMNA_SEMANA}px` : '0px';
+    return `${ANCHO_GUTTER}px repeat(${this.columnasVista().length}, minmax(${minimo}, 1fr))`;
+  });
+
+  anchoMinimo = computed(() =>
+    this.vista() === 'semana' ? ANCHO_GUTTER + 7 * ANCHO_COLUMNA_SEMANA : null,
+  );
 
   celdasMes = computed<CeldaMes[]>(() => {
     const referencia = this.fechaRef();
@@ -325,6 +397,7 @@ export class AgendaHorariosComponent implements OnInit {
         fecha,
         delMes: fecha.getMonth() === referencia.getMonth(),
         esHoy: mismoDia(fecha, this.hoy),
+        total: lista.length,
         chips: lista.slice(0, 3).map((v) => ({
           id: v.horario.id,
           entrada: aHHmm(v.horario.horaEntrada),
@@ -339,7 +412,21 @@ export class AgendaHorariosComponent implements OnInit {
   constructor(
     private readonly horarioService: HorarioService,
     private readonly toastService: ToastService,
-  ) {}
+  ) {
+    const consulta = window.matchMedia('(max-width: 767px)');
+    const aplicar = (movil: boolean): void => {
+      this.esMovil.set(movil);
+      if (movil && this.vista() === 'semana') {
+        this.vista.set('dia');
+      }
+    };
+
+    aplicar(consulta.matches);
+
+    const escuchar = (evento: MediaQueryListEvent): void => aplicar(evento.matches);
+    consulta.addEventListener('change', escuchar);
+    this.destroyRef.onDestroy(() => consulta.removeEventListener('change', escuchar));
+  }
 
   ngOnInit(): void {
     this.cargarDatos();
@@ -361,20 +448,17 @@ export class AgendaHorariosComponent implements OnInit {
 
     forkJoin({
       horarios: this.horarioService.listar(),
-      empleados: this.horarioService.listarEmpleados(),
-      cargos: this.horarioService.listarCargosResumen(),
-      opciones: this.horarioService.listarEmpleadosResumen(),
+      medicos: this.horarioService.listarMedicosAgenda(),
     }).subscribe({
-      next: ({ horarios, empleados, cargos, opciones }) => {
+      next: ({ horarios, medicos }) => {
         this.horarios.set(horarios.object || []);
-        this.empleados.set(empleados.object || []);
-        this.cargos.set(cargos.object || []);
-        this.opcionesEmpleado.set(opciones.object || []);
+        this.medicos.set(medicos.object || []);
         this.cargando.set(false);
+        this.programarScroll();
       },
       error: (error) => {
         console.error('Error al cargar la agenda de horarios:', error);
-        this.toastService.error('No se pudo cargar la agenda del personal.');
+        this.toastService.error('No se pudo cargar la agenda de los médicos.');
         this.errorCarga.set(true);
         this.cargando.set(false);
       },
@@ -392,12 +476,12 @@ export class AgendaHorariosComponent implements OnInit {
   }
 
   cargoDe(idEmpleado: number): string {
-    return this.cargoPorEmpleado().get(idEmpleado) ?? '';
+    return this.cargoPorMedico().get(idEmpleado) ?? '';
   }
 
   colorDeCargo(cargo: string): string {
     const indice = this.nombresCargo().indexOf(cargo);
-    return indice < 0 ? COLOR_SIN_CARGO : COLORES_CARGO[indice % COLORES_CARGO.length];
+    return indice < 0 ? COLOR_SIN_CARGO : PALETA_CARGO[indice % PALETA_CARGO.length];
   }
 
   fotoUrl(foto: string | null): string | null {
@@ -414,47 +498,22 @@ export class AgendaHorariosComponent implements OnInit {
 
   onCargoChange(idCargo: number | null): void {
     this.filtroCargo.set(idCargo);
-    this.filtroEmpleado.set(null);
-    this.cargarOpcionesEmpleado(idCargo);
+    this.filtroMedico.set(null);
   }
 
-  onEmpleadoChange(idEmpleado: number | null): void {
-    this.filtroEmpleado.set(idEmpleado);
+  onMedicoChange(idEmpleado: number | null): void {
+    this.filtroMedico.set(idEmpleado);
   }
 
   limpiarFiltros(): void {
-    const recargarOpciones = this.filtroCargo() !== null;
     this.busqueda.set('');
     this.filtroCargo.set(null);
-    this.filtroEmpleado.set(null);
-    if (recargarOpciones) {
-      this.cargarOpcionesEmpleado(null);
-    }
-  }
-
-  private cargarOpcionesEmpleado(idCargo: number | null): void {
-    this.opcionesEmpleado.set([]);
-
-    const peticion =
-      idCargo === null
-        ? this.horarioService.listarEmpleadosResumen()
-        : this.horarioService.listarEmpleadosPorCargo(idCargo);
-
-    peticion.subscribe({
-      next: (response) => {
-        if (this.filtroCargo() === idCargo) {
-          this.opcionesEmpleado.set(response.object || []);
-        }
-      },
-      error: (error) => {
-        console.error(error);
-        this.toastService.error('No se pudieron cargar los empleados del cargo.');
-      },
-    });
+    this.filtroMedico.set(null);
   }
 
   cambiarVista(vista: VistaCalendario): void {
     this.vista.set(vista);
+    this.programarScroll();
   }
 
   mover(direccion: 1 | -1): void {
@@ -470,18 +529,22 @@ export class AgendaHorariosComponent implements OnInit {
       default:
         this.fechaRef.set(sumarDias(fecha, direccion));
     }
+
+    this.programarScroll();
   }
 
   irAHoy(): void {
     this.fechaRef.set(new Date());
+    this.programarScroll();
   }
 
   irADia(fecha: Date): void {
     this.fechaRef.set(fecha);
     this.vista.set('dia');
+    this.programarScroll();
   }
 
-  verEmpleado(horario: HorarioResumen): void {
+  verMedico(horario: HorarioResumen): void {
     const cargo = this.cargoDe(horario.idEmpleado);
 
     this.empleadoVer.set({
@@ -496,5 +559,30 @@ export class AgendaHorariosComponent implements OnInit {
   handleHorarioCreado(): void {
     this.modalCrear.set(false);
     this.recargarHorarios();
+  }
+
+  private programarScroll(): void {
+    setTimeout(() => this.ajustarScroll());
+  }
+
+  private ajustarScroll(): void {
+    const contenedor = this.grilla;
+
+    if (!contenedor) {
+      return;
+    }
+
+    const columnas = this.columnasVista();
+    const linea = this.lineaAhora();
+    let destino = 0;
+
+    if (columnas.some((c) => c.esHoy) && linea !== null) {
+      destino = linea - 140;
+    } else {
+      const tops = columnas.flatMap((c) => c.bloques.map((b) => b.top));
+      destino = tops.length > 0 ? Math.min(...tops) - 24 : 0;
+    }
+
+    contenedor.scrollTop = Math.max(destino, 0);
   }
 }
