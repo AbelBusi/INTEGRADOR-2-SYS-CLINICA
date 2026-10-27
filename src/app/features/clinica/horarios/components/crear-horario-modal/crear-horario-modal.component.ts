@@ -43,7 +43,7 @@ export class CrearHorarioModalComponent implements OnInit {
   @Output() onHorarioCreado = new EventEmitter<void>();
 
   private medicos: MedicoAgenda[] = [];
-
+  fechaMinima = aISO(new Date());
   cargos: CargoResumen[] = [];
   empleados: MedicoAgenda[] = [];
   idCargo: number | null = null;
@@ -118,9 +118,15 @@ export class CrearHorarioModalComponent implements OnInit {
     if (!this.fechaInicio || !this.fechaFin) {
       return 'Indica la fecha de inicio y la de fin.';
     }
+
+    if (this.fechaInicio < this.fechaMinima) {
+      return 'La fecha de inicio no puede ser anterior a hoy.';
+    }
+
     if (this.fechaFin < this.fechaInicio) {
       return 'La fecha de fin no puede ser anterior a la de inicio.';
     }
+
     return null;
   }
 
@@ -190,9 +196,7 @@ export class CrearHorarioModalComponent implements OnInit {
     this.limpiarExistentes();
 
     this.empleados =
-      this.idCargo === null
-        ? this.medicos
-        : this.medicos.filter((m) => m.idCargo === this.idCargo);
+      this.idCargo === null ? this.medicos : this.medicos.filter((m) => m.idCargo === this.idCargo);
   }
 
   onEmpleadoChange(): void {
