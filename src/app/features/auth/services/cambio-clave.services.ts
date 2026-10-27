@@ -5,7 +5,6 @@ import { environment } from '../../../../environments/environment';
 import { AuthService } from './auth.service';
 
 export interface CambiarClaveDTO {
-  claveActual: string;
   nuevaClave: string;
 }
 

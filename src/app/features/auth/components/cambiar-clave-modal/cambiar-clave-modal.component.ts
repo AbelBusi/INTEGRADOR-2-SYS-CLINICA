@@ -25,11 +25,9 @@ export class CambiarClaveModalComponent implements AfterViewInit {
 
   @ViewChild('primerCampo') primerCampo?: ElementRef<HTMLInputElement>;
 
-  claveActual = signal('');
   nuevaClave = signal('');
   confirmacion = signal('');
 
-  verActual = signal(false);
   verNueva = signal(false);
   guardando = signal(false);
   error = signal<string | null>(null);
@@ -42,10 +40,6 @@ export class CambiarClaveModalComponent implements AfterViewInit {
       { texto: 'Una letra mayúscula', cumple: /[A-Z]/.test(nueva) },
       { texto: 'Una letra minúscula', cumple: /[a-z]/.test(nueva) },
       { texto: 'Un número', cumple: /\d/.test(nueva) },
-      {
-        texto: 'Distinta a la contraseña temporal',
-        cumple: nueva.length > 0 && nueva !== this.claveActual(),
-      },
     ];
   });
 
@@ -56,7 +50,6 @@ export class CambiarClaveModalComponent implements AfterViewInit {
   puedeGuardar = computed(
     () =>
       !this.guardando() &&
-      this.claveActual() !== '' &&
       this.requisitos().every((requisito) => requisito.cumple) &&
       this.coincide(),
   );
@@ -79,17 +72,20 @@ export class CambiarClaveModalComponent implements AfterViewInit {
     this.error.set(null);
 
     this.cambioClaveService
-      .cambiar({ claveActual: this.claveActual(), nuevaClave: this.nuevaClave() })
+      .cambiar({ nuevaClave: this.nuevaClave() })
       .subscribe({
         next: (response) => {
-          this.toastService.success(response?.mensaje || 'Contraseña actualizada correctamente');
+          this.toastService.success(
+            response?.mensaje || 'Contraseña actualizada correctamente',
+          );
           this.guardando.set(false);
           this.cambiado.emit();
         },
         error: (error) => {
-          console.error(error);
           this.error.set(
-            error.error?.mensaje || error.error?.message || 'No se pudo actualizar la contraseña.',
+            error.error?.mensaje ||
+            error.error?.message ||
+            'No se pudo actualizar la contraseña.',
           );
           this.guardando.set(false);
         },
