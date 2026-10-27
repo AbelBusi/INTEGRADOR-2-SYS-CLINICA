@@ -17,4 +17,6 @@ public interface IHorarioAtencionServicio {
 
     void eliminarPorId(Integer idHorario);
 
+    List<MedicoAgendaFiltroDTO> listaMedicosAgenda();
+
 }

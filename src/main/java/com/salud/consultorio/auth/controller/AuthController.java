@@ -31,7 +31,6 @@ public class AuthController {
 
     }
 
-    /** Paso 2 (solo usuarios con varios perfiles): elegir con cuál ingresar. Ruta pública. */
     @PostMapping("/seleccionar-rol")
     public ResponseEntity<TokenResponse> seleccionarRol(
             @Valid @RequestBody SeleccionarRolRequest dto

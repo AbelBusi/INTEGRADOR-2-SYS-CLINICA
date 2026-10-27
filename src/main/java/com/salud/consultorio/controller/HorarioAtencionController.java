@@ -105,4 +105,22 @@ public class HorarioAtencionController {
 
     }
 
+    @Operation(
+            summary = "Listar médicos activos para la agenda",
+            description = "Médicos activos con cargo médico: id de empleado, nombre y cargo. Se usa en los filtros de la agenda."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista obtenida correctamente (puede ser vacía)")
+    })
+    @GetMapping("/medicos")
+    public ResponseEntity<MensajeResponse> listarMedicos() {
+
+        List<MedicoAgendaFiltroDTO> lista = horarioAtencionServicio.listaMedicosAgenda();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("MEDICOS ACTIVOS PARA LA AGENDA")
+                .object(lista).build(), HttpStatus.OK);
+
+    }
+
 }

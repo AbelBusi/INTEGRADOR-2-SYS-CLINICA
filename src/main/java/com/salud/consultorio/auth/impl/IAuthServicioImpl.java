@@ -273,6 +273,7 @@ public class IAuthServicioImpl implements IAuthServicio {
         return new TokenResponse(accesoToken, refreshToken, requiereCambio(usuario));
     }
 
+
     @Transactional
     @Override
     public void cambiarClave(String nombreUsuario, CambiarClaveRequest dto) {
@@ -284,12 +285,9 @@ public class IAuthServicioImpl implements IAuthServicio {
             throw new UsuarioInactivoException(MENSAJE_INACTIVO);
         }
 
-        if (!passwordEncoder.matches(dto.claveActual(), usuario.getClaveAcceso())) {
-            throw new IllegalArgumentException("La contraseña actual no es correcta");
-        }
-
         if (passwordEncoder.matches(dto.nuevaClave(), usuario.getClaveAcceso())) {
-            throw new IllegalArgumentException("La nueva contraseña debe ser distinta a la actual");
+            throw new IllegalArgumentException(
+                    "La nueva contraseña debe ser distinta a la actual");
         }
 
         usuario.setClaveAcceso(passwordEncoder.encode(dto.nuevaClave()));

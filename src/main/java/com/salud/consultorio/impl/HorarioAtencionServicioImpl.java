@@ -32,6 +32,9 @@ public class HorarioAtencionServicioImpl implements IHorarioAtencionServicio {
 
         Empleado empleado = empleadoServicio.entidadPorIDTransaccion(dto.idEmpleado());
 
+        if (!horarioAtencionRepositorio.esMedicoActivo(empleado.getId())) {
+            throw new IllegalArgumentException("Solo se pueden registrar horarios de atención para médicos activos");
+        }
         validarVigencia(dto.fechaInicio(), dto.fechaFin());
 
         for (HorarioAtencionDTO actual : dto.horarios()) {
@@ -94,6 +97,12 @@ public class HorarioAtencionServicioImpl implements IHorarioAtencionServicio {
 
         horarioAtencionRepositorio.save(horario);
 
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<MedicoAgendaFiltroDTO> listaMedicosAgenda() {
+        return horarioAtencionRepositorio.listarMedicosActivos();
     }
 
     @Transactional(readOnly = true)

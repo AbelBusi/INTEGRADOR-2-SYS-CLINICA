@@ -1,6 +1,7 @@
 package com.salud.consultorio.repository;
 
 import com.salud.consultorio.dto.horarioAtencion.HorarioAtencionResumenDTO;
+import com.salud.consultorio.dto.horarioAtencion.MedicoAgendaFiltroDTO;
 import com.salud.consultorio.model.entity.HorarioAtencion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -90,5 +91,39 @@ public interface IHorarioAtencionRepositorio extends JpaRepository<HorarioAtenci
             @Param("horaSalida") LocalTime horaSalida,
             @Param("fecha") LocalDate fecha
     );
+
+
+    @Query("""
+        SELECT new com.salud.consultorio.dto.horarioAtencion.MedicoAgendaFiltroDTO(
+            em.id,
+            CONCAT(pe.nombre, ' ', pe.apellidos),
+            ca.id,
+            ca.nombre
+        )
+        FROM Medico m
+        JOIN m.empleado em
+        JOIN em.persona pe
+        JOIN em.cargo ca
+        WHERE m.estado = 1
+          AND em.estado = 1
+          AND pe.estado = 1
+          AND ca.esPersonalMedico = true
+        ORDER BY pe.apellidos, pe.nombre
+        """)
+    List<MedicoAgendaFiltroDTO> listarMedicosActivos();
+
+    @Query("""
+        SELECT CASE WHEN COUNT(m) > 0 THEN true ELSE false END
+        FROM Medico m
+        JOIN m.empleado em
+        JOIN em.persona pe
+        JOIN em.cargo ca
+        WHERE em.id = :idEmpleado
+          AND m.estado = 1
+          AND em.estado = 1
+          AND pe.estado = 1
+          AND ca.esPersonalMedico = true
+        """)
+    boolean esMedicoActivo(@Param("idEmpleado") Integer idEmpleado);
 
 }
