@@ -1,8 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
-import { CargoResumen, EmpleadoResumen, HorarioCrearDTO } from '../../interface/horario.interface';
+import { CargoResumen, HorarioCrearDTO, MedicoAgenda } from '../../interface/horario.interface';
 import {
   DIAS_SEMANA,
   aFechaISO,
@@ -43,8 +42,10 @@ export class CrearHorarioModalComponent implements OnInit {
   @Output() onClose = new EventEmitter<void>();
   @Output() onHorarioCreado = new EventEmitter<void>();
 
+  private medicos: MedicoAgenda[] = [];
+
   cargos: CargoResumen[] = [];
-  empleados: EmpleadoResumen[] = [];
+  empleados: MedicoAgenda[] = [];
   idCargo: number | null = null;
   idEmpleado: number | null = null;
 
@@ -74,23 +75,30 @@ export class CrearHorarioModalComponent implements OnInit {
   ngOnInit(): void {
     this.cargandoCatalogos = true;
 
-    forkJoin({
-      cargos: this.horarioService.listarCargosResumen(),
-      empleados: this.horarioService.listarEmpleadosResumen(),
-    }).subscribe({
-      next: ({ cargos, empleados }) => {
-        this.cargos = cargos.object || [];
-        this.empleados = empleados.object || [];
+    this.horarioService.listarMedicosAgenda().subscribe({
+      next: (response) => {
+        this.medicos = response.object || [];
+        this.cargos = this.cargosDe(this.medicos);
+        this.empleados = this.medicos;
         this.cargandoCatalogos = false;
         this.cdr.detectChanges();
       },
       error: (error) => {
         console.error(error);
-        this.toastService.error('No se pudieron cargar los cargos y empleados.');
+        this.toastService.error('No se pudieron cargar los cargos y médicos.');
         this.cargandoCatalogos = false;
         this.cdr.detectChanges();
       },
     });
+  }
+
+  private cargosDe(medicos: MedicoAgenda[]): CargoResumen[] {
+    const mapa = new Map<number, string>();
+    medicos.forEach((m) => mapa.set(m.idCargo, m.cargo));
+
+    return [...mapa]
+      .map(([idCargo, nombre]) => ({ idCargo, nombre }))
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
 
   get diasActivos(): DiaFormulario[] {
@@ -180,30 +188,11 @@ export class CrearHorarioModalComponent implements OnInit {
   onCargoChange(): void {
     this.idEmpleado = null;
     this.limpiarExistentes();
-    this.cargandoEmpleados = true;
 
-    const idCargo = this.idCargo;
-    const peticion =
-      idCargo === null
-        ? this.horarioService.listarEmpleadosResumen()
-        : this.horarioService.listarEmpleadosPorCargo(idCargo);
-
-    peticion.subscribe({
-      next: (response) => {
-        if (this.idCargo === idCargo) {
-          this.empleados = response.object || [];
-        }
-        this.cargandoEmpleados = false;
-        this.cdr.detectChanges();
-      },
-      error: (error) => {
-        console.error(error);
-        this.toastService.error('No se pudieron cargar los empleados del cargo.');
-        this.empleados = [];
-        this.cargandoEmpleados = false;
-        this.cdr.detectChanges();
-      },
-    });
+    this.empleados =
+      this.idCargo === null
+        ? this.medicos
+        : this.medicos.filter((m) => m.idCargo === this.idCargo);
   }
 
   onEmpleadoChange(): void {

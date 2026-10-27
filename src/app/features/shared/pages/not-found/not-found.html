@@ -1,1 +1,74 @@
-<p>not-found works!</p>
+<div class="flex h-screen h-[100dvh] flex-col overflow-hidden bg-white">
+
+  <!-- Contenido principal -->
+  <main class="flex min-h-0 flex-1 items-center justify-center px-5 py-4 sm:px-8 sm:py-6">
+    <section class="w-full max-w-xl text-center">
+
+      <div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center border border-red-200 bg-red-50 sm:mb-5 sm:h-20 sm:w-20">
+        <span class="material-symbols-outlined text-[32px] text-[#D9182A] sm:text-[42px]">
+          search_off
+        </span>
+      </div>
+
+      <p class="text-xs font-bold uppercase tracking-[0.18em] text-[#D9182A] sm:text-sm">
+        Error 404
+      </p>
+
+      <h1 class="mt-2 text-2xl font-bold tracking-tight text-neutral-900 sm:mt-3 sm:text-4xl">
+        Página no encontrada
+      </h1>
+
+      <p class="mx-auto mt-3 max-w-md text-sm leading-5 text-neutral-600 sm:mt-4 sm:text-base sm:leading-6">
+        La página que buscas no existe, fue movida o la dirección ingresada es incorrecta.
+        Verifica la URL o regresa al inicio del sistema.
+      </p>
+
+      <div class="mx-auto mt-5 flex w-full max-w-sm flex-col gap-2 sm:mt-8 sm:flex-row sm:gap-3">
+        <button
+          type="button"
+          (click)="volverInicio()"
+          class="flex h-11 w-full items-center justify-center gap-2 bg-[#58595B] px-5 text-sm font-bold text-white transition-colors hover:bg-[#404142] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#58595B] sm:w-auto"
+        >
+          <span class="material-symbols-outlined text-[19px]">home</span>
+          Ir al inicio
+        </button>
+
+        <button
+          type="button"
+          (click)="volverAtras()"
+          class="flex h-11 w-full items-center justify-center gap-2 border border-neutral-300 bg-white px-5 text-sm font-bold text-neutral-700 transition-colors hover:bg-neutral-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#58595B] sm:w-auto"
+        >
+          <span class="material-symbols-outlined text-[19px]">arrow_back</span>
+          Volver atrás
+        </button>
+      </div>
+
+      <div class="mx-auto mt-6 max-w-md border-t border-neutral-200 pt-3 sm:mt-10 sm:pt-5">
+        <p class="text-xs leading-5 text-neutral-500">
+          Centro de Salud Especializado José Olaya Balandra
+        </p>
+        <p class="mt-1 text-[11px] text-neutral-400 sm:text-xs">
+          Sistema institucional de gestión de salud
+        </p>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Pie institucional -->
+  <footer class="shrink-0 border-t border-neutral-200 bg-neutral-50">
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-center gap-1 px-4 py-2 text-center sm:flex-row sm:justify-between sm:gap-4 sm:px-8 sm:py-3">
+      <p class="text-[10px] text-neutral-500 sm:text-xs">
+        Ministerio de Salud · Gobierno del Perú
+      </p>
+      <p class="text-[10px] text-neutral-400 sm:text-xs">
+        Sistema de gestión institucional
+      </p>
+    </div>
+    <div class="flex h-1 shrink-0">
+      <div class="w-1/2 bg-[#58595B]"></div>
+      <div class="w-1/2 bg-[#D9182A]"></div>
+    </div>
+  </footer>
+
+</div>
