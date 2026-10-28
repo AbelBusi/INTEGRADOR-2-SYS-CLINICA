@@ -16,4 +16,9 @@ public interface IHistorialCitaServicio {
 
     List<HistorialCitaRespuestaDTO> listaPorCita(Integer idCita);
 
+    void registrarSistema(CitaMedica cita, AccionHistorialCita accion,
+                          Map<String, Object> datosAnteriores,
+                          Map<String, Object> datosNuevos,
+                          String observacion);
+
 }

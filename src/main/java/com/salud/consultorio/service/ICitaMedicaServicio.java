@@ -33,4 +33,8 @@ public interface ICitaMedicaServicio {
 
     void regularizar(Integer id, ResolucionRegularizacion resolucion, String observacion);
 
+    List<Integer> idsVencidasParaCancelacionAutomatica();
+
+    void cancelarAutomaticamentePorVencimiento(Integer id);
+
 }

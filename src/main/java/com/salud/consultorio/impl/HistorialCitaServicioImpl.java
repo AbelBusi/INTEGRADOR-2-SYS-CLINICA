@@ -7,6 +7,7 @@ import com.salud.consultorio.auth.UsuarioAutenticadoProvider;
 import com.salud.consultorio.dto.historialCita.HistorialCitaRespuestaDTO;
 import com.salud.consultorio.model.entity.CitaMedica;
 import com.salud.consultorio.model.entity.HistorialCita;
+import com.salud.consultorio.model.entity.Usuario;
 import com.salud.consultorio.model.enums.AccionHistorialCita;
 import com.salud.consultorio.repository.ICitaMedicaRepositorio;
 import com.salud.consultorio.repository.IHistorialCitaRepositorio;
@@ -39,21 +40,18 @@ public class HistorialCitaServicioImpl implements IHistorialCitaServicio {
                           Map<String, Object> datosNuevos,
                           String observacion) {
 
-        if (cita == null || cita.getId() == null || !citaMedicaRepositorio.existsById(cita.getId())) {
-            throw new EntityNotFoundException("No existe la cita médica para registrar el historial");
-        }
+        guardar(cita, usuarioAutenticadoProvider.obtener(), accion, datosAnteriores, datosNuevos, observacion);
 
-        HistorialCita evento = HistorialCita.builder()
-                .cita(cita)
-                .usuario(usuarioAutenticadoProvider.obtener())
-                .accion(accion)
-                .fechaEvento(LocalDateTime.now())
-                .datosAnteriores(serializar(datosAnteriores))
-                .datosNuevos(serializar(datosNuevos))
-                .observacion(observacion)
-                .build();
+    }
 
-        historialCitaRepositorio.save(evento);
+    @Transactional(propagation = Propagation.MANDATORY)
+    @Override
+    public void registrarSistema(CitaMedica cita, AccionHistorialCita accion,
+                                 Map<String, Object> datosAnteriores,
+                                 Map<String, Object> datosNuevos,
+                                 String observacion) {
+
+        guardar(cita, null, accion, datosAnteriores, datosNuevos, observacion);
 
     }
 
@@ -68,6 +66,29 @@ public class HistorialCitaServicioImpl implements IHistorialCitaServicio {
         return historialCitaRepositorio.listaPorCita(idCita).stream()
                 .map(this::toDto)
                 .toList();
+
+    }
+
+    private void guardar(CitaMedica cita, Usuario usuario, AccionHistorialCita accion,
+                         Map<String, Object> datosAnteriores,
+                         Map<String, Object> datosNuevos,
+                         String observacion) {
+
+        if (cita == null || cita.getId() == null || !citaMedicaRepositorio.existsById(cita.getId())) {
+            throw new EntityNotFoundException("No existe la cita médica para registrar el historial");
+        }
+
+        HistorialCita evento = HistorialCita.builder()
+                .cita(cita)
+                .usuario(usuario)
+                .accion(accion)
+                .fechaEvento(LocalDateTime.now())
+                .datosAnteriores(serializar(datosAnteriores))
+                .datosNuevos(serializar(datosNuevos))
+                .observacion(observacion)
+                .build();
+
+        historialCitaRepositorio.save(evento);
 
     }
 
@@ -101,16 +122,22 @@ public class HistorialCitaServicioImpl implements IHistorialCitaServicio {
 
     private HistorialCitaRespuestaDTO toDto(HistorialCita h) {
 
-        var persona = h.getUsuario().getPersona();
+        Usuario usuario = h.getUsuario();
+
+        Integer idUsuario = usuario != null ? usuario.getId() : null;
+        String login = usuario != null ? usuario.getUsuario() : "SISTEMA";
+        String nombre = usuario != null
+                ? usuario.getPersona().getNombre() + " " + usuario.getPersona().getApellidos()
+                : "Sistema";
 
         return new HistorialCitaRespuestaDTO(
                 h.getId(),
                 h.getCita().getId(),
                 h.getAccion().name(),
                 h.getFechaEvento(),
-                h.getUsuario().getId(),
-                h.getUsuario().getUsuario(),
-                persona.getNombre() + " " + persona.getApellidos(),
+                idUsuario,
+                login,
+                nombre,
                 h.getObservacion(),
                 deserializar(h.getDatosAnteriores()),
                 deserializar(h.getDatosNuevos())

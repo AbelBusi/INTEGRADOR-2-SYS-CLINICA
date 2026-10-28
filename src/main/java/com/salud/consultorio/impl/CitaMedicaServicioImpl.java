@@ -45,6 +45,8 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
     private static final String ROL_MEDICO = "MEDICO";
 
+    private static final Duration PLAZO_REGULARIZACION = Duration.ofHours(24);
+
     private final ICitaMedicaRepositorio citaMedicaRepositorio;
     private final IPacienteRepositorio pacienteRepositorio;
     private final IMedicoRepositorio medicoRepositorio;
@@ -65,6 +67,61 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         }
 
         return citaMedicaRepositorio.listaPorEstado(estado);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<Integer> idsVencidasParaCancelacionAutomatica() {
+
+        LocalDateTime limite = LocalDateTime.now(clock).minus(PLAZO_REGULARIZACION);
+
+        return citaMedicaRepositorio.listaIdsVencidasHasta(limite.toLocalDate(), limite.toLocalTime());
+
+    }
+
+    @Transactional
+    @Override
+    public void cancelarAutomaticamentePorVencimiento(Integer id) {
+
+        CitaMedica cita = citaMedicaRepositorio.buscarPorIdBloqueado(id).orElse(null);
+
+        if (cita == null || cita.getEstado() != CITA_PROGRAMADA) {
+            return;
+        }
+
+        if (!plazoRegularizacionVencido(cita, LocalDateTime.now(clock))) {
+            return;
+        }
+
+        Map<String, Object> anteriores = new LinkedHashMap<>();
+        anteriores.put("estado", cita.getEstado());
+
+        Map<String, Object> nuevos = new LinkedHashMap<>();
+        nuevos.put("estado", CITA_CANCELADA);
+        nuevos.put("cancelacionAutomatica", true);
+
+        cita.setEstado(CITA_CANCELADA);
+
+        historialCitaServicio.registrarSistema(
+                cita,
+                AccionHistorialCita.CANCELADA,
+                anteriores,
+                nuevos,
+                "Cancelada automáticamente: no se regularizó dentro de las 24 horas posteriores a su finalización."
+        );
+
+    }
+
+    private boolean plazoRegularizacionVencido(CitaMedica cita, LocalDateTime ahora) {
+        LocalDateTime fin = LocalDateTime.of(cita.getFechaCita(), cita.getHoraSalida());
+        return !ahora.isBefore(fin.plus(PLAZO_REGULARIZACION));
+    }
+
+    private void validarPlazoRegularizacion(CitaMedica cita) {
+        if (plazoRegularizacionVencido(cita, LocalDateTime.now(clock))) {
+            throw new IllegalArgumentException(
+                    "Venció el plazo de 24 horas para regularizar esta cita; se cancelará automáticamente.");
+        }
     }
 
     @Transactional(readOnly = true)
@@ -224,7 +281,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         CitaMedica cita = obtenerCitaBloqueada(id);
 
         validarCitaProgramada(cita, "atender");
-
+        validarPlazoRegularizacion(cita);
         String detalle = normalizarObservacion(observacion);
 
         aplicarResolucion(cita, CITA_ATENDIDA, AccionHistorialCita.ATENDIDA, detalle, false);
@@ -265,6 +322,8 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
             throw new IllegalArgumentException(
                     "La cita aún no ha finalizado, por lo que no está pendiente de regularización.");
         }
+
+        validarPlazoRegularizacion(cita);
 
         String justificacion = normalizarObservacion(observacion);
 

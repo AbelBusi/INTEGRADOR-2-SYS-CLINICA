@@ -199,4 +199,12 @@ public interface ICitaMedicaRepositorio extends JpaRepository<CitaMedica, Intege
             @Param("ahora") LocalTime ahora
     );
 
+    @Query("""
+        SELECT c.id
+        FROM CitaMedica c
+        WHERE c.estado = 1
+          AND (c.fechaCita < :fecha OR (c.fechaCita = :fecha AND c.horaSalida <= :hora))
+        ORDER BY c.fechaCita, c.horaInicio
+        """)
+    List<Integer> listaIdsVencidasHasta(@Param("fecha") LocalDate fecha, @Param("hora") LocalTime hora);
 }

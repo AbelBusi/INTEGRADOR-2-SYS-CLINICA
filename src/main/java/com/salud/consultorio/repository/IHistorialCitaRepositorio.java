@@ -13,13 +13,13 @@ public interface IHistorialCitaRepositorio extends Repository<HistorialCita, Int
     HistorialCita save(HistorialCita historial);
 
     @Query("""
-            SELECT h
-            FROM HistorialCita h
-            JOIN FETCH h.usuario u
-            JOIN FETCH u.persona
-            WHERE h.cita.id = :idCita
-            ORDER BY h.fechaEvento ASC, h.id ASC
-            """)
+        SELECT h
+        FROM HistorialCita h
+        LEFT JOIN FETCH h.usuario u
+        LEFT JOIN FETCH u.persona
+        WHERE h.cita.id = :idCita
+        ORDER BY h.fechaEvento ASC, h.id ASC
+        """)
     List<HistorialCita> listaPorCita(@Param("idCita") Integer idCita);
 
 }

@@ -26,7 +26,7 @@ public class HistorialCita {
     private CitaMedica cita;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_usuario", nullable = false, updatable = false)
+    @JoinColumn(name = "id_usuario", updatable = false)
     private Usuario usuario;
 
     @Enumerated(EnumType.STRING)
