@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 
 import { formatearFechaCorta } from '../../../horarios/utils/calendario.util';
 import { CitaFila, ResolucionRegularizacion } from '../../interface/cita.interface';
+import { limiteRegularizacion } from '../../utils/ventana-cita.util';
 
 @Component({
   selector: 'app-regularizar-cita-modal',
@@ -30,6 +31,17 @@ export class RegularizarCitaModalComponent {
 
   fechaCorta(iso: string): string {
     return formatearFechaCorta(iso);
+  }
+
+  get textoLimite(): string {
+    const limite = limiteRegularizacion(this.cita);
+    const fecha = limite.toLocaleDateString('es-PE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+    const hora = limite.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+    return `${fecha} ${hora}`;
   }
 
   onClose(): void {

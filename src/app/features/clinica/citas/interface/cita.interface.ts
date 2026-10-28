@@ -151,7 +151,7 @@ export interface HistorialCita {
   idCita: number;
   accion: AccionHistorial;
   fechaEvento: string | number[];
-  idUsuario: number;
+  idUsuario: number | null;
   usuario: string;
   nombreUsuario: string;
   observacion: string | null;

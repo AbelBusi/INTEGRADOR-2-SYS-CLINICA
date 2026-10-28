@@ -113,26 +113,34 @@ export function describirEvento(evento: HistorialCita, nombres: NombresHistorial
   const info = ACCIONES_HISTORIAL[evento.accion];
   const fecha = parsearFechaEvento(evento.fechaEvento);
   const regularizada = evento.datosNuevos?.['regularizacion'] === true;
-
+  const automatica = evento.datosNuevos?.['cancelacionAutomatica'] === true;
   return {
     id: evento.id,
-    etiqueta: regularizada ? 'Cita regularizada' : info.texto,
+    etiqueta: automatica
+      ? 'Cancelada automáticamente'
+      : regularizada
+        ? 'Cita regularizada'
+        : info.texto,
     icono: info.icono,
     punto: info.punto,
     fecha: fecha.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }),
     hora: fecha.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
     responsable: evento.nombreUsuario?.trim() || evento.usuario,
-    descripcion: regularizada
-      ? evento.accion === 'ATENDIDA'
-        ? 'La cita venció sin resolverse y se regularizó como atendida.'
-        : 'La cita venció sin resolverse y se regularizó como no realizada (cancelada).'
-      : calcularDescripcion(evento, nombres),
+    descripcion: automatica
+      ? 'La cita no se regularizó dentro de las 24 horas posteriores a su finalización y el sistema la canceló.'
+      : regularizada
+        ? evento.accion === 'ATENDIDA'
+          ? 'La cita venció sin resolverse y se regularizó como atendida.'
+          : 'La cita venció sin resolverse y se regularizó como no realizada (cancelada).'
+        : calcularDescripcion(evento, nombres),
     cambios: calcularCambios(evento, nombres),
     observacion: evento.observacion,
-    etiquetaObservacion: regularizada
-      ? 'Justificación'
-      : evento.accion === 'CANCELADA'
-        ? 'Motivo de cancelación'
-        : 'Observación',
+    etiquetaObservacion: automatica
+      ? 'Detalle'
+      : regularizada
+        ? 'Justificación'
+        : evento.accion === 'CANCELADA'
+          ? 'Motivo de cancelación'
+          : 'Observación',
   };
 }
