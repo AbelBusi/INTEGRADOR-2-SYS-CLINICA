@@ -1,28 +1,28 @@
-<section class="rounded-md border border-gray-200 bg-white">
+<section class="overflow-hidden border border-neutral-200 border-t-2 border-t-[#D9182A] bg-white">
 
-  <div class="flex items-center justify-between gap-2 border-b border-gray-200 px-4 py-2.5">
+  <div class="flex items-center justify-between gap-2 border-b border-neutral-200 px-4 py-3">
     <div class="flex items-center gap-2">
-      <span class="material-icons text-[20px] text-[#58595B]">science</span>
-      <h4 class="text-sm font-bold text-gray-800">Exámenes solicitados</h4>
-      <span class="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold text-gray-600">{{ examenes.length }}</span>
+      <span class="material-icons text-[20px] text-[#D9182A]">science</span>
+      <h4 class="text-sm font-bold text-neutral-900">Exámenes solicitados</h4>
+      <span class="border border-neutral-200 bg-neutral-100 px-2 py-0.5 text-[11px] font-bold text-neutral-700">{{ examenes.length }}</span>
     </div>
     <button
       type="button"
       (click)="alternarFormulario()"
-      class="inline-flex h-8 items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+      class="inline-flex h-8 items-center gap-1.5 border border-neutral-300 bg-white px-3 text-xs font-semibold text-neutral-700 hover:border-[#D9182A] hover:bg-red-50 hover:text-[#D9182A]">
       <span class="material-icons text-[16px]">{{ mostrarFormulario() ? 'close' : 'add' }}</span>
       {{ mostrarFormulario() ? 'Cancelar' : 'Agregar' }}
     </button>
   </div>
 
   @if (examenes.length === 0 && !mostrarFormulario()) {
-    <p class="px-4 py-3 text-sm text-gray-500">Sin exámenes solicitados.</p>
+    <p class="px-4 py-3 text-sm text-neutral-500">Sin exámenes solicitados.</p>
   }
 
-  <ul class="divide-y divide-gray-100">
+  <ul class="divide-y divide-neutral-100">
     @for (e of examenes; track e.id) {
       <li class="px-4 py-3">
-        <p class="text-sm text-gray-700">{{ e.motivo }}</p>
+        <p class="text-sm leading-5 text-neutral-800">{{ e.motivo }}</p>
       </li>
     }
   </ul>
@@ -31,23 +31,23 @@
     <form
       [formGroup]="form"
       (ngSubmit)="guardar()"
-      class="space-y-3 border-t border-gray-200 bg-gray-50 px-4 py-3">
+      class="space-y-3 border-t border-neutral-200 bg-neutral-50 px-4 py-4">
 
       <div>
-        <label class="mb-1 block text-xs font-semibold text-gray-600">Motivo del examen</label>
+        <label class="mb-1 block text-xs font-semibold text-neutral-700">Motivo del examen</label>
         <textarea
           formControlName="motivo"
           rows="2"
           maxlength="200"
           placeholder="Examen requerido y justificación"
-          class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none placeholder-gray-400 focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]"></textarea>
+          class="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none placeholder-neutral-400 focus:border-[#D9182A] focus:ring-1 focus:ring-[#D9182A]"></textarea>
       </div>
 
       <div class="flex justify-end">
         <button
           type="submit"
           [disabled]="form.invalid || guardando()"
-          class="inline-flex h-9 items-center gap-2 rounded-md bg-[#58595B] px-4 text-sm font-semibold text-white transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50">
+          class="inline-flex h-9 items-center gap-2 bg-[#D9182A] px-4 text-sm font-semibold text-white hover:bg-[#B91524] disabled:cursor-not-allowed disabled:opacity-50">
           <span class="material-icons text-[18px]">save</span>
           {{ guardando() ? 'Guardando...' : 'Guardar examen' }}
         </button>
