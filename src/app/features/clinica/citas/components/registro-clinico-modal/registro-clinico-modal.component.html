@@ -1,0 +1,54 @@
+<div
+  class="fixed inset-0 z-[60] flex items-center justify-center bg-neutral-900/50 p-4"
+  (click)="close.emit()">
+
+  <div
+    class="flex max-h-[85vh] w-full max-w-2xl flex-col border border-neutral-300 bg-white"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="titulo"
+    (click)="$event.stopPropagation()">
+
+    <div class="flex h-1 shrink-0">
+      <div class="w-1/2 bg-[#58595B]"></div>
+      <div class="w-1/2 bg-[#D9182A]"></div>
+    </div>
+
+    <div class="flex items-center justify-between gap-4 border-b border-neutral-200 px-5 py-4">
+      <div class="flex min-w-0 items-center gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center bg-[#58595B]">
+          <span class="material-icons text-[22px] text-white">{{ icono }}</span>
+        </div>
+        <div class="min-w-0">
+          <h3 class="text-base font-bold text-neutral-900">{{ titulo }}</h3>
+          @if (subtitulo) {
+            <p class="mt-0.5 truncate text-sm text-neutral-500">{{ subtitulo }}</p>
+          }
+        </div>
+      </div>
+
+      <button
+        type="button"
+        title="Cerrar"
+        aria-label="Cerrar"
+        (click)="close.emit()"
+        class="inline-flex h-9 w-9 shrink-0 items-center justify-center border border-neutral-300 bg-white text-neutral-600 hover:border-[#D9182A] hover:bg-red-50 hover:text-[#D9182A]">
+        <span class="material-icons text-[20px]">close</span>
+      </button>
+    </div>
+
+    <div class="flex-1 overflow-y-auto px-5 py-5">
+      <ng-content></ng-content>
+    </div>
+
+    <div class="flex justify-end border-t border-neutral-200 bg-neutral-50 px-5 py-3">
+      <button
+        type="button"
+        (click)="close.emit()"
+        class="h-10 border border-neutral-300 bg-white px-5 text-sm font-semibold text-neutral-700 hover:border-[#D9182A] hover:bg-red-50 hover:text-[#D9182A]">
+        Cerrar
+      </button>
+    </div>
+
+  </div>
+</div>
