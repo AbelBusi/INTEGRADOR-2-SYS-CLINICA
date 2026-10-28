@@ -204,6 +204,17 @@
             <span>Ver historial</span>
           </button>
 
+          @if (puedeRegistrarAtencionClinica(row)) {
+            <button
+              type="button"
+              title="Registrar diagnósticos y tratamientos"
+              (click)="citaAtencionClinica.set(row)"
+              class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68]">
+              <span class="material-icons text-[18px]">medical_services</span>
+              <span>Atención clínica</span>
+            </button>
+          }
+
           @if (puedeGestionar(row)) {
             @if (estaPendiente(row)) {
 
@@ -304,4 +315,11 @@
     (close)="cerrarRegularizar()"
     (confirmar)="confirmarRegularizacion($event)"
   ></app-regularizar-cita-modal>
+}
+
+@if (citaAtencionClinica(); as cita) {
+  <app-atencion-clinica-modal
+    [cita]="cita"
+    (close)="citaAtencionClinica.set(null)"
+  ></app-atencion-clinica-modal>
 }

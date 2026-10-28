@@ -1,0 +1,73 @@
+<div class="rounded-lg border border-gray-200 bg-white">
+
+  <button
+    type="button"
+    (click)="alternar.emit()"
+    class="flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-50">
+
+    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-[#58595B]">
+      <span class="material-icons text-[19px] text-white">assignment</span>
+    </div>
+
+    <div class="min-w-0 flex-1">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="rounded-md bg-gray-100 px-2 py-0.5 text-xs font-bold text-gray-700">
+          {{ detalle.diagnostico.codigo }}
+        </span>
+        <span class="inline-flex items-center rounded-full border border-gray-300 bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-600">
+          {{ etiquetaTipo(detalle.diagnostico.tipoDiagnostico) }}
+        </span>
+        <span class="text-xs text-gray-400">
+          {{ detalle.diagnostico.fecDiagnostico | date: 'dd/MM/yyyy HH:mm' }}
+        </span>
+      </div>
+      <p class="mt-1 text-sm font-semibold text-gray-800">{{ detalle.diagnostico.descripcion }}</p>
+      <p class="mt-0.5 text-xs text-gray-500">
+        {{ detalle.tratamientos.length }} tratamientos ·
+        {{ detalle.indicaciones.length }} indicaciones ·
+        {{ detalle.examenesSolicitados.length }} exámenes ·
+        {{ detalle.derivaciones.length }} derivaciones
+      </p>
+    </div>
+
+    <span class="material-icons text-[22px] text-gray-400">
+      {{ expandido ? 'expand_less' : 'expand_more' }}
+    </span>
+  </button>
+
+  @if (expandido) {
+    <div class="space-y-3 border-t border-gray-200 px-4 py-4">
+
+      <div class="rounded-md bg-gray-50 px-3 py-2">
+        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Observaciones</p>
+        <p class="mt-0.5 text-sm text-gray-700">{{ detalle.diagnostico.observaciones }}</p>
+      </div>
+
+      <app-tratamiento-seccion
+        [idDiagnostico]="detalle.diagnostico.id"
+        [tratamientos]="detalle.tratamientos"
+        (creado)="cambio.emit()"
+      ></app-tratamiento-seccion>
+
+      <app-indicacion-seccion
+        [idDiagnostico]="detalle.diagnostico.id"
+        [indicaciones]="detalle.indicaciones"
+        (creado)="cambio.emit()"
+      ></app-indicacion-seccion>
+
+      <app-examen-seccion
+        [idDiagnostico]="detalle.diagnostico.id"
+        [examenes]="detalle.examenesSolicitados"
+        (creado)="cambio.emit()"
+      ></app-examen-seccion>
+
+      <app-derivacion-seccion
+        [idDiagnostico]="detalle.diagnostico.id"
+        [derivaciones]="detalle.derivaciones"
+        (creado)="cambio.emit()"
+      ></app-derivacion-seccion>
+
+    </div>
+  }
+
+</div>

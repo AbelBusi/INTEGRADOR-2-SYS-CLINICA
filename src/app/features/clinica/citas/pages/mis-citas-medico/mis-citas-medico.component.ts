@@ -13,7 +13,7 @@ import { ObservacionCitaModalComponent } from '../../components/observacion-cita
 import { RegularizarCitaModalComponent } from '../../components/regularizar-cita-modal/regularizar-cita-modal.component';
 import { puedeCancelarCita, MOTIVO_NO_CANCELABLE } from '../../utils/ventana-cita.util';
 import { ResolucionRegularizacion } from '../../interface/cita.interface';
-
+import { AtencionClinicaModalComponent } from '../../components/atencion-clinica-modal/atencion-clinica-modal.component';
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
 
@@ -28,6 +28,7 @@ type TipoAccion = 'atender' | 'cancelar';
     CustomTableComponent,
     VerDetalleCitaModalComponent,
     HistorialCitaModalComponent,
+    AtencionClinicaModalComponent,
     ObservacionCitaModalComponent,
     RegularizarCitaModalComponent,
   ],
@@ -54,7 +55,7 @@ export class MisCitasMedicoComponent implements OnInit {
   idsPendientes = signal<Set<number>>(new Set());
   soloPendientes = signal(false);
   citaRegularizar = signal<CitaFila | null>(null);
-
+  citaAtencionClinica = signal<CitaFila | null>(null);
   totalPendientes = computed(
     () => this.citas().filter((c) => this.idsPendientes().has(c.id)).length,
   );
@@ -203,6 +204,10 @@ export class MisCitasMedicoComponent implements OnInit {
 
   puedeGestionar(cita: CitaFila): boolean {
     return cita.estado === 1;
+  }
+
+  puedeRegistrarAtencionClinica(cita: CitaFila): boolean {
+    return cita.estado === 1 || cita.estado === 3;
   }
 
   limpiarFiltros(): void {

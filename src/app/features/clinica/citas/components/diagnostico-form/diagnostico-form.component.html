@@ -1,0 +1,67 @@
+<form
+  [formGroup]="form"
+  (ngSubmit)="guardar()"
+  class="grid grid-cols-1 gap-3 rounded-md border border-gray-200 bg-gray-50 px-4 py-4 md:grid-cols-3">
+
+  <div>
+    <label class="mb-1 block text-xs font-semibold text-gray-600">Código (CIE-10)</label>
+    <input
+      type="text"
+      formControlName="codigo"
+      maxlength="15"
+      placeholder="Ej. J00"
+      class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none placeholder-gray-400 focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]"
+    />
+  </div>
+
+  <div class="md:col-span-2">
+    <label class="mb-1 block text-xs font-semibold text-gray-600">Descripción</label>
+    <input
+      type="text"
+      formControlName="descripcion"
+      maxlength="300"
+      placeholder="Descripción del diagnóstico"
+      class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none placeholder-gray-400 focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]"
+    />
+  </div>
+
+  <div>
+    <label class="mb-1 block text-xs font-semibold text-gray-600">Tipo de diagnóstico</label>
+    <select
+      formControlName="tipoDiagnostico"
+      class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
+      <option [ngValue]="null" disabled>Seleccione...</option>
+      @for (tipo of tipos; track tipo.valor) {
+        <option [ngValue]="tipo.valor">{{ tipo.texto }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="md:col-span-2">
+    <label class="mb-1 block text-xs font-semibold text-gray-600">Observaciones</label>
+    <textarea
+      formControlName="observaciones"
+      rows="2"
+      maxlength="300"
+      placeholder="Observaciones clínicas"
+      class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 outline-none placeholder-gray-400 focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]"></textarea>
+  </div>
+
+  <div class="flex justify-end gap-2 md:col-span-3">
+    <button
+      type="button"
+      (click)="cancelar.emit()"
+      [disabled]="guardando()"
+      class="h-9 rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:opacity-50">
+      Cancelar
+    </button>
+    <button
+      type="submit"
+      [disabled]="form.invalid || guardando()"
+      class="inline-flex h-9 items-center gap-2 rounded-md bg-[#58595B] px-4 text-sm font-semibold text-white transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50">
+      <span class="material-icons text-[18px]">save</span>
+      {{ guardando() ? 'Guardando...' : 'Guardar diagnóstico' }}
+    </button>
+  </div>
+
+</form>
