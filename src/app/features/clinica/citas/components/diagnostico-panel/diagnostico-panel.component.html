@@ -46,24 +46,28 @@
       <app-tratamiento-seccion
         [idDiagnostico]="detalle.diagnostico.id"
         [tratamientos]="detalle.tratamientos"
+        [soloLectura]="soloLectura"
         (creado)="cambio.emit()"
       ></app-tratamiento-seccion>
 
       <app-indicacion-seccion
         [idDiagnostico]="detalle.diagnostico.id"
         [indicaciones]="detalle.indicaciones"
+        [soloLectura]="soloLectura"
         (creado)="cambio.emit()"
       ></app-indicacion-seccion>
 
       <app-examen-seccion
         [idDiagnostico]="detalle.diagnostico.id"
         [examenes]="detalle.examenesSolicitados"
+        [soloLectura]="soloLectura"
         (creado)="cambio.emit()"
       ></app-examen-seccion>
 
       <app-derivacion-seccion
         [idDiagnostico]="detalle.diagnostico.id"
         [derivaciones]="detalle.derivaciones"
+        [soloLectura]="soloLectura"
         (creado)="cambio.emit()"
       ></app-derivacion-seccion>
 

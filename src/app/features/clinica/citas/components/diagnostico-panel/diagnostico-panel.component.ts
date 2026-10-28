@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 import { DiagnosticoDetalle } from '../../interface/atencion-clinica.interface';
@@ -25,6 +25,7 @@ export class DiagnosticoPanelComponent {
   @Input() expandido = false;
   @Output() alternar = new EventEmitter<void>();
   @Output() cambio = new EventEmitter<void>();
+  @Input() soloLectura = false;
 
   readonly etiquetaTipo = etiquetaTipoDiagnostico;
 }

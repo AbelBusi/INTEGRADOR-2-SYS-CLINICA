@@ -16,7 +16,7 @@ export class TratamientoSeccionComponent {
   @Input({ required: true }) idDiagnostico!: number;
   @Input() tratamientos: Tratamiento[] = [];
   @Output() creado = new EventEmitter<void>();
-
+  @Input() soloLectura = false;
   private readonly fb = inject(FormBuilder);
   private readonly atencionService = inject(AtencionClinicaService);
   private readonly toastService = inject(ToastService);
@@ -35,6 +35,9 @@ export class TratamientoSeccionComponent {
   });
 
   alternarFormulario(): void {
+    if (this.soloLectura) {
+      return;
+    }
     this.mostrarFormulario.set(!this.mostrarFormulario());
   }
 

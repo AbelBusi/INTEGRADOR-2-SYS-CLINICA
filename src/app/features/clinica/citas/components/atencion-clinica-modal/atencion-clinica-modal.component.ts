@@ -1,30 +1,50 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import { formatearFechaCorta } from '../../../horarios/utils/calendario.util';
+import { ToastService } from '../../../../../core/services/toast.service';
 import { CitaFila } from '../../interface/cita.interface';
 import { DiagnosticoDetalle } from '../../interface/atencion-clinica.interface';
 import { AtencionClinicaService } from '../../services/atencion-clinica.service';
+import { CitaService } from '../../services/cita.service';
 import { DiagnosticoFormComponent } from '../diagnostico-form/diagnostico-form.component';
 import { DiagnosticoPanelComponent } from '../diagnostico-panel/diagnostico-panel.component';
 
 @Component({
   selector: 'app-atencion-clinica-modal',
   standalone: true,
-  imports: [CommonModule, DiagnosticoFormComponent, DiagnosticoPanelComponent],
+  imports: [CommonModule, FormsModule, DiagnosticoFormComponent, DiagnosticoPanelComponent],
   templateUrl: './atencion-clinica-modal.component.html',
 })
 export class AtencionClinicaModalComponent implements OnInit {
   @Input({ required: true }) cita!: CitaFila;
+  @Input() permiteFinalizar = true;
   @Output() close = new EventEmitter<void>();
+  @Output() finalizada = new EventEmitter<void>();
 
   private readonly atencionService = inject(AtencionClinicaService);
+  private readonly citaService = inject(CitaService);
+  private readonly toastService = inject(ToastService);
+
+  readonly limiteObservacion = 300;
 
   diagnosticos = signal<DiagnosticoDetalle[]>([]);
   cargando = signal(false);
   error = signal<string | null>(null);
   mostrarFormulario = signal(false);
   expandidoId = signal<number | null>(null);
+  observacion = signal('');
+  confirmando = signal(false);
+  finalizando = signal(false);
+
+  get soloLectura(): boolean {
+    return this.cita.estado === 3;
+  }
+
+  get puedeFinalizar(): boolean {
+    return !this.soloLectura && this.permiteFinalizar;
+  }
 
   ngOnInit(): void {
     this.cargar(false, false);
@@ -61,6 +81,12 @@ export class AtencionClinicaModalComponent implements OnInit {
     return formatearFechaCorta(iso);
   }
 
+  cerrar(): void {
+    if (!this.finalizando()) {
+      this.close.emit();
+    }
+  }
+
   alternarFormulario(): void {
     this.mostrarFormulario.set(!this.mostrarFormulario());
   }
@@ -76,5 +102,39 @@ export class AtencionClinicaModalComponent implements OnInit {
 
   alCambiarRegistros(): void {
     this.cargar(true, false);
+  }
+
+  solicitarFinalizacion(): void {
+    if (this.puedeFinalizar) {
+      this.confirmando.set(true);
+    }
+  }
+
+  cancelarFinalizacion(): void {
+    if (!this.finalizando()) {
+      this.confirmando.set(false);
+    }
+  }
+
+  finalizar(): void {
+    if (!this.puedeFinalizar || this.finalizando()) {
+      return;
+    }
+
+    this.finalizando.set(true);
+
+    this.citaService.atender(this.cita.id, this.observacion()).subscribe({
+      next: (response) => {
+        this.toastService.success(response?.mensaje || 'Atención finalizada con éxito');
+        this.finalizando.set(false);
+        this.finalizada.emit();
+      },
+      error: (error) => {
+        console.error(error);
+        this.toastService.error(error.error?.mensaje || 'No se pudo finalizar la atención');
+        this.finalizando.set(false);
+        this.confirmando.set(false);
+      },
+    });
   }
 }

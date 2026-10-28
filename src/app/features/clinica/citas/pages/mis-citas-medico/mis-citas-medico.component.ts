@@ -17,8 +17,6 @@ import { AtencionClinicaModalComponent } from '../../components/atencion-clinica
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
 
-type TipoAccion = 'atender' | 'cancelar';
-
 @Component({
   selector: 'app-mis-citas-medico',
   standalone: true,
@@ -50,8 +48,7 @@ export class MisCitasMedicoComponent implements OnInit {
 
   citaVer = signal<CitaFila | null>(null);
   citaHistorial = signal<CitaFila | null>(null);
-  citaAccion = signal<{ cita: CitaFila; tipo: TipoAccion } | null>(null);
-
+  citaCancelar = signal<CitaFila | null>(null);
   idsPendientes = signal<Set<number>>(new Set());
   soloPendientes = signal(false);
   citaRegularizar = signal<CitaFila | null>(null);
@@ -206,8 +203,13 @@ export class MisCitasMedicoComponent implements OnInit {
     return cita.estado === 1;
   }
 
-  puedeRegistrarAtencionClinica(cita: CitaFila): boolean {
+  puedeAbrirAtencionClinica(cita: CitaFila): boolean {
     return cita.estado === 1 || cita.estado === 3;
+  }
+
+  alFinalizarAtencion(): void {
+    this.citaAtencionClinica.set(null);
+    this.cargar(true);
   }
 
   limpiarFiltros(): void {
@@ -220,49 +222,34 @@ export class MisCitasMedicoComponent implements OnInit {
     this.sortField.set(this.sortField() === field ? '' : field);
   }
 
-  abrirAccion(cita: CitaFila, tipo: TipoAccion): void {
-    this.citaAccion.set({ cita, tipo });
+  abrirCancelar(cita: CitaFila): void {
+    this.citaCancelar.set(cita);
   }
 
-  cerrarAccion(): void {
+  cerrarCancelar(): void {
     if (!this.procesando()) {
-      this.citaAccion.set(null);
+      this.citaCancelar.set(null);
     }
   }
 
-  confirmarAccion(observacion: string): void {
-    const accion = this.citaAccion();
-    if (!accion || this.procesando()) {
+  confirmarCancelacion(observacion: string): void {
+    const cita = this.citaCancelar();
+    if (!cita || this.procesando()) {
       return;
     }
 
     this.procesando.set(true);
 
-    const peticion =
-      accion.tipo === 'atender'
-        ? this.citaService.atender(accion.cita.id, observacion)
-        : this.citaService.cancelar(accion.cita.id, observacion);
-
-    peticion.subscribe({
+    this.citaService.cancelar(cita.id, observacion).subscribe({
       next: (response) => {
-        this.toastService.success(
-          response?.mensaje ||
-            (accion.tipo === 'atender'
-              ? 'Atención registrada con éxito'
-              : 'Cita cancelada con éxito'),
-        );
+        this.toastService.success(response?.mensaje || 'Cita cancelada con éxito');
         this.procesando.set(false);
-        this.citaAccion.set(null);
+        this.citaCancelar.set(null);
         this.cargar(true);
       },
       error: (error) => {
         console.error(error);
-        this.toastService.error(
-          error.error?.mensaje ||
-            (accion.tipo === 'atender'
-              ? 'Hubo un error al registrar la atención'
-              : 'Hubo un error al cancelar la cita'),
-        );
+        this.toastService.error(error.error?.mensaje || 'Hubo un error al cancelar la cita');
         this.procesando.set(false);
       },
     });

@@ -1,6 +1,6 @@
 <div
   class="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/50 p-4"
-  (click)="close.emit()">
+  (click)="cerrar()">
 
   <div
     class="flex max-h-[90vh] w-full max-w-4xl flex-col border border-neutral-200 border-t-2 border-t-[#D9182A] bg-white"
@@ -23,7 +23,7 @@
         type="button"
         title="Cerrar"
         aria-label="Cerrar atención clínica"
-        (click)="close.emit()"
+        (click)="cerrar()"
         class="inline-flex h-9 w-9 shrink-0 items-center justify-center border border-neutral-300 bg-white text-neutral-600 hover:border-[#D9182A] hover:bg-red-50 hover:text-[#D9182A]">
         <span class="material-icons text-[20px]">close</span>
       </button>
@@ -37,6 +37,16 @@
         <p class="text-xs font-bold uppercase tracking-wide text-neutral-600">Motivo de la cita</p>
         <p class="mt-1 text-sm leading-6 text-neutral-800">{{ cita.motivo }}</p>
       </div>
+
+      @if (soloLectura) {
+        <div class="flex items-start gap-3 border-l-2 border-l-[#58595B] bg-neutral-50 px-4 py-3">
+          <span class="material-icons text-[20px] text-[#58595B]">task_alt</span>
+          <p class="text-sm leading-5 text-neutral-700">
+            Esta cita ya fue atendida. La información es solo de consulta; las observaciones generales
+            están en el historial de la cita.
+          </p>
+        </div>
+      }
 
       @if (error(); as mensaje) {
         <div class="flex items-start gap-3 border border-red-300 bg-red-50 px-4 py-3" role="alert">
@@ -61,17 +71,19 @@
           </p>
         </div>
 
-        <button
-          type="button"
-          (click)="alternarFormulario()"
-          [disabled]="cargando()"
-          class="inline-flex h-10 items-center justify-center gap-2 bg-[#D9182A] px-4 text-sm font-semibold text-white hover:bg-[#B91524] disabled:cursor-not-allowed disabled:opacity-50">
-          <span class="material-icons text-[18px]">{{ mostrarFormulario() ? 'close' : 'add' }}</span>
-          {{ mostrarFormulario() ? 'Cancelar' : 'Nuevo diagnóstico' }}
-        </button>
+        @if (!soloLectura) {
+          <button
+            type="button"
+            (click)="alternarFormulario()"
+            [disabled]="cargando() || finalizando()"
+            class="inline-flex h-10 items-center justify-center gap-2 bg-[#D9182A] px-4 text-sm font-semibold text-white hover:bg-[#B91524] disabled:cursor-not-allowed disabled:opacity-50">
+            <span class="material-icons text-[18px]">{{ mostrarFormulario() ? 'close' : 'add' }}</span>
+            {{ mostrarFormulario() ? 'Cancelar' : 'Nuevo diagnóstico' }}
+          </button>
+        }
       </div>
 
-      @if (mostrarFormulario()) {
+      @if (mostrarFormulario() && !soloLectura) {
         <app-diagnostico-form
           [idCita]="cita.id"
           (creado)="alCrearDiagnostico()"
@@ -88,13 +100,16 @@
         <div class="border border-dashed border-neutral-300 px-4 py-10 text-center">
           <span class="material-icons text-[32px] text-[#58595B]">assignment</span>
           <p class="mt-2 text-sm font-semibold text-neutral-800">Sin diagnósticos registrados</p>
-          <p class="mt-1 text-sm text-neutral-500">Registra un diagnóstico para iniciar la atención clínica.</p>
+          <p class="mt-1 text-sm text-neutral-500">
+            {{ soloLectura ? 'Esta cita no tiene información clínica registrada.' : 'Registra un diagnóstico para iniciar la atención clínica.' }}
+          </p>
         </div>
       } @else {
         <div class="space-y-3">
           @for (detalle of diagnosticos(); track detalle.diagnostico.id) {
             <app-diagnostico-panel
               [detalle]="detalle"
+              [soloLectura]="soloLectura"
               [expandido]="expandidoId() === detalle.diagnostico.id"
               (alternar)="alternarPanel(detalle.diagnostico.id)"
               (cambio)="alCambiarRegistros()"
@@ -103,15 +118,81 @@
         </div>
       }
 
+      @if (puedeFinalizar) {
+        <div class="border-t border-neutral-200 pt-4">
+          <label
+            for="observacionAtencion"
+            class="text-xs font-bold uppercase tracking-wide text-neutral-600">
+            Observaciones generales de la atención (opcional)
+          </label>
+          <textarea
+            id="observacionAtencion"
+            name="observacionAtencion"
+            rows="3"
+            [maxlength]="limiteObservacion"
+            [ngModel]="observacion()"
+            (ngModelChange)="observacion.set($event)"
+            [disabled]="finalizando()"
+            placeholder="Resumen general de la atención..."
+            class="mt-2 w-full border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none placeholder-neutral-400 focus:border-[#D9182A] focus:ring-1 focus:ring-[#D9182A] disabled:opacity-60"></textarea>
+          <p class="mt-1 text-right text-xs text-neutral-500">
+            {{ observacion().length }}/{{ limiteObservacion }}
+          </p>
+        </div>
+      }
+
     </div>
 
-    <div class="flex justify-end border-t border-neutral-200 bg-neutral-50 px-5 py-3 sm:px-6">
-      <button
-        type="button"
-        (click)="close.emit()"
-        class="h-10 border border-neutral-300 bg-white px-5 text-sm font-semibold text-neutral-700 hover:border-[#D9182A] hover:bg-red-50 hover:text-[#D9182A]">
-        Cerrar
-      </button>
+    <div class="flex flex-wrap items-center justify-end gap-3 border-t border-neutral-200 bg-neutral-50 px-5 py-3 sm:px-6">
+
+      @if (confirmando()) {
+        <p class="mr-auto text-sm text-neutral-700">
+          Se marcará la cita como atendida. Esta acción no se puede deshacer.
+        </p>
+
+        <button
+          type="button"
+          (click)="cancelarFinalizacion()"
+          [disabled]="finalizando()"
+          class="h-10 border border-neutral-300 bg-white px-5 text-sm font-semibold text-neutral-700 hover:border-[#D9182A] hover:bg-red-50 hover:text-[#D9182A] disabled:cursor-not-allowed disabled:opacity-50">
+          Volver
+        </button>
+
+        <button
+          type="button"
+          (click)="finalizar()"
+          [disabled]="finalizando()"
+          class="inline-flex h-10 items-center gap-2 bg-[#0d6b68] px-5 text-sm font-semibold text-white hover:bg-[#0a5654] disabled:cursor-not-allowed disabled:opacity-50">
+          <span class="material-icons text-[18px]">task_alt</span>
+          {{ finalizando() ? 'Finalizando...' : 'Confirmar y finalizar' }}
+        </button>
+      } @else {
+        @if (!soloLectura && !permiteFinalizar) {
+          <p class="mr-auto text-sm text-neutral-600">
+            Cita vencida sin regularizar: ciérrala desde la acción «Regularizar».
+          </p>
+        }
+
+        <button
+          type="button"
+          (click)="cerrar()"
+          class="h-10 border border-neutral-300 bg-white px-5 text-sm font-semibold text-neutral-700 hover:border-[#D9182A] hover:bg-red-50 hover:text-[#D9182A]">
+          Cerrar
+        </button>
+
+        @if (puedeFinalizar) {
+          <button
+            type="button"
+            (click)="solicitarFinalizacion()"
+            [disabled]="cargando() || mostrarFormulario()"
+            [attr.title]="mostrarFormulario() ? 'Guarda o cancela el diagnóstico en edición' : 'Finalizar atención'"
+            class="inline-flex h-10 items-center gap-2 bg-[#0d6b68] px-5 text-sm font-semibold text-white hover:bg-[#0a5654] disabled:cursor-not-allowed disabled:opacity-50">
+            <span class="material-icons text-[18px]">task_alt</span>
+            Finalizar atención
+          </button>
+        }
+      }
+
     </div>
 
   </div>

@@ -17,7 +17,6 @@ export class DiagnosticoFormComponent {
   @Input({ required: true }) idCita!: number;
   @Output() creado = new EventEmitter<void>();
   @Output() cancelar = new EventEmitter<void>();
-
   private readonly fb = inject(FormBuilder);
   private readonly atencionService = inject(AtencionClinicaService);
   private readonly toastService = inject(ToastService);

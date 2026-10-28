@@ -19,7 +19,7 @@ export class ExamenSeccionComponent {
   @Input({ required: true }) idDiagnostico!: number;
   @Input() examenes: ExamenSolicitado[] = [];
   @Output() creado = new EventEmitter<void>();
-
+  @Input() soloLectura = false;
   private readonly fb = inject(FormBuilder);
   private readonly atencionService = inject(AtencionClinicaService);
   private readonly toastService = inject(ToastService);

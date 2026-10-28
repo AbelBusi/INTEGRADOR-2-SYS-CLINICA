@@ -204,20 +204,19 @@
             <span>Ver historial</span>
           </button>
 
-          @if (puedeRegistrarAtencionClinica(row)) {
+          @if (puedeAbrirAtencionClinica(row)) {
             <button
               type="button"
-              title="Registrar diagnósticos y tratamientos"
+              [title]="row.estado === 3 ? 'Ver información clínica' : 'Atender y registrar información clínica'"
               (click)="citaAtencionClinica.set(row)"
               class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68]">
-              <span class="material-icons text-[18px]">medical_services</span>
-              <span>Atención clínica</span>
+              <span class="material-icons text-[18px]">{{ row.estado === 3 ? 'assignment' : 'medical_services' }}</span>
+              <span>{{ row.estado === 3 ? 'Ver atención' : 'Atención clínica' }}</span>
             </button>
           }
 
           @if (puedeGestionar(row)) {
             @if (estaPendiente(row)) {
-
 
               <button
                 type="button"
@@ -229,30 +228,18 @@
                 <span>Regularizar</span>
               </button>
 
-
             } @else {
 
               <button
                 type="button"
-                title="Registrar atención"
-                (click)="abrirAccion(row, 'atender')"
-                [disabled]="procesando()"
-                class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition-colors hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68] disabled:cursor-not-allowed disabled:opacity-50">
-                <span class="material-icons text-[18px]">task_alt</span>
-                <span>Registrar atención</span>
-              </button>
-
-              <button
-                type="button"
                 [title]="puedeCancelar(row) ? 'Cancelar cita' : motivoNoCancelable"
-                (click)="abrirAccion(row, 'cancelar')"
+                (click)="abrirCancelar(row)"
                 [disabled]="procesando() || !puedeCancelar(row)"
                 class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-700 transition-colors hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 disabled:cursor-not-allowed disabled:opacity-50">
                 <span class="material-icons text-[18px]">event_busy</span>
               </button>
             }
           }
-
         </div>
       }
 
@@ -276,36 +263,20 @@
   ></app-historial-cita-modal>
 }
 
-@if (citaAccion(); as accion) {
-  @if (accion.tipo === 'atender') {
-    <app-observacion-cita-modal
-      [cita]="accion.cita"
-      titulo="Registrar atención"
-      descripcion="Se marcará la cita como atendida. Esta acción no se puede deshacer."
-      etiquetaCampo="Observación (opcional)"
-      placeholder="Detalle breve de la atención..."
-      textoConfirmar="Registrar atención"
-      icono="task_alt"
-      variante="exito"
-      [procesando]="procesando()"
-      (close)="cerrarAccion()"
-      (confirmar)="confirmarAccion($event)"
-    ></app-observacion-cita-modal>
-  } @else {
-    <app-observacion-cita-modal
-      [cita]="accion.cita"
-      titulo="Cancelar cita"
-      descripcion="La cita quedará cancelada y el horario se liberará."
-      etiquetaCampo="Motivo de cancelación (opcional)"
-      placeholder="¿Por qué se cancela la cita?"
-      textoConfirmar="Cancelar cita"
-      icono="event_busy"
-      variante="peligro"
-      [procesando]="procesando()"
-      (close)="cerrarAccion()"
-      (confirmar)="confirmarAccion($event)"
-    ></app-observacion-cita-modal>
-  }
+@if (citaCancelar(); as cita) {
+  <app-observacion-cita-modal
+    [cita]="cita"
+    titulo="Cancelar cita"
+    descripcion="La cita quedará cancelada y el horario se liberará."
+    etiquetaCampo="Motivo de cancelación (opcional)"
+    placeholder="¿Por qué se cancela la cita?"
+    textoConfirmar="Cancelar cita"
+    icono="event_busy"
+    variante="peligro"
+    [procesando]="procesando()"
+    (close)="cerrarCancelar()"
+    (confirmar)="confirmarCancelacion($event)"
+  ></app-observacion-cita-modal>
 }
 
 @if (citaRegularizar(); as cita) {
@@ -320,6 +291,8 @@
 @if (citaAtencionClinica(); as cita) {
   <app-atencion-clinica-modal
     [cita]="cita"
+    [permiteFinalizar]="!estaPendiente(cita)"
     (close)="citaAtencionClinica.set(null)"
+    (finalizada)="alFinalizarAtencion()"
   ></app-atencion-clinica-modal>
 }

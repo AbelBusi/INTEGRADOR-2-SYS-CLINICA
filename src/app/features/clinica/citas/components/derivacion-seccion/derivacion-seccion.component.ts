@@ -28,7 +28,7 @@ export class DerivacionSeccionComponent {
   private readonly atencionService = inject(AtencionClinicaService);
   private readonly citaService = inject(CitaService);
   private readonly toastService = inject(ToastService);
-
+  @Input() soloLectura = false;
   readonly niveles = NIVELES_URGENCIA;
   readonly etiquetaUrgencia = etiquetaUrgencia;
   readonly clasesUrgencia = clasesUrgencia;
@@ -49,6 +49,9 @@ export class DerivacionSeccionComponent {
   }
 
   alternarFormulario(): void {
+    if (this.soloLectura) {
+      return;
+    }
     const abrir = !this.mostrarFormulario();
     this.mostrarFormulario.set(abrir);
 
