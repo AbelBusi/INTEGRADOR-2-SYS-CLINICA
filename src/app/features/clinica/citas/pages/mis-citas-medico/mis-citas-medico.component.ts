@@ -208,7 +208,6 @@ export class MisCitasMedicoComponent implements OnInit {
   }
 
   alFinalizarAtencion(): void {
-    this.citaAtencionClinica.set(null);
     this.cargar(true);
   }
 

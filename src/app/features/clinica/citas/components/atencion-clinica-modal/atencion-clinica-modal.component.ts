@@ -10,11 +10,18 @@ import { AtencionClinicaService } from '../../services/atencion-clinica.service'
 import { CitaService } from '../../services/cita.service';
 import { DiagnosticoFormComponent } from '../diagnostico-form/diagnostico-form.component';
 import { DiagnosticoPanelComponent } from '../diagnostico-panel/diagnostico-panel.component';
+import { DocumentosClinicosModalComponent } from '../../../../../shared/documentos-clinicos/components/documentos-clinicos-modal/documentos-clinicos-modal.component';
 
 @Component({
   selector: 'app-atencion-clinica-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, DiagnosticoFormComponent, DiagnosticoPanelComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    DiagnosticoFormComponent,
+    DiagnosticoPanelComponent,
+    DocumentosClinicosModalComponent,
+  ],
   templateUrl: './atencion-clinica-modal.component.html',
 })
 export class AtencionClinicaModalComponent implements OnInit {
@@ -26,7 +33,8 @@ export class AtencionClinicaModalComponent implements OnInit {
   private readonly atencionService = inject(AtencionClinicaService);
   private readonly citaService = inject(CitaService);
   private readonly toastService = inject(ToastService);
-
+  mostrarDocumentos = signal(false);
+  atendidaLocal = signal(false);
   readonly limiteObservacion = 300;
 
   diagnosticos = signal<DiagnosticoDetalle[]>([]);
@@ -39,7 +47,11 @@ export class AtencionClinicaModalComponent implements OnInit {
   finalizando = signal(false);
 
   get soloLectura(): boolean {
-    return this.cita.estado === 3;
+    return this.cita.estado === 3 || this.atendidaLocal();
+  }
+
+  puedeImprimir(): boolean {
+    return !this.cargando() && this.diagnosticos().length > 0;
   }
 
   get puedeFinalizar(): boolean {
@@ -127,6 +139,8 @@ export class AtencionClinicaModalComponent implements OnInit {
       next: (response) => {
         this.toastService.success(response?.mensaje || 'Atención finalizada con éxito');
         this.finalizando.set(false);
+        this.confirmando.set(false);
+        this.atendidaLocal.set(true);
         this.finalizada.emit();
       },
       error: (error) => {

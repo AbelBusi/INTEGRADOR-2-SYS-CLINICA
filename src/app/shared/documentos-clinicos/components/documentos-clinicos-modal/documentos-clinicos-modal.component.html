@@ -1,0 +1,288 @@
+<div
+  class="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 p-4"
+  (click)="cerrar()">
+
+  <div
+    class="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-lg border border-gray-200 bg-white"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="documentos-clinicos-titulo"
+    (click)="$event.stopPropagation()">
+
+    <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+      <div class="flex min-w-0 items-center gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#58595B]">
+          <span class="material-icons text-[22px] text-white">print</span>
+        </div>
+        <div class="min-w-0">
+          <h2 id="documentos-clinicos-titulo" class="text-base font-bold text-gray-900">Documentos clínicos</h2>
+          <p class="truncate text-xs text-gray-500">
+            {{ cita.paciente }} · {{ fechaCita() }} · {{ cita.inicio }} - {{ cita.salida }}
+          </p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        aria-label="Cerrar"
+        [disabled]="procesando()"
+        (click)="cerrar()"
+        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-50 hover:text-[#58595B] disabled:cursor-not-allowed disabled:opacity-40">
+        <span class="material-icons text-[20px]">close</span>
+      </button>
+    </div>
+
+    @if (cargando()) {
+      <div class="flex flex-1 flex-col items-center justify-center gap-3 px-5 py-16">
+        <span class="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-[#D9182A]"></span>
+        <p class="text-sm text-gray-500">Cargando información de la atención...</p>
+      </div>
+    } @else if (errorCarga(); as mensaje) {
+      <div class="px-5 py-8">
+        <div class="flex items-start gap-3 rounded-lg border border-[#D9182A]/30 bg-[#D9182A]/5 px-4 py-3" role="alert">
+          <span class="material-icons text-[20px] text-[#D9182A]">error_outline</span>
+          <p class="flex-1 text-sm font-semibold text-[#D9182A]">{{ mensaje }}</p>
+        </div>
+      </div>
+    } @else {
+      <div class="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto lg:grid-cols-[22rem_minmax(0,1fr)] lg:overflow-hidden">
+
+        <div class="space-y-5 border-b border-gray-200 px-5 py-4 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+
+          <div>
+            <div class="mb-1.5 flex items-center justify-between">
+              <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Documentos ({{ cantidadSeleccionada() }}/{{ seleccionables().length }})
+              </p>
+            </div>
+
+            <label
+              class="mb-2 flex cursor-pointer items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700"
+              [class.cursor-not-allowed]="seleccionables().length === 0"
+              [class.opacity-60]="seleccionables().length === 0">
+              <input
+                type="checkbox"
+                class="h-4 w-4 accent-[#D9182A]"
+                [checked]="todosSeleccionados()"
+                [disabled]="seleccionables().length === 0 || procesando()"
+                (change)="alternarTodos()"
+              />
+              Seleccionar todos los disponibles
+            </label>
+
+            <div class="space-y-2">
+              @for (documento of documentos(); track documento.tipo) {
+                <label
+                  class="flex items-start gap-3 rounded-md border px-3 py-2.5"
+                  [ngClass]="
+                    esSeleccionable(documento)
+                      ? 'cursor-pointer border-gray-200 bg-white hover:border-[#58595B]'
+                      : 'cursor-not-allowed border-gray-200 bg-gray-50 opacity-60'
+                  ">
+                  <input
+                    type="checkbox"
+                    class="mt-0.5 h-4 w-4 shrink-0 accent-[#D9182A]"
+                    [checked]="seleccion().has(documento.tipo)"
+                    [disabled]="!esSeleccionable(documento) || procesando()"
+                    (change)="alternarDocumento(documento.tipo)"
+                  />
+                  <span class="material-icons text-[20px] text-[#58595B]">{{ documento.icono }}</span>
+                  <span class="min-w-0 flex-1">
+                    <span class="block text-sm font-semibold text-gray-800">{{ documento.titulo }}</span>
+                    <span class="block text-xs leading-5 text-gray-500">{{ detalleDocumento(documento) }}</span>
+                  </span>
+                  @if (documento.disponible) {
+                    <span class="rounded-md border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs font-bold text-gray-600">
+                      {{ documento.cantidad }}
+                    </span>
+                  }
+                </label>
+              }
+            </div>
+          </div>
+
+          <div>
+            <p class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500">Formato</p>
+            <div class="grid grid-cols-2 gap-2">
+              @for (item of formatos; track item.valor) {
+                <button
+                  type="button"
+                  [disabled]="procesando()"
+                  (click)="seleccionarFormato(item.valor)"
+                  [ngClass]="
+                    formato() === item.valor
+                      ? 'border-[#D9182A] bg-[#D9182A]/5 text-[#D9182A]'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-[#58595B] hover:bg-gray-50'
+                  "
+                  class="inline-flex h-10 items-center justify-center gap-2 rounded-md border text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60">
+                  <span class="material-icons text-[20px]">{{ item.icono }}</span>
+                  {{ item.texto }}
+                </button>
+              }
+            </div>
+
+            @if (formato() === 'ticket') {
+              <p class="mb-1.5 mt-3 text-xs font-semibold text-gray-600">Ancho del papel</p>
+              <div class="grid grid-cols-2 gap-2">
+                @for (item of anchosTicket; track item.valor) {
+                  <button
+                    type="button"
+                    [disabled]="procesando()"
+                    (click)="seleccionarAncho(item.valor)"
+                    [ngClass]="
+                      anchoTicket() === item.valor
+                        ? 'border-[#D9182A] bg-[#D9182A]/5 text-[#D9182A]'
+                        : 'border-gray-300 bg-white text-gray-700 hover:border-[#58595B] hover:bg-gray-50'
+                    "
+                    class="inline-flex h-10 items-center justify-center rounded-md border text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60">
+                    {{ item.texto }}
+                  </button>
+                }
+              </div>
+            }
+
+            @if (hayExcluidosPorFormato()) {
+              <p class="mt-2 text-xs text-gray-500">
+                El resumen de atención solo se genera en formato A4.
+              </p>
+            }
+          </div>
+
+          @if (cantidadSeleccionada() > 1) {
+            <label class="flex cursor-pointer items-start gap-2 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                class="mt-0.5 h-4 w-4 accent-[#D9182A]"
+                [checked]="consolidado()"
+                [disabled]="procesando()"
+                (change)="alternarConsolidado()"
+              />
+              <span>
+                Generar un solo PDF consolidado
+                <span class="block text-xs text-gray-500">
+                  Cada documento inicia en su propia página. Si lo desactivas, se genera un PDF por documento.
+                </span>
+              </span>
+            </label>
+          }
+        </div>
+
+        <div class="flex min-h-[420px] flex-col gap-3 px-5 py-4">
+
+          @if (archivos().length > 1) {
+            <div class="flex flex-wrap items-center gap-2">
+              @for (archivo of archivos(); track archivo.clave; let indice = $index) {
+                <button
+                  type="button"
+                  (click)="seleccionarArchivo(indice)"
+                  [ngClass]="
+                    indiceActivo() === indice
+                      ? 'border-[#D9182A] bg-[#D9182A]/5 text-[#D9182A]'
+                      : 'border-gray-300 bg-white text-gray-700 hover:border-[#58595B] hover:bg-gray-50'
+                  "
+                  class="h-8 rounded-md border px-3 text-xs font-semibold transition-colors">
+                  {{ archivo.etiqueta }}
+                </button>
+              }
+              <button
+                type="button"
+                (click)="descargarTodos()"
+                class="ml-auto text-xs font-semibold text-[#58595B] hover:text-[#D9182A]">
+                Descargar todos ({{ archivos().length }})
+              </button>
+            </div>
+          }
+
+          <div class="relative min-h-[360px] flex-1 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+
+            @if (vistaUrl(); as url) {
+              <iframe
+                [src]="url"
+                title="Vista previa del documento"
+                class="absolute inset-0 h-full w-full bg-white"></iframe>
+            } @else {
+              <div class="flex h-full min-h-[360px] flex-col items-center justify-center gap-2 px-6 text-center">
+                <span class="material-icons text-[36px] text-gray-300">picture_as_pdf</span>
+                <p class="text-sm font-semibold text-gray-700">Vista previa del documento</p>
+                <p class="max-w-sm text-xs leading-5 text-gray-500">
+                  {{ cantidadSeleccionada() === 0
+                  ? 'Selecciona al menos un documento para generar la vista previa.'
+                  : 'Pulsa «Visualizar PDF» para revisar el documento antes de descargarlo o imprimirlo.' }}
+                </p>
+              </div>
+            }
+
+            @if (procesando()) {
+              <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/90">
+                <span class="h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-[#D9182A]"></span>
+                <p class="text-sm text-gray-600">Generando documento...</p>
+              </div>
+            }
+          </div>
+
+          @if (errorGeneracion(); as mensaje) {
+            <div class="flex items-start gap-3 rounded-lg border border-[#D9182A]/30 bg-[#D9182A]/5 px-4 py-3" role="alert">
+              <span class="material-icons text-[20px] text-[#D9182A]">error_outline</span>
+              <p class="flex-1 text-sm font-semibold text-[#D9182A]">{{ mensaje }}</p>
+            </div>
+          }
+
+          @if (archivoActivo()) {
+            <p class="text-xs text-gray-500">
+              ¿No se visualiza el PDF?
+              <button type="button" (click)="abrirEnNuevaPestana()" class="font-semibold text-[#58595B] hover:text-[#D9182A]">
+                Abrirlo en una pestaña nueva
+              </button>
+            </p>
+          }
+        </div>
+
+      </div>
+    }
+
+    <div class="flex flex-col-reverse gap-3 border-t border-gray-200 bg-[#fafafa] px-5 py-3 sm:flex-row sm:items-center sm:justify-end">
+
+      <button
+        type="button"
+        [disabled]="procesando()"
+        (click)="cerrar()"
+        class="inline-flex h-10 items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60">
+        Cerrar
+      </button>
+
+      <button
+        type="button"
+        [disabled]="cantidadSeleccionada() === 0 || procesando()"
+        (click)="visualizar()"
+        class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60">
+        <span class="material-icons text-[20px]">visibility</span>
+        Visualizar PDF
+      </button>
+
+      <button
+        type="button"
+        [disabled]="cantidadSeleccionada() === 0 || procesando()"
+        (click)="descargar()"
+        class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#58595B] bg-white px-4 text-sm font-semibold text-[#58595B] transition-colors hover:bg-[#58595B] hover:text-white disabled:cursor-not-allowed disabled:opacity-60">
+        <span class="material-icons text-[20px]">download</span>
+        Descargar PDF
+      </button>
+
+      <button
+        type="button"
+        [disabled]="cantidadSeleccionada() === 0 || procesando()"
+        (click)="imprimir()"
+        class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#D9182A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:cursor-not-allowed disabled:opacity-60">
+        @if (accion() === 'impresion') {
+          <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+          Preparando...
+        } @else {
+          <span class="material-icons text-[20px]">print</span>
+          Imprimir
+        }
+      </button>
+
+    </div>
+
+  </div>
+</div>

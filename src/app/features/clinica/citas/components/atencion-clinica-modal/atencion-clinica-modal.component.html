@@ -61,26 +61,66 @@
         </div>
       }
 
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 pb-3">
-        <div>
-          <h4 class="text-sm font-bold uppercase tracking-wide text-neutral-800">
-            Diagnósticos
-          </h4>
-          <p class="mt-1 text-xs text-neutral-500">
-            {{ diagnosticos().length }} {{ diagnosticos().length === 1 ? 'diagnóstico registrado' : 'diagnósticos registrados' }}
-          </p>
-        </div>
+      <div class="flex flex-wrap items-center justify-end gap-3 border-t border-neutral-200 bg-neutral-50 px-5 py-3 sm:px-6">
 
-        @if (!soloLectura) {
+        @if (confirmando()) {
+          <p class="mr-auto text-sm text-neutral-700">
+            Se marcará la cita como atendida. Esta acción no se puede deshacer.
+          </p>
+
           <button
             type="button"
-            (click)="alternarFormulario()"
-            [disabled]="cargando() || finalizando()"
-            class="inline-flex h-10 items-center justify-center gap-2 bg-[#D9182A] px-4 text-sm font-semibold text-white hover:bg-[#B91524] disabled:cursor-not-allowed disabled:opacity-50">
-            <span class="material-icons text-[18px]">{{ mostrarFormulario() ? 'close' : 'add' }}</span>
-            {{ mostrarFormulario() ? 'Cancelar' : 'Nuevo diagnóstico' }}
+            (click)="cancelarFinalizacion()"
+            [disabled]="finalizando()"
+            class="h-10 border border-neutral-300 bg-white px-5 text-sm font-semibold text-neutral-700 hover:border-[#D9182A] hover:bg-red-50 hover:text-[#D9182A] disabled:cursor-not-allowed disabled:opacity-50">
+            Volver
           </button>
+
+          <button
+            type="button"
+            (click)="finalizar()"
+            [disabled]="finalizando()"
+            class="inline-flex h-10 items-center gap-2 bg-[#0d6b68] px-5 text-sm font-semibold text-white hover:bg-[#0a5654] disabled:cursor-not-allowed disabled:opacity-50">
+            <span class="material-icons text-[18px]">task_alt</span>
+            {{ finalizando() ? 'Finalizando...' : 'Confirmar y finalizar' }}
+          </button>
+        } @else {
+          @if (!soloLectura && !permiteFinalizar) {
+            <p class="mr-auto text-sm text-neutral-600">
+              Cita vencida sin regularizar: ciérrala desde la acción «Regularizar».
+            </p>
+          }
+
+          <button
+            type="button"
+            (click)="cerrar()"
+            class="h-10 border border-neutral-300 bg-white px-5 text-sm font-semibold text-neutral-700 hover:border-[#D9182A] hover:bg-red-50 hover:text-[#D9182A]">
+            Cerrar
+          </button>
+
+          @if (puedeImprimir()) {
+            <button
+              type="button"
+              (click)="mostrarDocumentos.set(true)"
+              class="inline-flex h-10 items-center gap-2 border border-[#58595B] bg-white px-5 text-sm font-bold text-[#58595B] hover:bg-[#58595B] hover:text-white">
+              <span class="material-icons text-[18px]">print</span>
+              Documentos
+            </button>
+          }
+
+          @if (puedeFinalizar) {
+            <button
+              type="button"
+              (click)="solicitarFinalizacion()"
+              [disabled]="cargando() || mostrarFormulario()"
+              [attr.title]="mostrarFormulario() ? 'Guarda o cancela el diagnóstico en edición' : 'Finalizar atención'"
+              class="inline-flex h-10 items-center gap-2 bg-[#0d6b68] px-5 text-sm font-semibold text-white hover:bg-[#0a5654] disabled:cursor-not-allowed disabled:opacity-50">
+              <span class="material-icons text-[18px]">task_alt</span>
+              Finalizar atención
+            </button>
+          }
         }
+
       </div>
 
       @if (mostrarFormulario() && !soloLectura) {
@@ -197,3 +237,10 @@
 
   </div>
 </div>
+
+@if (mostrarDocumentos()) {
+  <app-documentos-clinicos-modal
+    [cita]="cita"
+    (close)="mostrarDocumentos.set(false)"
+  ></app-documentos-clinicos-modal>
+}
