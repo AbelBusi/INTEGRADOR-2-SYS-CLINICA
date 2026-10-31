@@ -106,7 +106,14 @@ export class CitaEditarModalComponent extends CitaFormularioBase implements OnIn
 
         this.documentoMedico.set(info.numeroDocumento);
         this.idEspecialidad.set(info.idEspecialidad);
-        this.cargarMedicos(info.idEspecialidad, { idMedico: cita.idMedico, nombre: cita.medico });
+
+        this.cargarEspecialidadSeleccionada(info.idEspecialidad, info.especialidad);
+
+        this.cargarMedicos(info.idEspecialidad, {
+          idMedico: cita.idMedico,
+          nombre: cita.medico,
+        });
+
         this.cargarHorarios(cita.idMedico, info.idEmpleado);
       },
       error: (error) => {
@@ -117,4 +124,5 @@ export class CitaEditarModalComponent extends CitaFormularioBase implements OnIn
       },
     });
   }
+
 }

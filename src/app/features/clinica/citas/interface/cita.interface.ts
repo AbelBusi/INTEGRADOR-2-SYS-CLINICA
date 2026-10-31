@@ -99,7 +99,11 @@ export interface InfoEstadoCita {
   punto: string;
 }
 
-
+export interface EspecialidadBusqueda {
+  id: number;
+  nombre: string;
+  cantidadMedicos: number;
+}
 
 export const ESTADOS_CITA: Record<number, InfoEstadoCita> = {
   0: {

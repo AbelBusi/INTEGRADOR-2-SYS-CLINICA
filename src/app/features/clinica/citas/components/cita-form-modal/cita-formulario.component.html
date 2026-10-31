@@ -139,17 +139,116 @@
           </div>
 
           <div class="space-y-1.5">
-            <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Especialidad</label>
-            <select
-              name="idEspecialidad"
-              [ngModel]="form.idEspecialidad()"
-              (ngModelChange)="form.onEspecialidadChange($event)"
-              class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]">
-              <option [ngValue]="null" disabled>Seleccione una especialidad...</option>
-              @for (especialidad of form.especialidades(); track especialidad.idEspecialidad) {
-                <option [ngValue]="especialidad.idEspecialidad">{{ especialidad.nombre }}</option>
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">
+                Especialidad
+              </label>
+
+              @if (form.especialidadSeleccionada(); as e) {
+
+                <div class="flex items-center justify-between gap-3 rounded border border-[#0d6b68]/30 bg-[#0d6b68]/[0.05] px-3 py-2.5">
+                  <div class="flex min-w-0 items-center gap-3">
+                    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white">
+                      <span class="material-icons text-[19px] text-[#58595B]">medical_services</span>
+                    </div>
+
+                    <div class="min-w-0">
+                      <p class="truncate text-sm font-bold text-neutral-900">
+                        {{ e.nombre }}
+                      </p>
+                      <p class="text-xs text-neutral-500">
+                        {{ e.cantidadMedicos }} médicos activos
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    (click)="form.quitarEspecialidad()"
+                    class="shrink-0 rounded border border-neutral-300 bg-white px-2.5 py-1 text-xs font-semibold text-neutral-600 transition-colors hover:border-[#58595B] hover:bg-neutral-50">
+                    Cambiar
+                  </button>
+                </div>
+
+              } @else {
+
+                <div class="flex items-center gap-2 rounded border border-neutral-300 bg-white px-3 transition-colors focus-within:border-[#58595B]">
+                  <span class="material-icons text-[20px] text-neutral-400">search</span>
+
+                  <input
+                    type="text"
+                    name="busquedaEspecialidad"
+                    [ngModel]="form.textoBusquedaEspecialidad()"
+                    (ngModelChange)="form.onBusquedaEspecialidadInput($event)"
+                    autocomplete="off"
+                    placeholder="Buscar especialidad..."
+                    class="w-full bg-transparent py-2 text-sm text-neutral-800 outline-none placeholder-neutral-400"
+                  />
+
+                  @if (form.buscandoEspecialidad()) {
+                    <span class="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-neutral-300 border-t-[#D9182A]"></span>
+                  }
+                </div>
+
+                @if (form.textoBusquedaEspecialidad().trim().length >= form.MIN_BUSQUEDA) {
+
+                  <div class="rounded border border-neutral-200">
+
+                    @if (form.buscandoEspecialidad()) {
+                      <p class="px-3 py-3 text-xs font-medium text-neutral-500">
+                        Buscando especialidades...
+                      </p>
+                    } @else if (form.errorBusquedaEspecialidad()) {
+                      <p class="px-3 py-3 text-xs font-medium text-[#D9182A]">
+                        No se pudo realizar la búsqueda. Inténtalo de nuevo.
+                      </p>
+                    } @else if (form.resultadosEspecialidad().length > 0) {
+
+                      <ul class="max-h-52 divide-y divide-neutral-100 overflow-y-auto">
+                        @for (resultado of form.resultadosEspecialidad(); track resultado.id) {
+                          <li>
+                            <button
+                              type="button"
+                              (click)="form.seleccionarEspecialidad(resultado)"
+                              class="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-neutral-50">
+
+                              <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-100">
+                    <span class="material-icons text-[18px] text-[#58595B]">
+                      medical_services
+                    </span>
+                              </div>
+
+                              <div class="min-w-0">
+                                <p class="truncate text-sm font-semibold text-neutral-800">
+                                  {{ resultado.nombre }}
+                                </p>
+                                <p class="text-xs text-neutral-500">
+                                  {{ resultado.cantidadMedicos }} médicos activos
+                                </p>
+                              </div>
+
+                            </button>
+                          </li>
+                        }
+                      </ul>
+
+                    } @else if (form.busquedaEspecialidadCompleta()) {
+                      <p class="px-3 py-3 text-xs font-medium text-neutral-600">
+                        No se encontró ninguna especialidad con "{{ form.textoBusquedaEspecialidad().trim() }}".
+                      </p>
+                    }
+
+                  </div>
+
+                } @else {
+                  <p class="text-[11px] font-medium text-neutral-500">
+                    Escribe al menos {{ form.MIN_BUSQUEDA }} caracteres del nombre de la especialidad.
+                  </p>
+                }
+
               }
-            </select>
+            </div>
+
           </div>
 
           <div class="space-y-1.5">
@@ -203,7 +302,6 @@
 
         </section>
 
-        <!-- PASO 2: FECHA Y HORARIO -->
         <section class="space-y-5 border-t border-neutral-200 p-4 sm:p-6 lg:overflow-y-auto lg:border-t-0">
 
           <div class="flex items-center gap-3 border-b border-neutral-200 pb-3">

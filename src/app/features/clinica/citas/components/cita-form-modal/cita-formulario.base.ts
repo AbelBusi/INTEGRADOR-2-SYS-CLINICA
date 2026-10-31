@@ -34,6 +34,7 @@ import {
   DURACIONES,
   EspecialidadResumen,
   MedicoResumen,
+  EspecialidadBusqueda,
   MensajeResponse,
   PacienteBusqueda,
 } from '../../interface/cita.interface';
@@ -74,8 +75,8 @@ export abstract class CitaFormularioBase {
   private readonly destroyRef = inject(DestroyRef);
   private readonly busqueda$ = new Subject<string>();
 
-  // Lo que cambia entre crear y editar
   protected abstract readonly mensajeExito: string;
+  private readonly busquedaEspecialidad$ = new Subject<string>();
   protected abstract idCitaExcluida(): number | null;
   protected abstract enviar(dto: CitaDTO): Observable<MensajeResponse<Cita>>;
   protected abstract alGuardar(cita: Cita): void;
@@ -120,6 +121,13 @@ export abstract class CitaFormularioBase {
   cargandoHorario = signal(false);
   guardando = signal(false);
 
+  especialidadSeleccionada = signal<EspecialidadBusqueda | null>(null);
+  textoBusquedaEspecialidad = signal('');
+  resultadosEspecialidad = signal<EspecialidadBusqueda[]>([]);
+  buscandoEspecialidad = signal(false);
+  busquedaEspecialidadCompleta = signal(false);
+  errorBusquedaEspecialidad = signal(false);
+
   inicioAgenda = computed(() =>
     sumarDias(inicioSemana(this.hoy), this.paginaAgenda() * DIAS_POR_PAGINA),
   );
@@ -160,7 +168,6 @@ export abstract class CitaFormularioBase {
         if (tramos.length === 0) {
           estado = 'cerrado';
         } else {
-          // Se bloquea lo ocupado del médico y lo que el paciente ya tiene con cualquier médico
           const bloqueados = unirRangos(
             ocupadosDelDia(programadas, idMedico, iso, excluirId),
             ocupadosPacienteDelDia(programadas, idPaciente, iso, excluirId),
@@ -299,7 +306,6 @@ export abstract class CitaFormularioBase {
       this.motivo().length <= 200,
   );
 
-  // Cada modal lo llama desde su ngOnInit
   iniciar(): void {
     const idUsuario = Number(this.authService.getUserId());
 
@@ -319,9 +325,9 @@ export abstract class CitaFormularioBase {
           termino.length < this.MIN_BUSQUEDA
             ? of(null)
             : this.citaService.buscarPacientes(termino).pipe(
-              map((response) => ({ ok: true, lista: response.object || [] })),
-              catchError(() => of({ ok: false, lista: [] as PacienteBusqueda[] })),
-            ),
+                map((response) => ({ ok: true, lista: response.object || [] })),
+                catchError(() => of({ ok: false, lista: [] as PacienteBusqueda[] })),
+              ),
         ),
         takeUntilDestroyed(this.destroyRef),
       )
@@ -338,9 +344,43 @@ export abstract class CitaFormularioBase {
         this.buscando.set(false);
       });
 
+    this.busquedaEspecialidad$
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((termino) =>
+          termino.length < this.MIN_BUSQUEDA
+            ? of(null)
+            : this.citaService.buscarEspecialidades(termino).pipe(
+                map((response) => ({
+                  ok: true,
+                  lista: response.object || [],
+                })),
+                catchError(() =>
+                  of({
+                    ok: false,
+                    lista: [] as EspecialidadBusqueda[],
+                  }),
+                ),
+              ),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((resultado) => {
+        if (resultado === null) {
+          this.resultadosEspecialidad.set([]);
+          this.buscandoEspecialidad.set(false);
+          return;
+        }
+
+        this.resultadosEspecialidad.set(resultado.lista);
+        this.errorBusquedaEspecialidad.set(!resultado.ok);
+        this.busquedaEspecialidadCompleta.set(true);
+        this.buscandoEspecialidad.set(false);
+      });
+
     this.cargarInicial();
   }
-
   hora(minutos: number): string {
     return minutosAHHmm(minutos);
   }
@@ -382,6 +422,43 @@ export abstract class CitaFormularioBase {
       default:
         return '';
     }
+  }
+
+  onBusquedaEspecialidadInput(valor: string): void {
+    const termino = valor.trim();
+
+    this.textoBusquedaEspecialidad.set(valor);
+    this.busquedaEspecialidadCompleta.set(false);
+    this.errorBusquedaEspecialidad.set(false);
+
+    if (termino.length < this.MIN_BUSQUEDA) {
+      this.resultadosEspecialidad.set([]);
+      this.buscandoEspecialidad.set(false);
+    } else {
+      this.buscandoEspecialidad.set(true);
+    }
+
+    this.busquedaEspecialidad$.next(termino);
+  }
+
+  seleccionarEspecialidad(especialidad: EspecialidadBusqueda): void {
+    this.especialidadSeleccionada.set(especialidad);
+    this.textoBusquedaEspecialidad.set('');
+    this.resultadosEspecialidad.set([]);
+    this.busquedaEspecialidadCompleta.set(false);
+    this.buscandoEspecialidad.set(false);
+
+    this.onEspecialidadChange(especialidad.id);
+  }
+
+  quitarEspecialidad(): void {
+    this.especialidadSeleccionada.set(null);
+    this.textoBusquedaEspecialidad.set('');
+    this.resultadosEspecialidad.set([]);
+    this.busquedaEspecialidadCompleta.set(false);
+    this.errorBusquedaEspecialidad.set(false);
+
+    this.onEspecialidadChange(null);
   }
 
   onBusquedaInput(valor: string): void {
@@ -496,6 +573,30 @@ export abstract class CitaFormularioBase {
     });
   }
 
+  protected cargarEspecialidadSeleccionada(
+    idEspecialidad: number,
+    nombreEspecialidad: string,
+  ): void {
+    const nombre = nombreEspecialidad?.trim();
+
+    if (!nombre || nombre.length < this.MIN_BUSQUEDA) {
+      return;
+    }
+
+    this.citaService.buscarEspecialidades(nombre).subscribe({
+      next: (response) => {
+        const especialidad = response.object?.find((item) => item.id === idEspecialidad);
+
+        if (especialidad) {
+          this.especialidadSeleccionada.set(especialidad);
+          this.textoBusquedaEspecialidad.set('');
+          this.resultadosEspecialidad.set([]);
+          this.busquedaEspecialidadCompleta.set(false);
+        }
+      },
+      error: (error) => console.error(error),
+    });
+  }
   protected cargarHorarios(idMedico: number, idEmpleadoConocido?: number): void {
     this.cargandoHorario.set(true);
 
@@ -503,13 +604,13 @@ export abstract class CitaFormularioBase {
       idEmpleadoConocido !== undefined
         ? of(idEmpleadoConocido)
         : this.citaService.obtenerMedico(idMedico).pipe(
-          tap((r) => {
-            if (this.idMedico() === idMedico) {
-              this.documentoMedico.set(r.object.numeroDocumento);
-            }
-          }),
-          map((r) => r.object.idEmpleado),
-        );
+            tap((r) => {
+              if (this.idMedico() === idMedico) {
+                this.documentoMedico.set(r.object.numeroDocumento);
+              }
+            }),
+            map((r) => r.object.idEmpleado),
+          );
 
     idEmpleado$.pipe(switchMap((id) => this.citaService.obtenerHorarios(id))).subscribe({
       next: (response) => {

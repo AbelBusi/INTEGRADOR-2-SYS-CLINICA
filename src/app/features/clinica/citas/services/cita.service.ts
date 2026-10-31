@@ -6,6 +6,7 @@ import { EmpleadoHorario } from '../../horarios/interface/horario.interface';
 import {
   Cita,
   CitaDTO,
+  EspecialidadBusqueda,
   EspecialidadResumen,
   HistorialCita,
   MedicoInfo,
@@ -153,4 +154,13 @@ export class CitaService {
   iniciarAtencion(id: number): Observable<MensajeResponse<null>> {
     return this.http.patch<MensajeResponse<null>>(`${this.baseUrl}/${id}/iniciar-atencion`, null);
   }
+
+  buscarEspecialidades(busqueda: string): Observable<MensajeResponse<EspecialidadBusqueda[]>> {
+    const params = new HttpParams().set('busqueda', busqueda);
+    return this.http.get<MensajeResponse<EspecialidadBusqueda[]>>(
+      `${environment.apiUrl}/especialidades/buscar`,
+      { params },
+    );
+  }
+
 }
