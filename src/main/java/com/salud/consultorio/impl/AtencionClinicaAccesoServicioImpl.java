@@ -16,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Service
@@ -37,6 +39,8 @@ public class AtencionClinicaAccesoServicioImpl implements IAtencionClinicaAcceso
     private final IUsuarioRepositorio usuarioRepositorio;
     private final UsuarioAutenticadoProvider usuarioAutenticadoProvider;
 
+    private final Clock clock;
+
     @Override
     public CitaMedica citaParaEscritura(Integer idCita) {
 
@@ -48,6 +52,11 @@ public class AtencionClinicaAccesoServicioImpl implements IAtencionClinicaAcceso
 
         validarPropiedad(cita, medico);
         validarEstadoParaRegistrar(cita);
+
+        if (LocalDateTime.now(clock).isBefore(LocalDateTime.of(cita.getFechaCita(), cita.getHoraInicio()))) {
+            throw new IllegalArgumentException(
+                    "No se puede registrar información clínica antes de la fecha y hora programadas de la cita.");
+        }
 
         return cita;
 

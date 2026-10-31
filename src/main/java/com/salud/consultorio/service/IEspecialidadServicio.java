@@ -25,4 +25,5 @@ public interface IEspecialidadServicio{
 
     boolean existeEspecialidadNombre(String nombre);
 
+    List<EspecialidadBusquedaDTO> buscarEspecialidades(String busqueda);
 }

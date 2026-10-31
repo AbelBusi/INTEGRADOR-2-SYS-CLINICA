@@ -136,4 +136,18 @@ public class EspecialidadController {
 
     }
 
+    @GetMapping("buscar")
+    public ResponseEntity<MensajeResponse> buscarEspecialidades(
+            @RequestParam(required = false) String busqueda
+    ) {
+
+        List<EspecialidadBusquedaDTO> lista =
+                especialidadServicio.buscarEspecialidades(busqueda);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Búsqueda de especialidades")
+                .object(lista)
+                .build(), HttpStatus.OK);
+    }
+
 }

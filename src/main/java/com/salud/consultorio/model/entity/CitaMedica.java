@@ -6,6 +6,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @AllArgsConstructor
@@ -44,6 +45,9 @@ public class CitaMedica {
 
     @Column(name = "hora_salida", nullable = false)
     private LocalTime horaSalida;
+
+    @Column(name = "inicio_atencion")
+    private LocalDateTime inicioAtencion;
 
     @Column(name = "motivo", nullable = false, length = 200)
     private String motivo;

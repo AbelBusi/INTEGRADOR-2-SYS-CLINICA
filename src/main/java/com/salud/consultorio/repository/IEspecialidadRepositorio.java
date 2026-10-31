@@ -1,5 +1,6 @@
 package com.salud.consultorio.repository;
 
+import com.salud.consultorio.dto.especialidad.EspecialidadBusquedaDTO;
 import com.salud.consultorio.dto.especialidad.EspecialidadRespuestaDTO;
 import com.salud.consultorio.dto.especialidad.EspecialidadResumenDTO;
 import com.salud.consultorio.model.entity.Especialidad;
@@ -72,4 +73,26 @@ public interface IEspecialidadRepositorio extends JpaRepository<Especialidad, In
 
     Optional<Especialidad> findByIdAndEstado(Integer id, Integer estado);
 
+    @Query("""
+    SELECT new com.salud.consultorio.dto.especialidad.EspecialidadBusquedaDTO(
+        e.id,
+        e.nombre,
+        COUNT(m.id)
+    )
+    FROM Especialidad e
+    LEFT JOIN Medico m ON m.especialidad.id = e.id
+        AND m.estado = 1
+        AND m.empleado.estado = 1
+    WHERE e.estado = 1
+      AND (
+            :busqueda IS NULL
+            OR TRIM(:busqueda) = ''
+            OR LOWER(e.nombre) LIKE LOWER(CONCAT('%', :busqueda, '%'))
+      )
+    GROUP BY e.id, e.nombre
+    ORDER BY e.nombre ASC
+    """)
+    List<EspecialidadBusquedaDTO> buscarEspecialidades(
+            @Param("busqueda") String busqueda
+    );
 }

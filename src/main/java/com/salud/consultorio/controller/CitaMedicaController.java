@@ -314,4 +314,26 @@ public class CitaMedicaController {
 
     }
 
+    @Operation(
+            summary = "Iniciar la atención de la cita médica",
+            description = "Solo el médico asignado. No se permite antes de la fecha y hora programadas ni después " +
+                    "de finalizado el horario. Registra la fecha y hora reales de inicio la primera vez."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Atención iniciada correctamente"),
+            @ApiResponse(responseCode = "400", description = "La cita no está programada o está fuera de su horario"),
+            @ApiResponse(responseCode = "403", description = "La cita no pertenece al médico autenticado"),
+            @ApiResponse(responseCode = "404", description = "Cita médica no encontrada")
+    })
+    @PatchMapping("/{id}/iniciar-atencion")
+    public ResponseEntity<MensajeResponse> iniciarAtencion(@PathVariable Integer id) {
+
+        citaMedicaServicio.iniciarAtencion(id);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Atencion medica iniciada con exito")
+                .build(), HttpStatus.OK);
+
+    }
+
 }

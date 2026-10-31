@@ -19,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EspecialidadServicioImpl implements IEspecialidadServicio {
 
+
     private final IEspecialidadRepositorio especialidadRepositorio;
     private final IEspecialidadMapper especialidadMapper;
     private final IMedicoServicio medicoServicio;
@@ -101,6 +102,18 @@ public class EspecialidadServicioImpl implements IEspecialidadServicio {
     @Override
     public boolean existeEspecialidadNombre(String nombre) {
         return especialidadRepositorio.existsByNombre(nombre);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<EspecialidadBusquedaDTO> buscarEspecialidades(String busqueda) {
+        String termino = busqueda == null ? null : busqueda.trim();
+
+        if (termino != null && termino.length() < 3) {
+            return List.of();
+        }
+
+        return especialidadRepositorio.buscarEspecialidades(termino);
     }
 
     @Transactional

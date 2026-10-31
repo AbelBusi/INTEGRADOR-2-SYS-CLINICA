@@ -37,4 +37,6 @@ public interface ICitaMedicaServicio {
 
     void cancelarAutomaticamentePorVencimiento(Integer id);
 
+    void iniciarAtencion(Integer id);
+
 }

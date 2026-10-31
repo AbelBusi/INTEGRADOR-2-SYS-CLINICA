@@ -11,11 +11,7 @@ import com.salud.consultorio.model.entity.Paciente;
 import com.salud.consultorio.model.entity.Usuario;
 import com.salud.consultorio.model.enums.AccionHistorialCita;
 import com.salud.consultorio.model.enums.ResolucionRegularizacion;
-import com.salud.consultorio.repository.ICitaMedicaRepositorio;
-import com.salud.consultorio.repository.IHorarioAtencionRepositorio;
-import com.salud.consultorio.repository.IMedicoRepositorio;
-import com.salud.consultorio.repository.IPacienteRepositorio;
-import com.salud.consultorio.repository.IUsuarioRepositorio;
+import com.salud.consultorio.repository.*;
 import com.salud.consultorio.service.ICitaMedicaServicio;
 import com.salud.consultorio.service.IHistorialCitaServicio;
 import jakarta.persistence.EntityNotFoundException;
@@ -54,6 +50,8 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
     private final IHorarioAtencionRepositorio horarioAtencionRepositorio;
     private final IHistorialCitaServicio historialCitaServicio;
     private final UsuarioAutenticadoProvider usuarioAutenticadoProvider;
+    private final IDiagnosticoRepositorio diagnosticoRepositorio;
+
     private static final Duration LIMITE_CANCELACION = Duration.ofHours(2);
     private final Clock clock;
     @Transactional(readOnly = true)
@@ -281,10 +279,24 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         CitaMedica cita = obtenerCitaBloqueada(id);
 
         validarCitaProgramada(cita, "atender");
-        validarPlazoRegularizacion(cita);
+        registrarInicioSiCorresponde(cita);
+
         String detalle = normalizarObservacion(observacion);
 
         aplicarResolucion(cita, CITA_ATENDIDA, AccionHistorialCita.ATENDIDA, detalle, false);
+
+    }
+
+    @Transactional
+    @Override
+    public void iniciarAtencion(Integer id) {
+
+        Medico medico = obtenerMedicoAutenticado();
+        CitaMedica cita = obtenerCitaBloqueada(id);
+
+        validarPropiedadMedico(cita, medico);
+        validarCitaProgramada(cita, "iniciar la atención de");
+        registrarInicioSiCorresponde(cita);
 
     }
 
@@ -336,6 +348,10 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         }
 
         if (resolucion == ResolucionRegularizacion.ATENDIDA) {
+            if (!diagnosticoRepositorio.existsByCitaMedica_IdAndEstado(cita.getId(), ENTIDAD_ACTIVA)) {
+                throw new IllegalArgumentException(
+                        "Para regularizar la cita como atendida debe registrar al menos un diagnóstico.");
+            }
             aplicarResolucion(cita, CITA_ATENDIDA, AccionHistorialCita.ATENDIDA, justificacion, true);
         } else {
             aplicarResolucion(cita, CITA_CANCELADA, AccionHistorialCita.CANCELADA, justificacion, true);
@@ -387,6 +403,43 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         }
 
         return medico;
+
+    }
+
+    private void registrarInicioSiCorresponde(CitaMedica cita) {
+
+        if (cita.getInicioAtencion() != null) {
+            return;
+        }
+
+        validarVentanaAtencion(cita);
+
+        cita.setInicioAtencion(LocalDateTime.now(clock));
+
+    }
+
+    private void validarVentanaAtencion(CitaMedica cita) {
+
+        LocalDateTime ahora = LocalDateTime.now(clock);
+        LocalDateTime inicio = LocalDateTime.of(cita.getFechaCita(), cita.getHoraInicio());
+
+        if (ahora.isBefore(inicio)) {
+            throw new IllegalArgumentException(
+                    "No se puede iniciar la atención antes de la fecha y hora programadas de la cita.");
+        }
+
+        if (horarioFinalizado(cita, ahora)) {
+            throw new IllegalArgumentException(
+                    "El horario de la cita ya finalizó. Debe regularizarse indicando lo ocurrido.");
+        }
+
+    }
+
+    private void validarPropiedadMedico(CitaMedica cita, Medico medico) {
+
+        if (!Objects.equals(cita.getMedico().getId(), medico.getId())) {
+            throw new AccessDeniedException("La cita médica no está asignada al médico autenticado.");
+        }
 
     }
 

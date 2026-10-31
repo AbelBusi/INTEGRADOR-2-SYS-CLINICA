@@ -14,4 +14,6 @@ public interface IDiagnosticoRepositorio extends JpaRepository<Diagnostico, Inte
 
     boolean existsByCitaMedica_IdAndCodigoIgnoreCaseAndEstado(Integer idCita, String codigo, Integer estado);
 
+    boolean existsByCitaMedica_IdAndEstado(Integer idCita, Integer estado);
+
 }
