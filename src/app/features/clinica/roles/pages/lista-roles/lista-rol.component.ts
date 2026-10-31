@@ -66,7 +66,7 @@ export class ListaRolComponent implements OnInit {
   }
 
   esRolBase(id: number): boolean {
-    return [1, 2, 4].includes(id);
+    return [1, 2, 3,4].includes(id);
   }
 
   setRolPermisos(rol: Rol): void {

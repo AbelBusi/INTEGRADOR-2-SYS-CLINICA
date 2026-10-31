@@ -149,4 +149,8 @@ export class CitaService {
       observacion: observacion.trim(),
     });
   }
+
+  iniciarAtencion(id: number): Observable<MensajeResponse<null>> {
+    return this.http.patch<MensajeResponse<null>>(`${this.baseUrl}/${id}/iniciar-atencion`, null);
+  }
 }

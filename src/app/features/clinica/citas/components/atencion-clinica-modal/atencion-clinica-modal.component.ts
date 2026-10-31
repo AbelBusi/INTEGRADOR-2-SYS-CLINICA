@@ -27,6 +27,7 @@ import { DocumentosClinicosModalComponent } from '../../../../../shared/document
 export class AtencionClinicaModalComponent implements OnInit {
   @Input({ required: true }) cita!: CitaFila;
   @Input() permiteFinalizar = true;
+  @Input() justificacionRegularizacion: string | null = null;
   @Output() close = new EventEmitter<void>();
   @Output() finalizada = new EventEmitter<void>();
 
@@ -56,6 +57,14 @@ export class AtencionClinicaModalComponent implements OnInit {
 
   get puedeFinalizar(): boolean {
     return !this.soloLectura && this.permiteFinalizar;
+  }
+
+  get esRegularizacion(): boolean {
+    return this.justificacionRegularizacion !== null;
+  }
+
+  get faltaDiagnostico(): boolean {
+    return this.esRegularizacion && this.diagnosticos().length === 0;
   }
 
   ngOnInit(): void {
@@ -112,30 +121,37 @@ export class AtencionClinicaModalComponent implements OnInit {
     this.cargar(true, true);
   }
 
-  alCambiarRegistros(): void {
-    this.cargar(true, false);
-  }
-
-  solicitarFinalizacion(): void {
-    if (this.puedeFinalizar) {
-      this.confirmando.set(true);
-    }
-  }
-
   cancelarFinalizacion(): void {
     if (!this.finalizando()) {
       this.confirmando.set(false);
     }
   }
 
+  alCambiarRegistros(): void {
+    this.cargar(true, false);
+  }
+
+  solicitarFinalizacion(): void {
+    if (this.puedeFinalizar && !this.faltaDiagnostico) {
+      this.confirmando.set(true);
+    }
+  }
+
   finalizar(): void {
-    if (!this.puedeFinalizar || this.finalizando()) {
+    if (!this.puedeFinalizar || this.finalizando() || this.faltaDiagnostico) {
       return;
     }
 
     this.finalizando.set(true);
 
-    this.citaService.atender(this.cita.id, this.observacion()).subscribe({
+    const justificacion = this.justificacionRegularizacion;
+
+    const peticion =
+      justificacion !== null
+        ? this.citaService.regularizar(this.cita.id, 'ATENDIDA', justificacion)
+        : this.citaService.atender(this.cita.id, this.observacion());
+
+    peticion.subscribe({
       next: (response) => {
         this.toastService.success(response?.mensaje || 'Atención finalizada con éxito');
         this.finalizando.set(false);

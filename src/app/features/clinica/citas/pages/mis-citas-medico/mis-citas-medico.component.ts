@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -16,6 +16,7 @@ import { ResolucionRegularizacion } from '../../interface/cita.interface';
 import { AtencionClinicaModalComponent } from '../../components/atencion-clinica-modal/atencion-clinica-modal.component';
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
+import { citaVencida, puedeAtenderCita } from '../../utils/atencion-cita.util';
 
 @Component({
   selector: 'app-mis-citas-medico',
@@ -32,7 +33,7 @@ import { TableColumn } from '../../../../../shared/components/custom-table/table
   ],
   templateUrl: './mis-citas-medico.component.html',
 })
-export class MisCitasMedicoComponent implements OnInit {
+export class MisCitasMedicoComponent implements OnInit, OnDestroy {
   readonly hoyISO = aISO(new Date());
   readonly opcionesEstado = OPCIONES_ESTADO;
 
@@ -52,15 +53,15 @@ export class MisCitasMedicoComponent implements OnInit {
   idsPendientes = signal<Set<number>>(new Set());
   soloPendientes = signal(false);
   citaRegularizar = signal<CitaFila | null>(null);
-  citaAtencionClinica = signal<CitaFila | null>(null);
-  totalPendientes = computed(
-    () => this.citas().filter((c) => this.idsPendientes().has(c.id)).length,
-  );
+  citaAtencionClinica = signal<{ cita: CitaFila; justificacion: string | null } | null>(null);
+  ahora = signal(new Date());
+  private temporizador: ReturnType<typeof setInterval> | null = null;
+  totalPendientes = computed(() => this.citas().filter((c) => this.estaPendiente(c)).length);
 
   readonly motivoNoCancelable = MOTIVO_NO_CANCELABLE;
 
   estaPendiente(cita: CitaFila): boolean {
-    return this.idsPendientes().has(cita.id);
+    return this.idsPendientes().has(cita.id) || citaVencida(cita, this.ahora());
   }
 
   puedeCancelar(cita: CitaFila): boolean {
@@ -80,6 +81,12 @@ export class MisCitasMedicoComponent implements OnInit {
     const cita = this.citaRegularizar();
 
     if (!cita || this.procesando()) {
+      return;
+    }
+
+    if (datos.resolucion === 'ATENDIDA') {
+      this.citaRegularizar.set(null);
+      this.citaAtencionClinica.set({ cita, justificacion: datos.observacion });
       return;
     }
 
@@ -146,7 +153,7 @@ export class MisCitasMedicoComponent implements OnInit {
       if (termino && !normalizar(`${c.paciente} ${c.motivo}`).includes(termino)) {
         return false;
       }
-      if (this.soloPendientes() && !this.idsPendientes().has(c.id)) {
+      if (this.soloPendientes() && !this.estaPendiente(c)) {
         return false;
       }
       return true;
@@ -165,6 +172,13 @@ export class MisCitasMedicoComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar(false);
+    this.temporizador = setInterval(() => this.ahora.set(new Date()), 30000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.temporizador !== null) {
+      clearInterval(this.temporizador);
+    }
   }
 
   cargar(silencioso: boolean): void {
@@ -203,8 +217,33 @@ export class MisCitasMedicoComponent implements OnInit {
     return cita.estado === 1;
   }
 
-  puedeAbrirAtencionClinica(cita: CitaFila): boolean {
-    return cita.estado === 1 || cita.estado === 3;
+  puedeAtender(cita: CitaFila): boolean {
+    return puedeAtenderCita(cita, this.ahora());
+  }
+
+  verAtencion(cita: CitaFila): void {
+    this.citaAtencionClinica.set({ cita, justificacion: null });
+  }
+
+  atenderCita(cita: CitaFila): void {
+    if (this.procesando()) {
+      return;
+    }
+
+    this.procesando.set(true);
+
+    this.citaService.iniciarAtencion(cita.id).subscribe({
+      next: () => {
+        this.procesando.set(false);
+        this.citaAtencionClinica.set({ cita, justificacion: null });
+      },
+      error: (error) => {
+        console.error(error);
+        this.toastService.error(error.error?.mensaje || 'No se pudo iniciar la atención');
+        this.procesando.set(false);
+        this.cargar(true);
+      },
+    });
   }
 
   alFinalizarAtencion(): void {

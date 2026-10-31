@@ -204,14 +204,26 @@
             <span>Ver historial</span>
           </button>
 
-          @if (puedeAbrirAtencionClinica(row)) {
+          @if (row.estado === 3) {
             <button
               type="button"
-              [title]="row.estado === 3 ? 'Ver información clínica' : 'Atender y registrar información clínica'"
-              (click)="citaAtencionClinica.set(row)"
+              title="Ver información clínica"
+              (click)="verAtencion(row)"
               class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68]">
-              <span class="material-icons text-[18px]">{{ row.estado === 3 ? 'assignment' : 'medical_services' }}</span>
-              <span>{{ row.estado === 3 ? 'Ver atención' : 'Atención clínica' }}</span>
+              <span class="material-icons text-[18px]">assignment</span>
+              <span>Ver atención</span>
+            </button>
+          }
+
+          @if (puedeAtender(row)) {
+            <button
+              type="button"
+              title="Iniciar la atención de la cita"
+              (click)="atenderCita(row)"
+              [disabled]="procesando()"
+              class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68] disabled:cursor-not-allowed disabled:opacity-50">
+              <span class="material-icons text-[18px]">medical_services</span>
+              <span>Atender cita</span>
             </button>
           }
 
@@ -289,10 +301,10 @@
   ></app-regularizar-cita-modal>
 }
 
-@if (citaAtencionClinica(); as cita) {
+@if (citaAtencionClinica(); as atencion) {
   <app-atencion-clinica-modal
-    [cita]="cita"
-    [permiteFinalizar]="!estaPendiente(cita)"
+    [cita]="atencion.cita"
+    [justificacionRegularizacion]="atencion.justificacion"
     (close)="citaAtencionClinica.set(null)"
     (finalizada)="alFinalizarAtencion()"
   ></app-atencion-clinica-modal>

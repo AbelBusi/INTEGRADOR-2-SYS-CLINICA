@@ -69,8 +69,9 @@
                   : 'border-neutral-300 bg-white hover:border-[#58595B] hover:bg-neutral-50'">
                 <p class="flex items-center gap-1.5 text-sm font-bold text-neutral-900">
                   <span class="material-icons text-[18px] text-[#0d6b68]">task_alt</span>
-                  Sí se atendió
+                  Sí, se atendió
                 </p>
+                <p class="mt-0.5 text-xs text-neutral-500">Registrarás el diagnóstico y los datos clínicos.</p>
                 <p class="mt-0.5 text-xs text-neutral-500">La cita quedará como atendida.</p>
               </button>
 
@@ -83,9 +84,9 @@
                   : 'border-neutral-300 bg-white hover:border-[#58595B] hover:bg-neutral-50'">
                 <p class="flex items-center gap-1.5 text-sm font-bold text-neutral-900">
                   <span class="material-icons text-[18px] text-[#D9182A]">event_busy</span>
-                  No se realizó
+                  No, no se atendió
                 </p>
-                <p class="mt-0.5 text-xs text-neutral-500">Inasistencia o cancelación. Quedará cancelada.</p>
+                <p class="mt-0.5 text-xs text-neutral-500">Inasistencia u otro motivo. Quedará cancelada.</p>
               </button>
 
             </div>
@@ -93,7 +94,9 @@
 
           <div class="space-y-1.5">
             <div class="flex items-center justify-between">
-              <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Justificación</label>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">
+                {{ resolucion() === 'CANCELADA' ? 'Motivo por el cual no se realizó la atención' : 'Justificación del registro tardío' }}
+              </label>
               <span
                 class="text-[11px] font-medium text-neutral-400"
                 [class.text-[#D9182A]]="observacion().length >= MAX">
@@ -106,7 +109,7 @@
               (ngModelChange)="observacion.set($event)"
               [maxlength]="MAX"
               rows="3"
-              placeholder="Describe lo ocurrido..."
+              [placeholder]="resolucion() === 'CANCELADA' ? 'Indica por qué no se realizó la atención...' : 'Indica por qué se regulariza fuera de horario...'"
               class="w-full resize-none rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"></textarea>
           </div>
 
@@ -125,8 +128,7 @@
               @if (procesando) {
                 <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
               }
-              Regularizar cita
-            </button>
+              {{ resolucion() === 'ATENDIDA' ? 'Continuar al registro clínico' : 'Regularizar cita' }}            </button>
           </div>
 
         </form>
