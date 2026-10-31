@@ -54,6 +54,7 @@ export class CitaEditarModalComponent extends CitaFormularioBase implements OnIn
 
   protected override alCargarDatos(): void {
     const cita = this.cita;
+    this.modoEdicion.set(true);
 
     this.paciente.set({
       idPaciente: cita.idPaciente,

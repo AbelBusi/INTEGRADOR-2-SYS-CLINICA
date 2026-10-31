@@ -128,6 +128,8 @@ export abstract class CitaFormularioBase {
   busquedaEspecialidadCompleta = signal(false);
   errorBusquedaEspecialidad = signal(false);
 
+  readonly modoEdicion = signal(false);
+
   inicioAgenda = computed(() =>
     sumarDias(inicioSemana(this.hoy), this.paginaAgenda() * DIAS_POR_PAGINA),
   );
