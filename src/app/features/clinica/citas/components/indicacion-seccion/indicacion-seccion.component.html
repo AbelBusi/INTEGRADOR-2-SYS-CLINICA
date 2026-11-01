@@ -84,11 +84,67 @@
     <ul class="divide-y divide-neutral-200 border border-neutral-300">
       @for (i of indicaciones; track i.id) {
         <li class="px-4 py-3">
-          <p class="text-sm font-bold text-neutral-900">{{ i.tipoIndicacion }}</p>
-          <p class="mt-0.5 text-xs text-neutral-600">
-            {{ i.frecuencia }} · {{ i.diasReposo }} {{ i.diasReposo === 1 ? 'día' : 'días' }} de reposo
-          </p>
-          <p class="mt-1 text-sm leading-6 text-neutral-700">{{ i.descripcion }}</p>
+
+          @if (editandoId() === i.id && !soloLectura) {
+            <app-indicacion-editar
+              [idDiagnostico]="idDiagnostico"
+              [indicacion]="i"
+              (editado)="alEditado()"
+              (cancelado)="cancelarEdicion()" />
+          } @else {
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-sm font-bold text-neutral-900">{{ i.tipoIndicacion }}</p>
+                <p class="mt-0.5 text-xs text-neutral-600">
+                  {{ i.frecuencia }} · {{ i.diasReposo }} {{ i.diasReposo === 1 ? 'día' : 'días' }} de reposo
+                </p>
+                <p class="mt-1 text-sm leading-6 text-neutral-700">{{ i.descripcion }}</p>
+              </div>
+
+              @if (!soloLectura) {
+                <div class="flex shrink-0 items-center gap-2">
+                  <button
+                    type="button"
+                    (click)="iniciarEdicion(i.id)"
+                    title="Editar indicación"
+                    class="inline-flex h-9 w-9 items-center justify-center border border-[#58595B] bg-white text-[#58595B] hover:bg-[#58595B] hover:text-white">
+                    <span class="material-icons text-[18px]">edit</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="pedirConfirmacion(i.id)"
+                    title="Eliminar indicación"
+                    class="inline-flex h-9 w-9 items-center justify-center border border-[#D9182A] bg-white text-[#D9182A] hover:bg-[#D9182A] hover:text-white">
+                    <span class="material-icons text-[18px]">delete</span>
+                  </button>
+                </div>
+              }
+            </div>
+
+            @if (confirmandoId() === i.id && !soloLectura) {
+              <div class="mt-3 flex flex-wrap items-center justify-between gap-3 border border-neutral-300 border-l-2 border-l-[#D9182A] bg-neutral-50 px-3 py-2">
+                <p class="text-sm font-semibold text-neutral-800">¿Eliminar esta indicación?</p>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    (click)="cancelarConfirmacion()"
+                    [disabled]="eliminandoId() === i.id"
+                    class="inline-flex h-9 items-center border border-[#58595B] bg-white px-4 text-sm font-bold text-[#58595B] hover:bg-[#58595B] hover:text-white disabled:opacity-50">
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    (click)="eliminar(i)"
+                    [disabled]="eliminandoId() === i.id"
+                    class="inline-flex h-9 items-center gap-2 bg-[#D9182A] px-4 text-sm font-bold text-white hover:bg-[#b71423] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500">
+                    <span class="material-icons text-[18px]">delete</span>
+                    {{ eliminandoId() === i.id ? 'Eliminando...' : 'Sí, eliminar' }}
+                  </button>
+                </div>
+              </div>
+            }
+          }
+
         </li>
       }
     </ul>

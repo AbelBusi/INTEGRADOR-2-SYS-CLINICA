@@ -1,4 +1,5 @@
 import { Cita } from './cita.interface';
+import { Indicacion } from './indicacion.interface';
 
 export interface Diagnostico {
   id: number;
@@ -21,16 +22,6 @@ export interface Tratamiento {
   duracionDias: number;
   totCantidad: number;
   descIndicacion: string;
-  estado: number;
-}
-
-export interface Indicacion {
-  id: number;
-  idDiagnostico: number;
-  tipoIndicacion: string;
-  descripcion: string;
-  diasReposo: number;
-  frecuencia: string;
   estado: number;
 }
 
@@ -79,13 +70,6 @@ export interface TratamientoCrearDTO {
   duracionDias: number;
   totCantidad: number;
   descIndicacion: string;
-}
-
-export interface IndicacionCrearDTO {
-  tipoIndicacion: string;
-  descripcion: string;
-  diasReposo: number;
-  frecuencia: string;
 }
 
 export interface ExamenSolicitadoCrearDTO {

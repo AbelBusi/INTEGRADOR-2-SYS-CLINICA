@@ -96,6 +96,8 @@
           [indicaciones]="detalle.indicaciones"
           [soloLectura]="soloLectura"
           (creado)="cambio.emit()"
+          (editado)="cambio.emit()"
+          (eliminado)="cambio.emit()"
         ></app-indicacion-seccion>
       </app-registro-clinico-modal>
     }

@@ -11,8 +11,6 @@ import {
   DiagnosticoCrearDTO,
   ExamenSolicitado,
   ExamenSolicitadoCrearDTO,
-  Indicacion,
-  IndicacionCrearDTO,
   Tratamiento,
   TratamientoCrearDTO,
 } from '../interface/atencion-clinica.interface';
@@ -52,15 +50,6 @@ export class AtencionClinicaService {
     );
   }
 
-  crearIndicacion(
-    idDiagnostico: number,
-    dto: IndicacionCrearDTO,
-  ): Observable<MensajeResponse<Indicacion>> {
-    return this.http.post<MensajeResponse<Indicacion>>(
-      `${this.diagnosticosUrl}/${idDiagnostico}/indicaciones`,
-      dto,
-    );
-  }
 
   crearExamenSolicitado(
     idDiagnostico: number,
