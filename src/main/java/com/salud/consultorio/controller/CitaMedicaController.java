@@ -336,4 +336,30 @@ public class CitaMedicaController {
 
     }
 
+    @Operation(
+            summary = "Regularizar cita vencida (flujo administrativo)",
+            description = "Para roles distintos de MEDICO. Cancela una cita programada cuyo horario ya finalizó indicando el motivo: " +
+                    "NO_REALIZADA_ESTABLECIMIENTO, SUSPENDIDA_INSTITUCIONAL (ambos permiten reprogramar) o CANCELADA_PACIENTE. " +
+                    "La justificación es obligatoria y queda en el historial."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Cita regularizada correctamente"),
+            @ApiResponse(responseCode = "400", description = "La cita no está pendiente de regularización o falta la justificación"),
+            @ApiResponse(responseCode = "403", description = "El usuario tiene rol MEDICO"),
+            @ApiResponse(responseCode = "404", description = "Cita médica no encontrada")
+    })
+    @PatchMapping("/{id}/regularizar-administrativo")
+    public ResponseEntity<MensajeResponse> regularizarCitaAdministrativo(
+            @PathVariable Integer id,
+            @Valid @RequestBody CitaMedicaRegularizarAdministrativoDTO dto) {
+
+        CitaMedicaRespuestaDTO respuesta = citaMedicaServicio.regularizarAdministrativo(
+                id, dto.motivo(), dto.observacion(), dto.reprogramacion());
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Cita medica regularizada con exito")
+                .object(respuesta).build(), HttpStatus.OK);
+
+    }
+
 }

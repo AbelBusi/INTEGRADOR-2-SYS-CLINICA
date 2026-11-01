@@ -10,6 +10,7 @@ import com.salud.consultorio.model.entity.Medico;
 import com.salud.consultorio.model.entity.Paciente;
 import com.salud.consultorio.model.entity.Usuario;
 import com.salud.consultorio.model.enums.AccionHistorialCita;
+import com.salud.consultorio.model.enums.MotivoRegularizacionAdministrativa;
 import com.salud.consultorio.model.enums.ResolucionRegularizacion;
 import com.salud.consultorio.repository.*;
 import com.salud.consultorio.service.ICitaMedicaServicio;
@@ -30,6 +31,7 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
+
 
     private static final int CITA_ELIMINADA = 0;
     private static final int CITA_PROGRAMADA = 1;
@@ -192,10 +194,26 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
     @Transactional
     @Override
     public CitaMedicaRespuestaDTO actualizar(CitaMedicaActualizarDTO dto, Integer id) {
+        return actualizarInterno(dto, id, null, null);
+    }
+
+
+    private CitaMedicaRespuestaDTO actualizarInterno(CitaMedicaActualizarDTO dto, Integer id,
+                                                     MotivoRegularizacionAdministrativa motivoRegularizacion,
+                                                     String justificacion) {
 
         CitaMedica cita = obtenerCitaBloqueada(id);
 
         validarCitaProgramada(cita, "editar");
+
+        if (motivoRegularizacion == null) {
+            LocalDateTime inicioCita = LocalDateTime.of(cita.getFechaCita(), cita.getHoraInicio());
+
+            if (!LocalDateTime.now(clock).isBefore(inicioCita)) {
+                throw new IllegalArgumentException(
+                        "No se puede editar una cita cuyo horario ya comenzó.");
+            }
+        }
 
         validarDatosCita(dto.fechaCita(), dto.horaInicio(), dto.horaSalida(), dto.motivo());
 
@@ -251,7 +269,17 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
                 ? AccionHistorialCita.REPROGRAMADA
                 : AccionHistorialCita.MODIFICADA;
 
-        historialCitaServicio.registrar(cita, accion, anteriores, nuevos, null);
+        String observacionHistorial = null;
+
+        if (motivoRegularizacion != null) {
+            accion = AccionHistorialCita.REPROGRAMADA;
+            nuevos.put("regularizacion", true);
+            nuevos.put("motivoRegularizacion", motivoRegularizacion.name());
+            nuevos.put("permiteReprogramar", true);
+            observacionHistorial = justificacion;
+        }
+
+        historialCitaServicio.registrar(cita, accion, anteriores, nuevos, observacionHistorial);
 
         return toDto(cita);
 
@@ -297,6 +325,91 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         validarPropiedadMedico(cita, medico);
         validarCitaProgramada(cita, "iniciar la atención de");
         registrarInicioSiCorresponde(cita);
+
+    }
+
+    @Transactional
+    @Override
+    public CitaMedicaRespuestaDTO regularizarAdministrativo(Integer id, MotivoRegularizacionAdministrativa motivo,
+                                                            String observacion, CitaMedicaActualizarDTO reprogramacion) {
+
+        Usuario usuario = usuarioAutenticadoProvider.obtener();
+
+        if (usuarioRepositorio.tieneRolActivo(usuario.getId(), ROL_MEDICO)) {
+            throw new AccessDeniedException("Los médicos deben regularizar mediante el flujo clínico.");
+        }
+
+        CitaMedica cita = obtenerCitaBloqueada(id);
+
+        validarCitaProgramada(cita, "regularizar");
+
+        if (!horarioFinalizado(cita, LocalDateTime.now(clock))) {
+            throw new IllegalArgumentException(
+                    "La cita aún no ha finalizado, por lo que no está pendiente de regularización.");
+        }
+
+        validarPlazoRegularizacion(cita);
+
+        String justificacion = normalizarObservacion(observacion);
+
+        if (justificacion == null) {
+            throw new IllegalArgumentException("La justificación es obligatoria para regularizar una cita vencida.");
+        }
+
+        if (motivo == null) {
+            throw new IllegalArgumentException("El motivo de regularización es obligatorio.");
+        }
+
+        if (!motivo.permiteReprogramar()) {
+            aplicarResolucionAdministrativa(cita, motivo, justificacion);
+            return null;
+        }
+
+        if (reprogramacion == null) {
+            throw new IllegalArgumentException("Debe indicar la nueva fecha y horario para reprogramar la cita.");
+        }
+
+        CitaMedicaRespuestaDTO reprogramada = actualizarInterno(reprogramacion, id, motivo, justificacion);
+
+        if (horarioFinalizado(cita, LocalDateTime.now(clock))) {
+            throw new IllegalArgumentException("La nueva fecha y horario deben ser posteriores al actual.");
+        }
+
+        return reprogramada;
+
+    }
+
+    private void registrarRegularizacionReprogramada(CitaMedica cita, MotivoRegularizacionAdministrativa motivo,
+                                                     String justificacion) {
+
+        Map<String, Object> anteriores = new LinkedHashMap<>();
+        anteriores.put("estado", cita.getEstado());
+
+        Map<String, Object> nuevos = new LinkedHashMap<>();
+        nuevos.put("estado", cita.getEstado());
+        nuevos.put("regularizacion", true);
+        nuevos.put("motivoRegularizacion", motivo.name());
+        nuevos.put("permiteReprogramar", true);
+
+        historialCitaServicio.registrar(cita, AccionHistorialCita.REPROGRAMADA, anteriores, nuevos, justificacion);
+
+    }
+
+    private void aplicarResolucionAdministrativa(CitaMedica cita, MotivoRegularizacionAdministrativa motivo,
+                                                 String justificacion) {
+
+        Map<String, Object> anteriores = new LinkedHashMap<>();
+        anteriores.put("estado", cita.getEstado());
+
+        Map<String, Object> nuevos = new LinkedHashMap<>();
+        nuevos.put("estado", CITA_CANCELADA);
+        nuevos.put("regularizacion", true);
+        nuevos.put("motivoRegularizacion", motivo.name());
+        nuevos.put("permiteReprogramar", motivo.permiteReprogramar());
+
+        cita.setEstado(CITA_CANCELADA);
+
+        historialCitaServicio.registrar(cita, AccionHistorialCita.CANCELADA, anteriores, nuevos, justificacion);
 
     }
 

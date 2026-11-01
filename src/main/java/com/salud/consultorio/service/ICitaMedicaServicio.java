@@ -3,6 +3,7 @@ package com.salud.consultorio.service;
 import com.salud.consultorio.dto.citaMedica.CitaMedicaActualizarDTO;
 import com.salud.consultorio.dto.citaMedica.CitaMedicaCrearDTO;
 import com.salud.consultorio.dto.citaMedica.CitaMedicaRespuestaDTO;
+import com.salud.consultorio.model.enums.MotivoRegularizacionAdministrativa;
 import com.salud.consultorio.model.enums.ResolucionRegularizacion;
 
 import java.util.List;
@@ -38,5 +39,8 @@ public interface ICitaMedicaServicio {
     void cancelarAutomaticamentePorVencimiento(Integer id);
 
     void iniciarAtencion(Integer id);
+
+    CitaMedicaRespuestaDTO regularizarAdministrativo(Integer id, MotivoRegularizacionAdministrativa motivo,
+                                                     String observacion, CitaMedicaActualizarDTO reprogramacion);
 
 }
