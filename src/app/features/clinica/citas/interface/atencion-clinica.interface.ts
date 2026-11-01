@@ -1,6 +1,8 @@
 import { Cita } from './cita.interface';
 import { Indicacion } from './indicacion.interface';
+import { ExamenSolicitado } from './examen-solicitado.interface';
 export * from './tratamiento.interface';
+export * from './examen-solicitado.interface';
 
 export interface Diagnostico {
   id: number;
@@ -23,13 +25,6 @@ export interface Tratamiento {
   duracionDias: number;
   totCantidad: number;
   descIndicacion: string;
-  estado: number;
-}
-
-export interface ExamenSolicitado {
-  id: number;
-  idDiagnostico: number;
-  motivo: string;
   estado: number;
 }
 
@@ -61,20 +56,6 @@ export interface DiagnosticoCrearDTO {
   descripcion: string;
   tipoDiagnostico: number;
   observaciones: string;
-}
-
-export interface TratamientoCrearDTO {
-  nombreMedicamento: string;
-  dosis: string;
-  viaAdministracion: string;
-  frecuencia: string;
-  duracionDias: number;
-  totCantidad: number;
-  descIndicacion: string;
-}
-
-export interface ExamenSolicitadoCrearDTO {
-  motivo: string;
 }
 
 export interface DerivacionCrearDTO {

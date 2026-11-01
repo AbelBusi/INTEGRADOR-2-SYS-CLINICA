@@ -115,6 +115,8 @@
           [examenes]="detalle.examenesSolicitados"
           [soloLectura]="soloLectura"
           (creado)="cambio.emit()"
+          (editado)="cambio.emit()"
+          (eliminado)="cambio.emit()"
         ></app-examen-seccion>
       </app-registro-clinico-modal>
     }

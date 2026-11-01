@@ -9,8 +9,6 @@ import {
   DerivacionCrearDTO,
   Diagnostico,
   DiagnosticoCrearDTO,
-  ExamenSolicitado,
-  ExamenSolicitadoCrearDTO,
 } from '../interface/atencion-clinica.interface';
 
 @Injectable({
@@ -38,16 +36,6 @@ export class AtencionClinicaService {
     );
   }
 
-
-  crearExamenSolicitado(
-    idDiagnostico: number,
-    dto: ExamenSolicitadoCrearDTO,
-  ): Observable<MensajeResponse<ExamenSolicitado>> {
-    return this.http.post<MensajeResponse<ExamenSolicitado>>(
-      `${this.diagnosticosUrl}/${idDiagnostico}/examenes-solicitados`,
-      dto,
-    );
-  }
 
   crearDerivacion(
     idDiagnostico: number,

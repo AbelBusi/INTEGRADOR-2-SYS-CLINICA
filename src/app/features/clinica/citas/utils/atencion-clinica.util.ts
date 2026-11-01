@@ -65,3 +65,40 @@ export function clasesUrgencia(valor: number): string {
       return 'border-gray-300 bg-gray-50 text-gray-600';
   }
 }
+
+export const TIPOS_EXAMEN: string[] = [
+  'Laboratorio',
+  'Imagenología',
+  'Cardiológico',
+  'Endoscópico',
+  'Anatomía patológica',
+  'Función respiratoria',
+  'Neurofisiológico',
+  'Otro',
+];
+
+export interface PrioridadExamen {
+  valor: string;
+  etiqueta: string;
+}
+
+export const PRIORIDADES_EXAMEN: PrioridadExamen[] = [
+  { valor: 'NORMAL', etiqueta: 'Normal' },
+  { valor: 'PRIORITARIO', etiqueta: 'Prioritario' },
+  { valor: 'URGENTE', etiqueta: 'Urgente' },
+];
+
+export function etiquetaPrioridadExamen(valor: string): string {
+  return PRIORIDADES_EXAMEN.find((p) => p.valor === valor)?.etiqueta ?? valor;
+}
+
+export function clasePrioridadExamen(valor: string): string {
+  switch (valor) {
+    case 'URGENTE':
+      return 'border-[#D9182A] bg-[#D9182A] text-white';
+    case 'PRIORITARIO':
+      return 'border-[#58595B] bg-[#58595B] text-white';
+    default:
+      return 'border-neutral-300 bg-white text-neutral-600';
+  }
+}
