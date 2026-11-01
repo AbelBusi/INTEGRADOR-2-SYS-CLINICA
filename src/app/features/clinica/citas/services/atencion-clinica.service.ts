@@ -11,8 +11,6 @@ import {
   DiagnosticoCrearDTO,
   ExamenSolicitado,
   ExamenSolicitadoCrearDTO,
-  Tratamiento,
-  TratamientoCrearDTO,
 } from '../interface/atencion-clinica.interface';
 
 @Injectable({
@@ -36,16 +34,6 @@ export class AtencionClinicaService {
   ): Observable<MensajeResponse<Diagnostico>> {
     return this.http.post<MensajeResponse<Diagnostico>>(
       `${this.citasUrl}/${idCita}/diagnosticos`,
-      dto,
-    );
-  }
-
-  crearTratamiento(
-    idDiagnostico: number,
-    dto: TratamientoCrearDTO,
-  ): Observable<MensajeResponse<Tratamiento>> {
-    return this.http.post<MensajeResponse<Tratamiento>>(
-      `${this.diagnosticosUrl}/${idDiagnostico}/tratamientos`,
       dto,
     );
   }

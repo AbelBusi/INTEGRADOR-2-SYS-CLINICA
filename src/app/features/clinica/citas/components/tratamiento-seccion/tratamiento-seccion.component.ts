@@ -3,13 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { ToastService } from '../../../../../core/services/toast.service';
-import { Tratamiento, TratamientoCrearDTO } from '../../interface/atencion-clinica.interface';
+import { TratamientoEditarComponent } from './tratamiento-editar.component';
+import { TratamientoService } from '../../services/tratamiento.service';
+import { VIAS_ADMINISTRACION } from '../../utils/atencion-clinica.util';
 import { AtencionClinicaService } from '../../services/atencion-clinica.service';
+import { Tratamiento, TratamientoCrearDTO } from '../../interface/tratamiento.interface';
 
 @Component({
   selector: 'app-tratamiento-seccion',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TratamientoEditarComponent],
   templateUrl: './tratamiento-seccion.component.html',
 })
 export class TratamientoSeccionComponent {
@@ -20,6 +23,16 @@ export class TratamientoSeccionComponent {
   private readonly fb = inject(FormBuilder);
   private readonly atencionService = inject(AtencionClinicaService);
   private readonly toastService = inject(ToastService);
+  @Output() editado = new EventEmitter<void>();
+  @Output() eliminado = new EventEmitter<void>();
+
+  private readonly tratamientoService = inject(TratamientoService); // reemplaza a atencionService
+
+  readonly viasAdministracion = VIAS_ADMINISTRACION; // reemplaza el array local
+
+  editandoId = signal<number | null>(null);
+  confirmandoId = signal<number | null>(null);
+  eliminandoId = signal<number | null>(null);
 
   mostrarFormulario = signal(false);
   guardando = signal(false);
@@ -34,10 +47,57 @@ export class TratamientoSeccionComponent {
     descIndicacion: ['', [Validators.required, Validators.maxLength(300)]],
   });
 
+  iniciarEdicion(id: number): void {
+    if (this.soloLectura) return;
+    this.mostrarFormulario.set(false);
+    this.confirmandoId.set(null);
+    this.editandoId.set(id);
+  }
+
+  cancelarEdicion(): void {
+    this.editandoId.set(null);
+  }
+
+  alEditado(): void {
+    this.editandoId.set(null);
+    this.editado.emit();
+  }
+
+  pedirConfirmacion(id: number): void {
+    if (this.soloLectura) return;
+    this.editandoId.set(null);
+    this.confirmandoId.set(id);
+  }
+
+  cancelarConfirmacion(): void {
+    this.confirmandoId.set(null);
+  }
+
+  eliminar(tratamiento: Tratamiento): void {
+    if (this.soloLectura || this.eliminandoId() !== null) return;
+
+    this.eliminandoId.set(tratamiento.id);
+
+    this.tratamientoService.eliminar(this.idDiagnostico, tratamiento.id).subscribe({
+      next: (response) => {
+        this.toastService.success(response?.mensaje || 'Tratamiento eliminado con éxito');
+        this.eliminandoId.set(null);
+        this.confirmandoId.set(null);
+        this.eliminado.emit();
+      },
+      error: (error) => {
+        console.error(error);
+        this.toastService.error(
+          error.error?.mensaje || error.error?.message || 'No se pudo eliminar el tratamiento',
+        );
+        this.eliminandoId.set(null);
+      },
+    });
+  }
+
   alternarFormulario(): void {
-    if (this.soloLectura) {
-      return;
-    }
+    if (this.soloLectura) return;
+    this.editandoId.set(null);
     this.mostrarFormulario.set(!this.mostrarFormulario());
   }
 
@@ -51,7 +111,7 @@ export class TratamientoSeccionComponent {
 
     const dto = this.form.getRawValue() as TratamientoCrearDTO;
 
-    this.atencionService.crearTratamiento(this.idDiagnostico, dto).subscribe({
+    this.tratamientoService.crear(this.idDiagnostico, dto).subscribe({
       next: (response) => {
         this.toastService.success(response?.mensaje || 'Tratamiento registrado con éxito');
         this.guardando.set(false);
@@ -61,7 +121,9 @@ export class TratamientoSeccionComponent {
       },
       error: (error) => {
         console.error(error);
-        this.toastService.error(error.error?.mensaje || 'No se pudo registrar el tratamiento');
+        this.toastService.error(
+          error.error?.mensaje || error.error?.message || 'No se pudo registrar el tratamiento',
+        );
         this.guardando.set(false);
       },
     });

@@ -81,6 +81,8 @@
           [tratamientos]="detalle.tratamientos"
           [soloLectura]="soloLectura"
           (creado)="cambio.emit()"
+          (editado)="cambio.emit()"
+          (eliminado)="cambio.emit()"
         ></app-tratamiento-seccion>
       </app-registro-clinico-modal>
     }

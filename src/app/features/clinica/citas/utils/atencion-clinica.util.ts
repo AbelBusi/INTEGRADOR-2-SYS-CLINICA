@@ -15,6 +15,38 @@ export const NIVELES_URGENCIA: OpcionCatalogo[] = [
   { valor: 3, texto: 'Emergencia' },
 ];
 
+export const VIAS_ADMINISTRACION: string[] = [
+  'Oral',
+  'Sublingual',
+  'Bucal',
+  'Tópica',
+  'Transdérmica',
+  'Inhalatoria',
+  'Nasal',
+  'Intranasal',
+  'Oftálmica',
+  'Ótica',
+  'Rectal',
+  'Vaginal',
+  'Intravaginal',
+  'Uretral',
+  'Intravesical',
+  'Intravenosa',
+  'Intramuscular',
+  'Subcutánea',
+  'Intradérmica',
+  'Intraarticular',
+  'Intratecal',
+  'Intraperitoneal',
+  'Intracardiaca',
+  'Intraósea',
+  'Epidural',
+  'Intralesional',
+  'Intravítrea',
+  'Endotraqueal',
+  'Intrabursal',
+];
+
 export function etiquetaTipoDiagnostico(valor: number): string {
   return TIPOS_DIAGNOSTICO.find((o) => o.valor === valor)?.texto ?? 'Sin tipo';
 }

@@ -1,5 +1,6 @@
 import { Cita } from './cita.interface';
 import { Indicacion } from './indicacion.interface';
+export * from './tratamiento.interface';
 
 export interface Diagnostico {
   id: number;

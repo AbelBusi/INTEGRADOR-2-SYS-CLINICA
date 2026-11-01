@@ -1,0 +1,96 @@
+<form
+  [formGroup]="form"
+  (ngSubmit)="guardar()"
+  class="grid grid-cols-1 gap-4 border border-neutral-300 border-l-2 border-l-[#D9182A] bg-neutral-50 p-4 md:grid-cols-2">
+
+  <div class="md:col-span-2">
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">Medicamento</label>
+    <input
+      type="text"
+      formControlName="nombreMedicamento"
+      maxlength="100"
+      class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B]"
+    />
+  </div>
+
+  <div>
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">Dosis</label>
+    <input
+      type="text"
+      formControlName="dosis"
+      maxlength="40"
+      class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B]"
+    />
+  </div>
+
+  <div>
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">Vía de administración</label>
+    <select
+      formControlName="viaAdministracion"
+      class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B]">
+      <option value="" disabled>Seleccionar vía de administración</option>
+      @for (via of viasAdministracion; track via) {
+        <option [value]="via">{{ via }}</option>
+      }
+    </select>
+  </div>
+
+  <div>
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">Frecuencia</label>
+    <input
+      type="text"
+      formControlName="frecuencia"
+      maxlength="40"
+      class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B]"
+    />
+  </div>
+
+  <div class="grid grid-cols-2 gap-4">
+    <div>
+      <label class="mb-1 block text-sm font-semibold text-neutral-700">Duración (días)</label>
+      <input
+        type="number"
+        min="1"
+        formControlName="duracionDias"
+        class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B]"
+      />
+    </div>
+    <div>
+      <label class="mb-1 block text-sm font-semibold text-neutral-700">Cantidad total</label>
+      <input
+        type="number"
+        min="1"
+        formControlName="totCantidad"
+        class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B]"
+      />
+    </div>
+  </div>
+
+  <div class="md:col-span-2">
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">Indicación del medicamento</label>
+    <textarea
+      formControlName="descIndicacion"
+      rows="2"
+      maxlength="300"
+      class="w-full border border-neutral-400 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-[#58595B]"></textarea>
+  </div>
+
+  <div class="flex justify-end gap-3 md:col-span-2">
+    <button
+      type="button"
+      (click)="cancelado.emit()"
+      [disabled]="guardando()"
+      class="inline-flex h-11 items-center gap-2 border border-[#58595B] bg-white px-5 text-sm font-bold text-[#58595B] hover:bg-[#58595B] hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
+      <span class="material-icons text-[18px]">close</span>
+      Cancelar
+    </button>
+    <button
+      type="submit"
+      [disabled]="form.invalid || guardando()"
+      class="inline-flex h-11 items-center gap-2 bg-[#58595B] px-5 text-sm font-bold text-white hover:bg-[#404142] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500">
+      <span class="material-icons text-[18px]">save</span>
+      {{ guardando() ? 'Guardando...' : 'Guardar cambios' }}
+    </button>
+  </div>
+
+</form>
