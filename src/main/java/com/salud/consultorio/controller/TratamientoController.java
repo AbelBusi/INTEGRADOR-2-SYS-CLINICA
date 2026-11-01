@@ -1,5 +1,6 @@
 package com.salud.consultorio.controller;
 
+import com.salud.consultorio.dto.tratamiento.TratamientoActualizarDTO;
 import com.salud.consultorio.dto.tratamiento.TratamientoCrearDTO;
 import com.salud.consultorio.dto.tratamiento.TratamientoRespuestaDTO;
 import com.salud.consultorio.model.payload.MensajeResponse;
@@ -63,6 +64,55 @@ public class TratamientoController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("LISTA DE TRATAMIENTOS DEL DIAGNOSTICO")
                 .object(lista).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(
+            summary = "Editar un tratamiento de un diagnóstico",
+            description = "Solo el médico asignado y mientras la atención no esté finalizada. " +
+                    "No se repite el mismo medicamento activo dentro del diagnóstico."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Tratamiento actualizado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o atención finalizada"),
+            @ApiResponse(responseCode = "403", description = "El diagnóstico no pertenece a una cita del médico autenticado"),
+            @ApiResponse(responseCode = "404", description = "Diagnóstico o tratamiento no encontrados"),
+            @ApiResponse(responseCode = "409", description = "Tratamiento duplicado")
+    })
+    @PutMapping("/{idTratamiento}")
+    public ResponseEntity<MensajeResponse> actualizar(
+            @PathVariable Integer idDiagnostico,
+            @PathVariable Integer idTratamiento,
+            @Valid @RequestBody TratamientoActualizarDTO dto) {
+
+        TratamientoRespuestaDTO respuesta = tratamientoServicio.actualizar(idDiagnostico, idTratamiento, dto);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Tratamiento actualizado con exito")
+                .object(respuesta).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(
+            summary = "Eliminar un tratamiento de un diagnóstico",
+            description = "Eliminación lógica. Solo el médico asignado y mientras la atención no esté finalizada."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Tratamiento eliminado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Atención finalizada"),
+            @ApiResponse(responseCode = "403", description = "El diagnóstico no pertenece a una cita del médico autenticado"),
+            @ApiResponse(responseCode = "404", description = "Diagnóstico o tratamiento no encontrados")
+    })
+    @DeleteMapping("/{idTratamiento}")
+    public ResponseEntity<MensajeResponse> eliminar(
+            @PathVariable Integer idDiagnostico,
+            @PathVariable Integer idTratamiento) {
+
+        tratamientoServicio.eliminar(idDiagnostico, idTratamiento);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Tratamiento eliminado con exito")
+                .build(), HttpStatus.OK);
 
     }
 

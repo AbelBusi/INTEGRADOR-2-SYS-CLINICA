@@ -4,6 +4,7 @@ import com.salud.consultorio.model.entity.Tratamiento;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ITratamientoRepositorio extends JpaRepository<Tratamiento, Integer> {
 
@@ -13,5 +14,10 @@ public interface ITratamientoRepositorio extends JpaRepository<Tratamiento, Inte
 
     boolean existsByDiagnostico_IdAndNombreMedicamentoIgnoreCaseAndEstado(
             Integer idDiagnostico, String nombreMedicamento, Integer estado);
+
+    Optional<Tratamiento> findByIdAndDiagnostico_IdAndEstado(Integer id, Integer idDiagnostico, Integer estado);
+
+    boolean existsByDiagnostico_IdAndNombreMedicamentoIgnoreCaseAndEstadoAndIdNot(
+            Integer idDiagnostico, String nombreMedicamento, Integer estado, Integer id);
 
 }
