@@ -1,7 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Observable } from 'rxjs';
-
 import { aMinutos, fechaDesdeISO, inicioSemana } from '../../../horarios/utils/calendario.util';
 import {
   Cita,
@@ -16,6 +15,7 @@ import {
   MAXIMO_PAGINAS,
 } from '../cita-form-modal/cita-formulario.base';
 import { CitaFormularioComponent } from '../cita-form-modal/cita-formulario.component';
+import { MotivoRegularizacionAdministrativa } from '../../interface/cita.interface';
 
 @Component({
   selector: 'app-cita-editar-modal',
@@ -27,6 +27,10 @@ export class CitaEditarModalComponent extends CitaFormularioBase implements OnIn
   @Input({ required: true }) cita!: CitaFila;
   @Output() close = new EventEmitter<void>();
   @Output() guardado = new EventEmitter<Cita>();
+  @Input() regularizacion: {
+    motivo: MotivoRegularizacionAdministrativa;
+    observacion: string;
+  } | null = null;
 
   protected readonly mensajeExito = 'Cita actualizada con éxito';
 
@@ -39,6 +43,14 @@ export class CitaEditarModalComponent extends CitaFormularioBase implements OnIn
   }
 
   protected enviar(dto: CitaDTO): Observable<MensajeResponse<Cita>> {
+    if (this.regularizacion) {
+      return this.citaService.regularizarAdministrativo(
+        this.cita.id,
+        this.regularizacion.motivo,
+        this.regularizacion.observacion,
+        dto,
+      ) as Observable<MensajeResponse<Cita>>;
+    }
     return this.citaService.actualizar(this.cita.id, dto);
   }
 
@@ -125,5 +137,4 @@ export class CitaEditarModalComponent extends CitaFormularioBase implements OnIn
       },
     });
   }
-
 }

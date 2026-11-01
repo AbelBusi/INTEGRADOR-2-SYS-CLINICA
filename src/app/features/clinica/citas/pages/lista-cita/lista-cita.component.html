@@ -208,9 +208,9 @@
           @if (puedeModificar(row)) {
             <button
               type="button"
-              title="Editar"
+              [title]="puedeEditar(row) ? 'Editar' : motivoNoEditable"
               (click)="abrirEditar(row)"
-              [disabled]="procesando()"
+              [disabled]="procesando() || !puedeEditar(row)"
               class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
               <span class="material-icons text-[18px]">edit</span>
               <span>Editar</span>
@@ -291,10 +291,19 @@
 }
 
 @if (citaRegularizar(); as cita) {
-  <app-regularizar-cita-modal
+  <app-regularizar-cita-administrativo-modal
     [cita]="cita"
     [procesando]="procesando()"
     (close)="cerrarRegularizar()"
     (confirmar)="confirmarRegularizacion($event)"
-  ></app-regularizar-cita-modal>
+  ></app-regularizar-cita-administrativo-modal>
+}
+
+@if (citaReprogramar(); as r) {
+  <app-cita-editar-modal
+    [cita]="r.cita"
+    [regularizacion]="{ motivo: r.motivo, observacion: r.observacion }"
+    (close)="citaReprogramar.set(null)"
+    (guardado)="handleReprogramado($event)"
+  ></app-cita-editar-modal>
 }

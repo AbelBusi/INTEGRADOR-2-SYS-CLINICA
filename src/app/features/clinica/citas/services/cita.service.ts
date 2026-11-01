@@ -12,6 +12,7 @@ import {
   MedicoInfo,
   MedicoResumen,
   MensajeResponse,
+  MotivoRegularizacionAdministrativa,
   PacienteBusqueda,
   PacienteInfo,
   ResolucionRegularizacion,
@@ -160,6 +161,18 @@ export class CitaService {
     return this.http.get<MensajeResponse<EspecialidadBusqueda[]>>(
       `${environment.apiUrl}/especialidades/buscar`,
       { params },
+    );
+  }
+
+  regularizarAdministrativo(
+    id: number,
+    motivo: MotivoRegularizacionAdministrativa,
+    observacion: string,
+    reprogramacion?: CitaDTO,
+  ): Observable<MensajeResponse<Cita | null>> {
+    return this.http.patch<MensajeResponse<Cita | null>>(
+      `${this.baseUrl}/${id}/regularizar-administrativo`,
+      { motivo, observacion: observacion.trim(), reprogramacion: reprogramacion ?? null },
     );
   }
 

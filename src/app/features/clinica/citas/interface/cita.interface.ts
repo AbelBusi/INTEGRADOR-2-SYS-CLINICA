@@ -177,3 +177,36 @@ export const ACCIONES_HISTORIAL: Record<AccionHistorial, InfoAccionHistorial> = 
   ATENDIDA: { texto: 'Atención médica registrada', icono: 'task_alt', punto: 'bg-[#0d6b68]' },
   ELIMINADA: { texto: 'Cita eliminada', icono: 'delete', punto: 'bg-neutral-400' },
 };
+
+export type MotivoRegularizacionAdministrativa =
+  'NO_REALIZADA_ESTABLECIMIENTO' | 'SUSPENDIDA_INSTITUCIONAL' | 'CANCELADA_PACIENTE';
+
+export const OPCIONES_REGULARIZACION_ADMINISTRATIVA: {
+  valor: MotivoRegularizacionAdministrativa;
+  titulo: string;
+  descripcion: string;
+  permiteReprogramar: boolean;
+  icono: string;
+}[] = [
+  {
+    valor: 'NO_REALIZADA_ESTABLECIMIENTO',
+    titulo: 'Atención no realizada por el establecimiento',
+    descripcion: 'Médico ausente, problemas operativos o consultorio no disponible.',
+    permiteReprogramar: true,
+    icono: 'domain_disabled',
+  },
+  {
+    valor: 'SUSPENDIDA_INSTITUCIONAL',
+    titulo: 'Atención suspendida por motivos institucionales',
+    descripcion: 'Suspensión de actividades o contingencias del establecimiento.',
+    permiteReprogramar: true,
+    icono: 'report_problem',
+  },
+  {
+    valor: 'CANCELADA_PACIENTE',
+    titulo: 'Paciente solicitó cancelar la cita',
+    descripcion: 'Se registra la cancelación; no se habilita la reprogramación automática.',
+    permiteReprogramar: false,
+    icono: 'event_busy',
+  },
+];

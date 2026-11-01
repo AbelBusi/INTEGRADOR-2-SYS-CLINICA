@@ -1,5 +1,5 @@
 import { formatearFechaCorta } from '../../horarios/utils/calendario.util';
-import { ACCIONES_HISTORIAL, HistorialCita, infoEstado } from '../interface/cita.interface';
+import { ACCIONES_HISTORIAL, HistorialCita, infoEstado, OPCIONES_REGULARIZACION_ADMINISTRATIVA } from '../interface/cita.interface';
 
 export interface NombresHistorial {
   medico: Record<number, string>;
@@ -109,18 +109,59 @@ function calcularDescripcion(evento: HistorialCita, nombres: NombresHistorial): 
   }
 }
 
+type OpcionAdministrativa = (typeof OPCIONES_REGULARIZACION_ADMINISTRATIVA)[number];
+
+function buscarOpcionAdministrativa(evento: HistorialCita): OpcionAdministrativa | null {
+  const motivo = evento.datosNuevos?.['motivoRegularizacion'];
+
+  return OPCIONES_REGULARIZACION_ADMINISTRATIVA.find((o) => o.valor === motivo) ?? null;
+}
+
+function describirRegularizacionAdministrativa(
+  opcion: OpcionAdministrativa,
+  evento: HistorialCita,
+  nombres: NombresHistorial,
+): string {
+  const nuevos = evento.datosNuevos ?? {};
+  let resultado = 'La cita quedó cancelada.';
+
+  if (evento.accion === 'REPROGRAMADA') {
+    const partes: string[] = [];
+    if ('fechaCita' in nuevos) partes.push(`fecha ${aTexto('fechaCita', nuevos['fechaCita'], nombres)}`);
+    if ('horaInicio' in nuevos || 'horaSalida' in nuevos) {
+      partes.push(
+        `horario ${aTexto('horaInicio', nuevos['horaInicio'], nombres)} - ${aTexto('horaSalida', nuevos['horaSalida'], nombres)}`,
+      );
+    }
+    if ('idMedico' in nuevos) partes.push(`médico ${aTexto('idMedico', nuevos['idMedico'], nombres)}`);
+
+    resultado =
+      'La cita se reprogramó y volvió a quedar programada' +
+      (partes.length ? `. Nuevo${partes.length > 1 ? 's' : ''} dato${partes.length > 1 ? 's' : ''}: ${partes.join(', ')}.` : '.');
+  }
+
+  const reprogramacion = opcion.permiteReprogramar
+    ? 'Este motivo permite reprogramar la cita.'
+    : 'Este motivo no habilita la reprogramación automática.';
+
+  return `Regularización tardía por: ${opcion.titulo}. ${opcion.descripcion} ${resultado} ${reprogramacion}`;
+}
+
 export function describirEvento(evento: HistorialCita, nombres: NombresHistorial): EventoVista {
   const info = ACCIONES_HISTORIAL[evento.accion];
   const fecha = parsearFechaEvento(evento.fechaEvento);
   const regularizada = evento.datosNuevos?.['regularizacion'] === true;
   const automatica = evento.datosNuevos?.['cancelacionAutomatica'] === true;
+  const opcionAdmin = regularizada ? buscarOpcionAdministrativa(evento) : null;
   return {
     id: evento.id,
     etiqueta: automatica
       ? 'Cancelada automáticamente'
-      : regularizada
-        ? 'Cita regularizada'
-        : info.texto,
+      : opcionAdmin
+        ? 'Regularización administrativa'
+        : regularizada
+          ? 'Cita regularizada'
+          : info.texto,
     icono: info.icono,
     punto: info.punto,
     fecha: fecha.toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -128,19 +169,23 @@ export function describirEvento(evento: HistorialCita, nombres: NombresHistorial
     responsable: evento.nombreUsuario?.trim() || evento.usuario,
     descripcion: automatica
       ? 'La cita no se regularizó dentro de las 24 horas posteriores a su finalización y el sistema la canceló.'
-      : regularizada
-        ? evento.accion === 'ATENDIDA'
-          ? 'La cita venció sin resolverse y se regularizó como atendida.'
-          : 'La cita venció sin resolverse y se regularizó como no realizada (cancelada).'
-        : calcularDescripcion(evento, nombres),
+      : opcionAdmin
+        ? describirRegularizacionAdministrativa(opcionAdmin, evento, nombres)
+        : regularizada
+          ? evento.accion === 'ATENDIDA'
+            ? 'La cita venció sin resolverse y se regularizó como atendida.'
+            : 'La cita venció sin resolverse y se regularizó como no realizada (cancelada).'
+          : calcularDescripcion(evento, nombres),
     cambios: calcularCambios(evento, nombres),
     observacion: evento.observacion,
     etiquetaObservacion: automatica
       ? 'Detalle'
-      : regularizada
-        ? 'Justificación'
-        : evento.accion === 'CANCELADA'
-          ? 'Motivo de cancelación'
-          : 'Observación',
+      : opcionAdmin
+        ? 'Justificación de la regularización tardía'
+        : regularizada
+          ? 'Justificación'
+          : evento.accion === 'CANCELADA'
+            ? 'Motivo de cancelación'
+            : 'Observación',
   };
 }

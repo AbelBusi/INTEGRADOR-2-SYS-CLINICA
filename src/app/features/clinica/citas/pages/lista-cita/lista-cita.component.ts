@@ -10,12 +10,12 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { VerDetalleCitaModalComponent } from '../../components/ver-detalle-cita-modal/ver-detalle-cita-modal.component';
 import { CitaCrearModalComponent } from '../../components/cita-crear-modal/cita-crear-modal.component';
 import { CitaEditarModalComponent } from '../../components/cita-editar-modal/cita-editar-modal.component';
-import { RegularizarCitaModalComponent } from '../../components/regularizar-cita-modal/regularizar-cita-modal.component';
 import { puedeCancelarCita, MOTIVO_NO_CANCELABLE } from '../../utils/ventana-cita.util';
-import { ResolucionRegularizacion } from '../../interface/cita.interface';
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
 import { HistorialCitaModalComponent } from '../../components/historial-cita-modal/historial-cita-modal.component';
+import { RegularizarCitaAdministrativoModalComponent } from '../../components/regularizar-cita-administrativo-modal/regularizar-cita-administrativo-modal.component';
+import { MotivoRegularizacionAdministrativa, OPCIONES_REGULARIZACION_ADMINISTRATIVA } from '../../interface/cita.interface';
 
 @Component({
   selector: 'app-lista-cita',
@@ -28,7 +28,7 @@ import { HistorialCitaModalComponent } from '../../components/historial-cita-mod
     CitaEditarModalComponent,
     VerDetalleCitaModalComponent,
     HistorialCitaModalComponent,
-    RegularizarCitaModalComponent,
+    RegularizarCitaAdministrativoModalComponent,
   ],
   templateUrl: './lista-cita.component.html',
 })
@@ -62,6 +62,12 @@ export class ListaCitaComponent implements OnInit {
     this.modalAccionesAbierto.set(true);
   }
 
+  citaReprogramar = signal<{
+    cita: CitaFila;
+    motivo: MotivoRegularizacionAdministrativa;
+    observacion: string;
+  } | null>(null);
+
   cerrarModalAcciones() {
     this.modalAccionesAbierto.set(false);
     this.citaSeleccionada.set(null);
@@ -69,6 +75,11 @@ export class ListaCitaComponent implements OnInit {
 
   readonly motivoNoCancelable = MOTIVO_NO_CANCELABLE;
 
+  readonly motivoNoEditable = 'No se puede editar una cita cuyo horario ya comenzó.';
+
+  puedeEditar(cita: CitaFila): boolean {
+    return new Date() < new Date(`${cita.fecha}T${cita.inicio}`);
+  }
   estaPendiente(cita: CitaFila): boolean {
     return this.idsPendientes().has(cita.id);
   }
@@ -83,8 +94,14 @@ export class ListaCitaComponent implements OnInit {
     }
   }
 
+  handleReprogramado(cita: Cita): void {
+    this.citaReprogramar.set(null);
+    this.cargar(true);
+    this.citaVer.set(normalizarCita(cita));
+  }
+
   confirmarRegularizacion(datos: {
-    resolucion: ResolucionRegularizacion;
+    motivo: MotivoRegularizacionAdministrativa;
     observacion: string;
   }): void {
     const cita = this.citaRegularizar();
@@ -93,9 +110,17 @@ export class ListaCitaComponent implements OnInit {
       return;
     }
 
+    const opcion = OPCIONES_REGULARIZACION_ADMINISTRATIVA.find((o) => o.valor === datos.motivo);
+
+    if (opcion?.permiteReprogramar) {
+      this.citaRegularizar.set(null);
+      this.citaReprogramar.set({ cita, motivo: datos.motivo, observacion: datos.observacion });
+      return;
+    }
+
     this.procesando.set(true);
 
-    this.citaService.regularizar(cita.id, datos.resolucion, datos.observacion).subscribe({
+    this.citaService.regularizarAdministrativo(cita.id, datos.motivo, datos.observacion).subscribe({
       next: (response) => {
         this.toastService.success(response?.mensaje || 'Cita regularizada con éxito');
         this.procesando.set(false);
@@ -111,8 +136,6 @@ export class ListaCitaComponent implements OnInit {
   }
 
   private cargarPendientes(): void {
-    // En lista-cita: this.citaService.listarPendientesRegularizacion()
-    // En mis-citas-medico: this.citaService.listarMisPendientesRegularizacionMedico()
     this.citaService.listarPendientesRegularizacion().subscribe({
       next: (response) => this.idsPendientes.set(new Set((response.object || []).map((c) => c.id))),
       error: (error) => console.error('No se pudieron cargar las citas pendientes:', error),
