@@ -1,5 +1,6 @@
 package com.salud.consultorio.service;
 
+import com.salud.consultorio.dto.indicacion.IndicacionActualizarDTO;
 import com.salud.consultorio.dto.indicacion.IndicacionCrearDTO;
 import com.salud.consultorio.dto.indicacion.IndicacionRespuestaDTO;
 
@@ -11,4 +12,7 @@ public interface IIndicacionServicio {
 
     List<IndicacionRespuestaDTO> listaPorDiagnostico(Integer idDiagnostico);
 
+    IndicacionRespuestaDTO actualizar(Integer idDiagnostico, Integer idIndicacion, IndicacionActualizarDTO dto);
+
+    void eliminar(Integer idDiagnostico, Integer idIndicacion);
 }

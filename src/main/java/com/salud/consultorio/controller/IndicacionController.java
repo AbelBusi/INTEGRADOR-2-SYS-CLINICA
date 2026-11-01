@@ -1,5 +1,6 @@
 package com.salud.consultorio.controller;
 
+import com.salud.consultorio.dto.indicacion.IndicacionActualizarDTO;
 import com.salud.consultorio.dto.indicacion.IndicacionCrearDTO;
 import com.salud.consultorio.dto.indicacion.IndicacionRespuestaDTO;
 import com.salud.consultorio.model.payload.MensajeResponse;
@@ -61,6 +62,53 @@ public class IndicacionController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("LISTA DE INDICACIONES DEL DIAGNOSTICO")
                 .object(lista).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(
+            summary = "Editar una indicación de un diagnóstico",
+            description = "Solo el médico asignado y mientras la atención no esté finalizada."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Indicación actualizada correctamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o atención finalizada"),
+            @ApiResponse(responseCode = "403", description = "El diagnóstico no pertenece a una cita del médico autenticado"),
+            @ApiResponse(responseCode = "404", description = "Diagnóstico o indicación no encontrados")
+    })
+    @PutMapping("/{idIndicacion}")
+    public ResponseEntity<MensajeResponse> actualizar(
+            @PathVariable Integer idDiagnostico,
+            @PathVariable Integer idIndicacion,
+            @Valid @RequestBody IndicacionActualizarDTO dto) {
+
+        IndicacionRespuestaDTO respuesta = indicacionServicio.actualizar(idDiagnostico, idIndicacion, dto);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Indicacion actualizada con exito")
+                .object(respuesta).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(
+            summary = "Eliminar una indicación de un diagnóstico",
+            description = "Eliminación lógica. Solo el médico asignado y mientras la atención no esté finalizada."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Indicación eliminada correctamente"),
+            @ApiResponse(responseCode = "400", description = "Atención finalizada"),
+            @ApiResponse(responseCode = "403", description = "El diagnóstico no pertenece a una cita del médico autenticado"),
+            @ApiResponse(responseCode = "404", description = "Diagnóstico o indicación no encontrados")
+    })
+    @DeleteMapping("/{idIndicacion}")
+    public ResponseEntity<MensajeResponse> eliminar(
+            @PathVariable Integer idDiagnostico,
+            @PathVariable Integer idIndicacion) {
+
+        indicacionServicio.eliminar(idDiagnostico, idIndicacion);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Indicacion eliminada con exito")
+                .build(), HttpStatus.OK);
 
     }
 
