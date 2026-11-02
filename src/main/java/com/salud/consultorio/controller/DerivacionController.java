@@ -1,5 +1,6 @@
 package com.salud.consultorio.controller;
 
+import com.salud.consultorio.dto.derivacion.DerivacionActualizarDTO;
 import com.salud.consultorio.dto.derivacion.DerivacionCrearDTO;
 import com.salud.consultorio.dto.derivacion.DerivacionRespuestaDTO;
 import com.salud.consultorio.model.payload.MensajeResponse;
@@ -64,6 +65,56 @@ public class DerivacionController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("LISTA DE DERIVACIONES DEL DIAGNOSTICO")
                 .object(lista).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(
+            summary = "Editar una derivación de un diagnóstico",
+            description = "Solo el médico asignado, mientras la atención no esté finalizada y la derivación esté pendiente. " +
+                    "No se repite una derivación vigente a la misma especialidad."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Derivación actualizada correctamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o atención finalizada"),
+            @ApiResponse(responseCode = "403", description = "El diagnóstico no pertenece a una cita del médico autenticado"),
+            @ApiResponse(responseCode = "404", description = "Diagnóstico, derivación o especialidad no encontrados"),
+            @ApiResponse(responseCode = "409", description = "Derivación no pendiente o duplicada")
+    })
+    @PutMapping("/{idDerivacion}")
+    public ResponseEntity<MensajeResponse> actualizar(
+            @PathVariable Integer idDiagnostico,
+            @PathVariable Integer idDerivacion,
+            @Valid @RequestBody DerivacionActualizarDTO dto) {
+
+        DerivacionRespuestaDTO respuesta = derivacionServicio.actualizar(idDiagnostico, idDerivacion, dto);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Derivacion actualizada con exito")
+                .object(respuesta).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(
+            summary = "Eliminar una derivación de un diagnóstico",
+            description = "Eliminación lógica. Solo el médico asignado, mientras la atención no esté finalizada y la derivación esté pendiente."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Derivación eliminada correctamente"),
+            @ApiResponse(responseCode = "400", description = "Atención finalizada"),
+            @ApiResponse(responseCode = "403", description = "El diagnóstico no pertenece a una cita del médico autenticado"),
+            @ApiResponse(responseCode = "404", description = "Diagnóstico o derivación no encontrados"),
+            @ApiResponse(responseCode = "409", description = "Derivación no pendiente")
+    })
+    @DeleteMapping("/{idDerivacion}")
+    public ResponseEntity<MensajeResponse> eliminar(
+            @PathVariable Integer idDiagnostico,
+            @PathVariable Integer idDerivacion) {
+
+        derivacionServicio.eliminar(idDiagnostico, idDerivacion);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Derivacion eliminada con exito")
+                .build(), HttpStatus.OK);
 
     }
 

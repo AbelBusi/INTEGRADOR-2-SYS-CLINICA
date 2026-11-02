@@ -44,4 +44,7 @@ public interface IDerivacionRepositorio extends JpaRepository<Derivacion, Intege
     List<Derivacion> findByDiagnostico_CitaMedica_IdAndEstadoInOrderByIdAsc(
             Integer idCita, Collection<Integer> estados);
 
+    boolean existsByDiagnostico_IdAndEspecialidad_IdAndEstadoInAndIdNot(
+            Integer idDiagnostico, Integer idEspecialidad, Collection<Integer> estados, Integer id);
+
 }
