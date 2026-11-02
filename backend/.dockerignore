@@ -1,0 +1,11 @@
+target
+.git
+.gitignore
+.idea
+*.iml
+*.log
+boot_out.log
+boot_err.log
+stress-test
+.dockerignore
+HELP.md

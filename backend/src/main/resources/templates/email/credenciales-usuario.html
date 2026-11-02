@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Credenciales de acceso</title>
+</head>
+
+<body style="margin:0;padding:0;background-color:#F2F2F2;font-family:Arial,Helvetica,sans-serif;">
+
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#F2F2F2;font-size:1px;">
+    Tu cuenta del Hospital José Olaya ha sido creada.
+</div>
+
+<table role="presentation"
+       width="100%"
+       cellpadding="0"
+       cellspacing="0"
+       style="background-color:#F2F2F2;">
+
+    <tr>
+        <td align="center" style="padding:0 0 24px 0;">
+
+            <table role="presentation"
+                   width="600"
+                   cellpadding="0"
+                   cellspacing="0"
+                   style="max-width:600px;width:100%;background-color:#FFFFFF;">
+
+                <!-- Cabecera -->
+                <tr>
+                    <td style="background-color:#D91E18;">
+
+                        <table role="presentation"
+                               width="100%"
+                               cellpadding="0"
+                               cellspacing="0">
+
+                            <tr>
+
+                                <td th:if="${tieneEscudo}"
+                                    width="110"
+                                    align="center"
+                                    style="background-color:#FFFFFF;padding:14px;">
+
+                                    <img src="cid:escudo"
+                                         alt="República del Perú"
+                                         width="72"
+                                         style="display:block;border:0;">
+
+                                </td>
+
+                                <td style="padding:20px 24px;">
+
+                                    <div style="color:#FFFFFF;font-size:26px;letter-spacing:2px;line-height:1;">
+                                        PERÚ
+                                    </div>
+
+                                    <div style="color:#FFFFFF;font-size:13px;margin-top:6px;">
+                                        Ministerio de Salud
+                                    </div>
+
+                                </td>
+
+                            </tr>
+
+                        </table>
+
+                    </td>
+                </tr>
+
+                <!-- Franja -->
+                <tr>
+                    <td style="background-color:#58595B;padding:12px 24px;">
+
+                        <span style="color:#FFFFFF;font-size:14px;font-weight:bold;letter-spacing:2px;">
+                            MINSA
+                        </span>
+
+                        <span style="color:#D6D6D6;font-size:13px;">
+                            &nbsp;&nbsp;|&nbsp;&nbsp;Hospital José Olaya
+                        </span>
+
+                    </td>
+                </tr>
+
+                <!-- Imagen -->
+                <tr th:if="${tieneHospital}">
+                    <td>
+
+                        <img src="cid:hospital"
+                             alt="Hospital José Olaya"
+                             width="600"
+                             style="display:block;width:100%;height:auto;border:0;">
+
+                    </td>
+                </tr>
+
+                <!-- Contenido -->
+                <tr>
+                    <td style="padding:32px 32px 0 32px;">
+
+                        <h1 style="margin:0 0 14px 0;font-size:20px;font-weight:bold;color:#333333;">
+                            Tu cuenta ha sido creada
+                        </h1>
+
+                        <p style="margin:0;font-size:15px;line-height:1.6;color:#444444;">
+                            Se ha creado una cuenta para ti en el sistema
+                            del Hospital José Olaya.
+                        </p>
+
+                    </td>
+                </tr>
+
+                <!-- Credenciales -->
+                <tr>
+                    <td style="padding:24px 32px 0 32px;">
+
+                        <table role="presentation"
+                               width="100%"
+                               cellpadding="0"
+                               cellspacing="0"
+                               style="background-color:#F5F5F5;border-top:3px solid #D91E18;">
+
+                            <tr>
+                                <td style="padding:22px 24px;">
+
+                                    <div style="font-size:13px;color:#777777;margin-bottom:6px;">
+                                        Nombre de usuario
+                                    </div>
+
+                                    <div th:text="${usuario}"
+                                         style="font-family:'Courier New',Courier,monospace;font-size:22px;font-weight:bold;color:#222222;">
+                                        usuario
+                                    </div>
+
+                                    <div style="font-size:13px;color:#777777;margin-top:20px;margin-bottom:6px;">
+                                        Contraseña temporal
+                                    </div>
+
+                                    <div th:text="${claveTemporal}"
+                                         style="font-family:'Courier New',Courier,monospace;font-size:22px;font-weight:bold;color:#222222;">
+                                        X7@abc123
+                                    </div>
+
+                                </td>
+                            </tr>
+
+                        </table>
+
+                    </td>
+                </tr>
+
+                <!-- Aviso -->
+                <tr>
+                    <td style="padding:20px 32px 0 32px;font-size:14px;color:#444444;line-height:1.6;">
+
+                        <strong>Importante:</strong>
+                        esta contraseña es temporal.
+
+                        Al iniciar sesión por primera vez,
+                        el sistema te solicitará crear una nueva contraseña
+                        antes de permitirte continuar.
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="padding:28px 32px 32px 32px;font-size:13px;line-height:1.6;color:#666666;">
+
+                        No compartas estas credenciales con otras personas.
+                        Si no esperabas recibir este mensaje,
+                        comunícate con el administrador del sistema.
+
+                    </td>
+                </tr>
+
+                <!-- Pie -->
+                <tr>
+                    <td style="background-color:#58595B;padding:18px 32px;">
+
+                        <img th:if="${tieneLogoMinsa}"
+                             src="cid:logoMinsa"
+                             alt="MINSA"
+                             height="32"
+                             style="display:block;border:0;margin-bottom:8px;">
+
+                        <div style="color:#FFFFFF;font-size:12px;font-weight:bold;">
+                            Ministerio de Salud · Gobierno del Perú
+                        </div>
+
+                        <div style="color:#CFCFCF;font-size:11px;margin-top:4px;">
+                            Hospital José Olaya · Mensaje automático, no respondas a este correo.
+                        </div>
+
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+
+</table>
+
+</body>
+</html>
