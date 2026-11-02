@@ -1,0 +1,31 @@
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" (click)="handleClose()">
+  <div class="card w-full max-w-md p-6 space-y-4" (click)="$event.stopPropagation()">
+    <h3 class="text-lg font-bold text-slate-800">Editar rol</h3>
+    @if (error) {
+      <p class="text-sm text-red-700 bg-red-50 rounded-lg px-3 py-2">{{ error }}</p>
+    }
+    <form (ngSubmit)="onSubmit()" class="space-y-4">
+      <div>
+        <label class="block text-sm text-slate-600 mb-1">Nombre *</label>
+        <input class="input-field" [(ngModel)]="form.nombre" name="nombre" required />
+      </div>
+      <div>
+        <label class="block text-sm text-slate-600 mb-1">Descripción *</label>
+        <textarea class="input-field min-h-[80px]" [(ngModel)]="form.descripcion" name="descripcion" required></textarea>
+      </div>
+      <div>
+        <label class="block text-sm text-slate-600 mb-1">Estado</label>
+        <select class="input-field" [(ngModel)]="form.estado" name="estado">
+          <option [ngValue]="1">Activo</option>
+          <option [ngValue]="0">Inactivo</option>
+        </select>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" class="btn-secondary" (click)="handleClose()">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="guardando">
+          {{ guardando ? 'Guardando...' : 'Actualizar' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

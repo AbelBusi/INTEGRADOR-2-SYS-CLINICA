@@ -1,0 +1,77 @@
+<form (submit)="onSubmit($event)" class="space-y-4" novalidate>
+
+  <div>
+    <label for="rec-nueva-clave" class="mb-1 block text-sm font-semibold text-neutral-700">
+      Nueva contraseña
+    </label>
+    <div class="relative">
+      <span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-neutral-400">
+        lock
+      </span>
+      <input
+        id="rec-nueva-clave"
+        [type]="mostrar() ? 'text' : 'password'"
+        autocomplete="new-password"
+        [attr.maxlength]="maximo"
+        [placeholder]="'Mínimo ' + minimo + ' caracteres'"
+        [value]="nuevaClave()"
+        (input)="nuevaClave.set($any($event.target).value)"
+        class="h-11 w-full border border-neutral-400 bg-white pl-10 pr-10 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-[#58595B]"
+      />
+      <button
+        type="button"
+        (click)="toggleMostrar()"
+        aria-label="Mostrar u ocultar contraseña"
+        class="absolute right-3 top-1/2 flex -translate-y-1/2 items-center text-neutral-400 hover:text-[#58595B]"
+      >
+        <span class="material-symbols-outlined text-[20px]">
+          {{ mostrar() ? 'visibility_off' : 'visibility' }}
+        </span>
+      </button>
+    </div>
+    @if (intentado() && !claveValida()) {
+      <p class="mt-1 text-xs text-red-700">
+        La contraseña debe tener entre {{ minimo }} y {{ maximo }} caracteres.
+      </p>
+    }
+  </div>
+
+  <div>
+    <label for="rec-confirmar-clave" class="mb-1 block text-sm font-semibold text-neutral-700">
+      Confirmar contraseña
+    </label>
+    <div class="relative">
+      <span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-neutral-400">
+        lock_reset
+      </span>
+      <input
+        id="rec-confirmar-clave"
+        [type]="mostrar() ? 'text' : 'password'"
+        autocomplete="new-password"
+        [attr.maxlength]="maximo"
+        placeholder="Repita su nueva contraseña"
+        [value]="confirmacion()"
+        (input)="confirmacion.set($any($event.target).value)"
+        class="h-11 w-full border border-neutral-400 bg-white pl-10 pr-3 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-[#58595B]"
+      />
+    </div>
+    @if (intentado() && claveValida() && !coinciden()) {
+      <p class="mt-1 text-xs text-red-700">Las contraseñas no coinciden.</p>
+    }
+  </div>
+
+  <button
+    type="submit"
+    [disabled]="cargando()"
+    class="flex h-11 w-full items-center justify-center gap-2 bg-[#58595B] text-sm font-bold text-white transition-colors hover:bg-[#404142] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500"
+  >
+    @if (cargando()) {
+      <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+      <span>Guardando...</span>
+    } @else {
+      <span>Restablecer contraseña</span>
+      <span class="material-symbols-outlined text-[18px]">check</span>
+    }
+  </button>
+
+</form>

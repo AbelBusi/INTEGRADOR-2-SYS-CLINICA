@@ -1,0 +1,257 @@
+@if (loading()) {
+  <div class="flex justify-center items-center py-16">
+    <div class="w-8 h-8 border-4 border-gray-200 border-t-[#0d6b68] rounded-full animate-spin"></div>
+  </div>
+}
+
+@if (!loading()) {
+  <div class="flex flex-col bg-white border border-gray-200 rounded-lg overflow-hidden">
+
+    <div
+      class="min-h-0 overflow-auto overscroll-contain [scrollbar-width:thin]"
+      [style.max-height]="maxHeight()"
+    >
+      <table class="w-full text-sm">
+
+        <thead class="sticky top-0 z-10">
+        <tr>
+          @for (col of columns(); track col.header) {
+
+            <th
+              class="px-5 py-4 text-xs font-bold text-gray-600 uppercase tracking-wide
+         whitespace-nowrap bg-[#f4f7f7]
+         shadow-[inset_0_-2px_0_#0d6b68]"
+              [class.text-left]="!col.align || col.align === 'left'"
+              [class.text-center]="col.align === 'center'"
+              [class.text-right]="col.align === 'right'"
+              [class.cursor-pointer]="col.sortable"
+              [class.hover:bg-[#eaf1f1]]="col.sortable"
+              (click)="col.sortable && handleSort(col.field.toString())"
+            >
+              <div
+                class="flex items-center gap-2"
+                [class.justify-start]="!col.align || col.align === 'left'"
+                [class.justify-center]="col.align === 'center'"
+                [class.justify-end]="col.align === 'right'"
+              >
+                {{ col.header }}
+
+                @if (col.sortable) {
+                  <span
+                    class="material-icons text-[18px]"
+                    [ngClass]="
+          sortField() === col.field
+            ? 'text-[#0d6b68]'
+            : 'text-gray-400'
+        "
+                  >
+        unfold_more
+      </span>
+                }
+              </div>
+            </th>
+
+          }
+        </tr>
+        </thead>
+
+        <tbody class="divide-y divide-gray-100">
+
+          @for (row of paginatedData(); track row) {
+            <tr
+              (click)="rowClick.emit(row)"
+              class="group cursor-pointer bg-white hover:bg-[#f7faf9] transition-colors"
+            >
+
+              @for (col of columns(); track col.header) {
+
+                <td
+                  class="px-5 py-4"
+                  [class.text-left]="!col.align || col.align === 'left'"
+                  [class.text-center]="col.align === 'center'"
+                  [class.text-right]="col.align === 'right'"
+                  [class.whitespace-nowrap]="col.type === 'actions'"
+                >
+
+                  @if (col.type === 'actions') {
+
+                    <div class="flex justify-center items-center gap-1">
+
+                      <button
+                        type="button"
+                        title="Eliminar"
+                        (click)="$event.stopPropagation(); deleteAction.emit(row)"
+                        class="w-9 h-9 inline-flex items-center justify-center rounded-md
+                       text-gray-500 border border-gray-200 bg-white
+                       hover:text-red-600 hover:border-red-200 hover:bg-red-50
+                       transition-colors"
+                      >
+                <span class="material-icons text-[19px]">
+                  delete
+                </span>
+                      </button>
+
+                    </div>
+
+                  } @else if (col.type === 'custom' && customColumnTemplate) {
+
+                    <ng-container
+                      *ngTemplateOutlet="
+                customColumnTemplate;
+                context: {
+                  $implicit: row,
+                  field: col.field
+                }
+              "
+                    ></ng-container>
+
+                  } @else {
+
+                    <span class="text-gray-800 font-medium">
+              {{ getCellValue(row, col.field) }}
+            </span>
+
+                  }
+
+                </td>
+
+              }
+
+            </tr>
+
+          } @empty {
+
+            <tr>
+              <td
+                [attr.colSpan]="columns().length"
+                class="px-5 py-16 text-center"
+              >
+                <div class="flex flex-col items-center justify-center">
+
+                  <div
+                    class="w-12 h-12 rounded-full bg-gray-100
+                   flex items-center justify-center mb-3"
+                  >
+            <span class="material-icons text-gray-400 text-2xl">
+              search_off
+            </span>
+                  </div>
+
+                  <p class="text-sm font-semibold text-gray-600">
+                    No se encontraron registros
+                  </p>
+
+                  <p class="text-xs text-gray-400 mt-1">
+                    No existen datos que coincidan con el criterio seleccionado.
+                  </p>
+
+                </div>
+              </td>
+            </tr>
+
+          }
+
+        </tbody>
+
+      </table>
+    </div>
+
+    <div class="shrink-0 border-t border-gray-200 bg-[#fafafa] px-5 py-3">
+
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+
+          <div class="flex items-center gap-2">
+            <label for="pageSizeSelect" class="text-xs text-gray-500">
+              Registros por página:
+            </label>
+
+            <select
+              id="pageSizeSelect"
+              [value]="pageSize()"
+              (change)="onPageSizeChange($event)"
+              class="h-8 rounded-md border border-gray-200 bg-white px-2
+                     text-xs font-bold text-[#0d6b68] outline-none cursor-pointer
+                     focus:border-[#0d6b68] focus:ring-1 focus:ring-[#0d6b68]"
+            >
+              @for (option of pageSizeOptions(); track option) {
+                <option [value]="option" [selected]="option === pageSize()">
+                  {{ option }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <span class="text-xs text-gray-500">
+            Mostrando
+            <span class="font-semibold text-gray-700">{{ startRecord() }}–{{ endRecord() }}</span>
+            de
+            <span class="font-semibold text-gray-700">{{ totalRecords() }}</span>
+          </span>
+
+        </div>
+
+        <!-- Navegación -->
+        <div class="flex items-center justify-between gap-3 sm:justify-end">
+
+          <button
+            type="button"
+            (click)="previousPage()"
+            [disabled]="currentPage() === 1"
+            aria-label="Página anterior"
+            class="w-9 h-9 inline-flex items-center justify-center
+                   rounded-md border border-gray-200 bg-white
+                   text-gray-500
+                   hover:bg-[#f0f6f5] hover:text-[#0d6b68]
+                   disabled:opacity-40 disabled:cursor-not-allowed
+                   transition-colors"
+          >
+            <span class="material-icons text-[20px]">
+              chevron_left
+            </span>
+          </button>
+
+          <div
+            class="min-w-[90px] h-9 px-3
+                   flex items-center justify-center
+                   rounded-md border border-gray-200 bg-white"
+          >
+            <span class="text-sm font-bold text-[#0d6b68]">
+              {{ currentPage() }}
+            </span>
+
+            <span class="text-sm text-gray-300 mx-2">
+              /
+            </span>
+
+            <span class="text-sm font-medium text-gray-500">
+              {{ totalPages() }}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            (click)="nextPage()"
+            [disabled]="currentPage() === totalPages()"
+            aria-label="Página siguiente"
+            class="w-9 h-9 inline-flex items-center justify-center
+                   rounded-md border border-gray-200 bg-white
+                   text-gray-500
+                   hover:bg-[#f0f6f5] hover:text-[#0d6b68]
+                   disabled:opacity-40 disabled:cursor-not-allowed
+                   transition-colors"
+          >
+            <span class="material-icons text-[20px]">
+              chevron_right
+            </span>
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+}

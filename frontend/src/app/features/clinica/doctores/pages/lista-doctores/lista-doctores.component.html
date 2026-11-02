@@ -1,0 +1,121 @@
+<div class="animate-fade-in space-y-6">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="page-header mb-0">
+      <h2>Doctores</h2>
+      <p>Equipo médico del consultorio</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    @for (item of stats(); track item.title) {
+      <div class="bg-white rounded border border-slate-200 p-4 flex items-center gap-4 shadow-sm select-none">
+
+        <div class="w-10 h-10 rounded flex items-center justify-center shrink-0 text-white"
+             [ngClass]="{
+               'bg-teal-600': item.icon === 'groups',
+               'bg-emerald-600': item.icon === 'check_circle',
+               'bg-sky-600': item.icon === 'local_hospital'
+             }">
+          <span class="material-icons text-xl block">{{ item.icon }}</span>
+        </div>
+
+        <div>
+          <p class="text-xs font-medium text-slate-400 uppercase tracking-wider">{{ item.title }}</p>
+          <p class="text-2xl font-mono font-bold text-slate-900 tracking-tight leading-none mt-0.5">{{ item.value }}</p>
+        </div>
+
+      </div>
+    }
+  </div>
+
+  <div class="flex items-center justify-between gap-4 flex-wrap">
+    <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex items-center gap-2 bg-white border border-slate-200 rounded px-3 py-2 w-72 shadow-sm focus-within:ring-2 focus-within:ring-teal-500/20 transition-all">
+        <span class="material-icons text-slate-400 text-lg select-none">search</span>
+        <input
+          type="text"
+          class="bg-transparent text-sm text-slate-700 placeholder-slate-400 outline-none w-full"
+          placeholder="Buscar por nombre o CMP..."
+          [ngModel]="search()"
+          (ngModelChange)="search.set($event)"
+        />
+      </div>
+      <select
+        class="input-field w-auto py-2 rounded"
+        [ngModel]="filtroEspecialidad()"
+        (ngModelChange)="filtroEspecialidad.set($event)"
+      >
+        <option value="">Todas las especialidades</option>
+        @for (esp of especialidades(); track esp) {
+          <option [value]="esp">{{ esp }}</option>
+        }
+      </select>
+    </div>
+    <span class="text-sm text-slate-400 select-none">
+      <span class="font-medium text-slate-600">{{ filteredDoctores().length }}</span> doctores
+    </span>
+  </div>
+
+  <app-custom-table
+    [data]="filteredDoctores()"
+    [columns]="columnas"
+    [loading]="cargando()"
+    [sortField]="sortField()"
+    (sort)="handleSort($event)">
+
+    <ng-template #customColumn let-row let-field="field">
+
+      @if (field === 'apellidos') {
+        <div class="flex items-center gap-3 cursor-pointer p-1 rounded hover:bg-slate-50 transition-colors w-full group"
+             (click)="abrirDetalle(row)">
+          <div class="w-9 h-9 rounded-full bg-teal-100 border border-teal-200 flex items-center justify-center shrink-0 select-none">
+        <span class="text-teal-700 text-xs font-bold">
+          {{ (row.nombre || row.persona?.nombre || '?')[0] }}{{ (row.apellidos || row.persona?.apellidos || '?')[0] }}
+        </span>
+          </div>
+          <div>
+            <p class="font-bold text-slate-900 group-hover:text-teal-600 transition-colors">
+              Dr. {{ row.apellidos || row.persona?.apellidos }}, {{ row.nombre || row.persona?.nombre }}
+            </p>
+            <p class="text-[11px] text-slate-400">ID #{{ row.id }}</p>
+          </div>
+        </div>
+      }
+
+      @if (field === 'especialidad') {
+        <div class="cursor-pointer py-2 text-slate-600 text-sm w-full block hover:text-teal-600" (click)="abrirDetalle(row)">
+          {{ typeof row.especialidad === 'object' ? row.especialidad?.nombre : row.especialidad }}
+        </div>
+      }
+
+      @if (field === 'cpm') {
+        <div class="cursor-pointer py-2 text-slate-600 font-mono text-sm w-full block hover:text-teal-600" (click)="abrirDetalle(row)">
+          {{ row.cpm || row.persona?.cpm || 'N/A' }}
+        </div>
+      }
+
+      @if (field === 'genero') {
+        <div class="cursor-pointer py-2 text-slate-600 text-sm w-full block hover:text-teal-600" (click)="abrirDetalle(row)">
+          {{ row.genero || row.persona?.genero || 'N/A' }}
+        </div>
+      }
+
+      @if (field === 'estado') {
+        <div class="cursor-pointer py-1.5 w-full block" (click)="abrirDetalle(row)">
+      <span class="badge select-none" [ngClass]="(row.estado === 1 || row.estado === '1') ? 'badge-active' : 'badge-inactive'">
+        <span class="w-1.5 h-1.5 rounded-full" [ngClass]="(row.estado === 1 || row.estado === '1') ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+        {{ (row.estado === 1 || row.estado === '1') ? 'Activo' : 'Inactivo' }}
+      </span>
+        </div>
+      }
+
+    </ng-template>  </app-custom-table>
+</div>
+
+@if (isDetalleOpen() && selectedDoctorId()) {
+  <app-detalle-doctor-modal
+    [doctorId]="selectedDoctorId()!"
+    (close)="cerrarDetalle()"
+    (updateDoctor)="handleDoctorUpdated()">
+  </app-detalle-doctor-modal>
+}

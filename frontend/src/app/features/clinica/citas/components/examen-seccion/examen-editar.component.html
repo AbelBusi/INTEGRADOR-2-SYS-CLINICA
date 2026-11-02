@@ -1,0 +1,95 @@
+<form
+  [formGroup]="form"
+  (ngSubmit)="guardar()"
+  class="grid grid-cols-1 gap-4 border border-neutral-300 border-l-2 border-l-[#D9182A] bg-neutral-50 p-4 md:grid-cols-2">
+
+  <div class="md:col-span-2">
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">Nombre del examen</label>
+    <input
+      type="text"
+      formControlName="nombreExamen"
+      maxlength="150"
+      class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B]"
+    />
+  </div>
+
+  <div>
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">Tipo de examen</label>
+    <select
+      formControlName="tipoExamen"
+      class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B]">
+      <option value="" disabled>Seleccionar tipo de examen</option>
+      @for (tipo of tipos; track tipo) {
+        <option [value]="tipo">{{ tipo }}</option>
+      }
+    </select>
+  </div>
+
+  <div>
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">Prioridad</label>
+    <select
+      formControlName="prioridad"
+      class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B]">
+      @for (p of prioridades; track p.valor) {
+        <option [value]="p.valor">{{ p.etiqueta }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="md:col-span-2">
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">Motivo del examen</label>
+    <textarea
+      formControlName="motivo"
+      rows="2"
+      maxlength="200"
+      class="w-full border border-neutral-400 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-[#58595B]"></textarea>
+  </div>
+
+  <div class="md:col-span-2">
+    <label class="flex cursor-pointer items-center gap-2 text-sm font-semibold text-neutral-700">
+      <input type="checkbox" formControlName="requiereAyuno" class="h-4 w-4 accent-[#58595B]" />
+      El paciente requiere ayuno
+    </label>
+  </div>
+
+  <div class="md:col-span-2">
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">
+      Indicaciones de preparación <span class="font-normal text-neutral-500">(opcional)</span>
+    </label>
+    <textarea
+      formControlName="indicaciones"
+      rows="2"
+      maxlength="300"
+      class="w-full border border-neutral-400 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-[#58595B]"></textarea>
+  </div>
+
+  <div class="md:col-span-2">
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">
+      Observación <span class="font-normal text-neutral-500">(opcional)</span>
+    </label>
+    <textarea
+      formControlName="observacion"
+      rows="2"
+      maxlength="300"
+      class="w-full border border-neutral-400 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-[#58595B]"></textarea>
+  </div>
+
+  <div class="flex justify-end gap-3 md:col-span-2">
+    <button
+      type="button"
+      (click)="cancelado.emit()"
+      [disabled]="guardando()"
+      class="inline-flex h-11 items-center gap-2 border border-[#58595B] bg-white px-5 text-sm font-bold text-[#58595B] hover:bg-[#58595B] hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
+      <span class="material-icons text-[18px]">close</span>
+      Cancelar
+    </button>
+    <button
+      type="submit"
+      [disabled]="form.invalid || guardando()"
+      class="inline-flex h-11 items-center gap-2 bg-[#58595B] px-5 text-sm font-bold text-white hover:bg-[#404142] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500">
+      <span class="material-icons text-[18px]">save</span>
+      {{ guardando() ? 'Guardando...' : 'Guardar cambios' }}
+    </button>
+  </div>
+
+</form>
