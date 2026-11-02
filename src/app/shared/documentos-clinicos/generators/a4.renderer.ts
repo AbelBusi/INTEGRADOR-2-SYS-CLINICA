@@ -287,7 +287,7 @@ function renderizarGrupo(
   estado.autoTable(estado.doc, {
     startY: estado.y,
     head: [grupo.columnas.map((columna) => columna.cabecera)],
-    body: grupo.filas,
+    body: grupo.filas.map((fila) => fila.map((celda) => (celda.trim() === '' ? '-' : celda))),
     theme: 'grid',
     styles: estiloBase(8),
     headStyles: {

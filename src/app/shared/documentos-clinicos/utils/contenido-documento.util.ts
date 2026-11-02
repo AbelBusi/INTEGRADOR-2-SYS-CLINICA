@@ -20,6 +20,15 @@ import { fechaHoraTexto, fechaTexto, numeroDocumento } from './documento-clinico
 const NOTA_RESUMEN =
   'Este documento resume la atención. Los tratamientos, indicaciones, exámenes y derivaciones se emiten en sus documentos independientes.';
 
+function texto(valor: string | null | undefined): string {
+  return (valor ?? '').trim();
+}
+
+function capitalizar(valor: string | null | undefined): string {
+  const limpio = texto(valor);
+  return limpio ? limpio.charAt(0).toUpperCase() + limpio.slice(1).toLowerCase() : '';
+}
+
 function limpiar(pares: ParDato[]): ParDato[] {
   return pares.filter((par) => par.valor.trim() !== '');
 }
@@ -152,8 +161,24 @@ function construirGrupos(tipo: TipoDocumentoClinico, ctx: ContextoClinico): Grup
       return agruparPorDiagnostico(
         detalles,
         (d) => d.examenesSolicitados,
-        [{ cabecera: 'Examen / motivo', peso: 6, titulo: true }],
-        (e, indice) => [`${indice + 1}. ${e.motivo}`],
+        [
+          { cabecera: 'Examen', peso: 2.2, titulo: true },
+          { cabecera: 'Tipo', peso: 1.5 },
+          { cabecera: 'Prioridad', peso: 1.3 },
+          { cabecera: 'Ayuno', peso: 0.9 },
+          { cabecera: 'Motivo', peso: 2.4 },
+          { cabecera: 'Indicaciones', peso: 2.4 },
+          { cabecera: 'Observación', peso: 2 },
+        ],
+        (e) => [
+          texto(e.nombreExamen),
+          texto(e.tipoExamen),
+          capitalizar(e.prioridad),
+          e.requiereAyuno ? 'Sí' : 'No',
+          texto(e.motivo),
+          texto(e.indicaciones),
+          texto(e.observacion),
+        ],
       );
 
     case 'derivaciones':
@@ -161,11 +186,17 @@ function construirGrupos(tipo: TipoDocumentoClinico, ctx: ContextoClinico): Grup
         detalles,
         (d) => d.derivaciones,
         [
-          { cabecera: 'Especialidad', peso: 2.6, titulo: true },
-          { cabecera: 'Urgencia', peso: 1.5 },
-          { cabecera: 'Motivo', peso: 5 },
+          { cabecera: 'Especialidad', peso: 2.4, titulo: true },
+          { cabecera: 'Código', peso: 1.5 },
+          { cabecera: 'Urgencia', peso: 1.4 },
+          { cabecera: 'Motivo', peso: 4.5 },
         ],
-        (d) => [d.nombreEspecialidad, etiquetaUrgencia(d.urgencia), d.motivo],
+        (d) => [
+          texto(d.nombreEspecialidad),
+          texto(d.codigo),
+          etiquetaUrgencia(d.urgencia),
+          texto(d.motivo),
+        ],
       );
   }
 }
