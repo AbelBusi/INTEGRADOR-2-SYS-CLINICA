@@ -27,7 +27,11 @@ export class CitaCrearModalComponent extends CitaFormularioBase implements OnIni
   }
 
   protected enviar(dto: CitaDTO): Observable<MensajeResponse<Cita>> {
-    return this.citaService.crear(dto);
+    const derivacion = this.derivacion();
+
+    return derivacion
+      ? this.derivacionService.programarCita(derivacion.id, dto)
+      : this.citaService.crear(dto);
   }
 
   protected alGuardar(cita: Cita): void {

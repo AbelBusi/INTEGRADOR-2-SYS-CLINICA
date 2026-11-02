@@ -29,6 +29,69 @@
             </div>
           </div>
 
+          @if (!form.modoEdicion()  && !form.derivacion()) {
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">
+                Código de derivación
+                <span class="font-normal normal-case tracking-normal text-neutral-500">(opcional)</span>
+              </label>
+
+              @if (form.derivacion(); as d) {
+
+                <div class="space-y-1.5 rounded border border-[#0d6b68]/30 bg-[#0d6b68]/[0.05] px-3 py-2.5">
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="flex min-w-0 flex-wrap items-center gap-2">
+                      <span class="border border-neutral-300 bg-white px-2 py-0.5 text-xs font-bold text-neutral-800">{{ d.codigo }}</span>
+                      <span class="truncate text-xs text-neutral-600">Derivado por {{ d.medicoSolicitante }}</span>
+                    </div>
+                    <button
+                      type="button"
+                      (click)="form.quitarDerivacion()"
+                      class="shrink-0 rounded border border-neutral-300 bg-white px-2.5 py-1 text-xs font-semibold text-neutral-600 transition-colors hover:border-[#58595B] hover:bg-neutral-50">
+                      Quitar
+                    </button>
+                  </div>
+                  <p class="text-[11px] text-neutral-600">
+                    El paciente, la especialidad y el motivo vienen de la derivación y no se pueden modificar.
+                  </p>
+                </div>
+
+              } @else {
+
+                <div class="flex gap-2">
+                  <div class="flex min-w-0 flex-1 items-center gap-2 rounded border border-neutral-300 bg-white px-3 transition-colors focus-within:border-[#58595B]">
+                    <span class="material-icons text-[20px] text-neutral-400">call_split</span>
+                    <input
+                      type="text"
+                      name="codigoDerivacion"
+                      [ngModel]="form.codigoDerivacion()"
+                      (ngModelChange)="form.onCodigoDerivacionInput($event)"
+                      (keydown.enter)="$event.preventDefault(); form.buscarDerivacion()"
+                      autocomplete="off"
+                      placeholder="Ej. DER-7K3M9Q"
+                      class="w-full bg-transparent py-2 text-sm uppercase text-neutral-800 outline-none placeholder:normal-case placeholder-neutral-400"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    (click)="form.buscarDerivacion()"
+                    [disabled]="form.buscandoDerivacion() || !form.codigoDerivacion().trim()"
+                    class="flex items-center gap-2 rounded bg-[#58595B] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#404142] disabled:opacity-50">
+                    @if (form.buscandoDerivacion()) {
+                      <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
+                    }
+                    Buscar
+                  </button>
+                </div>
+
+                @if (form.errorDerivacion()) {
+                  <p class="text-[11px] font-medium text-[#D9182A]">{{ form.errorDerivacion() }}</p>
+                }
+
+              }
+            </div>
+          }
+
           <div class="space-y-1.5">
             <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Paciente</label>
 
@@ -55,7 +118,7 @@
                     }
                   </div>
                 </div>
-                @if (!form.modoEdicion()) {
+                @if (!form.modoEdicion()  && !form.derivacion()) {
                   <button
                     type="button"
                     (click)="form.quitarPaciente()"
@@ -297,6 +360,8 @@
               name="motivo"
               [ngModel]="form.motivo()"
               (ngModelChange)="form.motivo.set($event)"
+              [readOnly]="form.derivacion() !== null"
+              [class.bg-neutral-100]="form.derivacion() !== null"
               maxlength="200"
               rows="3"
               class="w-full resize-none rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"

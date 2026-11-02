@@ -76,12 +76,15 @@
       @for (d of derivaciones; track d.id) {
         <li class="px-4 py-3">
           <div class="flex flex-wrap items-center gap-2">
+  <span class="border border-neutral-300 bg-neutral-100 px-2 py-0.5 text-xs font-bold text-neutral-800">
+    {{ codigoDerivacion(d.id) }}
+  </span>
             <p class="text-sm font-bold text-neutral-900">{{ d.nombreEspecialidad }}</p>
             <span
               class="border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
               [ngClass]="clasesUrgencia(d.urgencia)">
-              {{ etiquetaUrgencia(d.urgencia) }}
-            </span>
+    {{ etiquetaUrgencia(d.urgencia) }}
+  </span>
           </div>
           <p class="mt-1 text-sm leading-6 text-neutral-700">{{ d.motivo }}</p>
         </li>

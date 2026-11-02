@@ -102,3 +102,7 @@ export function clasePrioridadExamen(valor: string): string {
       return 'border-neutral-300 bg-white text-neutral-600';
   }
 }
+
+export function codigoDerivacion(id: number): string {
+  return `DER-${String(id).padStart(6, '0')}`;
+}

@@ -10,6 +10,7 @@ import { CitaService } from '../../services/cita.service';
 import {
   NIVELES_URGENCIA,
   clasesUrgencia,
+  codigoDerivacion,
   etiquetaUrgencia,
 } from '../../utils/atencion-clinica.util';
 
@@ -36,7 +37,7 @@ export class DerivacionSeccionComponent {
   especialidades = signal<EspecialidadResumen[]>([]);
   mostrarFormulario = signal(false);
   guardando = signal(false);
-
+  readonly codigoDerivacion = codigoDerivacion;
   readonly form = this.fb.nonNullable.group({
     idEspecialidad: [null as number | null, [Validators.required]],
     urgencia: [1, [Validators.required]],

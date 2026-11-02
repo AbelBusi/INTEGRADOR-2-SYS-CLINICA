@@ -1,6 +1,9 @@
 import { DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
+import { DerivacionCita } from '../../interface/derivacion.interface';
+import { DerivacionService } from '../../services/derivacion.service';
+import { ESTADO_DERIVACION, mensajeBloqueoDerivacion } from '../../utils/derivacion.util';
 import {
   Observable,
   Subject,
@@ -74,7 +77,7 @@ export abstract class CitaFormularioBase {
   protected readonly toastService = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly busqueda$ = new Subject<string>();
-
+  protected readonly derivacionService = inject(DerivacionService);
   protected abstract readonly mensajeExito: string;
   private readonly busquedaEspecialidad$ = new Subject<string>();
   protected abstract idCitaExcluida(): number | null;
@@ -128,8 +131,13 @@ export abstract class CitaFormularioBase {
   busquedaEspecialidadCompleta = signal(false);
   errorBusquedaEspecialidad = signal(false);
 
-  readonly modoEdicion = signal(false);
+  codigoDerivacion = signal('');
+  derivacion = signal<DerivacionCita | null>(null);
+  buscandoDerivacion = signal(false);
+  errorDerivacion = signal<string | null>(null);
 
+  readonly modoEdicion = signal(false);
+  readonly motivoSoloLectura = signal(false);
   inicioAgenda = computed(() =>
     sumarDias(inicioSemana(this.hoy), this.paginaAgenda() * DIAS_POR_PAGINA),
   );
@@ -499,6 +507,82 @@ export abstract class CitaFormularioBase {
     const texto = this.textoBusqueda().trim();
     this.documentoPrefill.set(/^\d{8}$/.test(texto) ? texto : '');
     this.crearPacienteAbierto.set(true);
+  }
+
+  onCodigoDerivacionInput(valor: string): void {
+    this.codigoDerivacion.set(valor);
+    this.errorDerivacion.set(null);
+  }
+
+  buscarDerivacion(): void {
+    const codigo = this.codigoDerivacion().trim();
+
+    if (!codigo || this.buscandoDerivacion()) {
+      return;
+    }
+
+    this.buscandoDerivacion.set(true);
+    this.errorDerivacion.set(null);
+
+    this.derivacionService.buscarPorCodigo(codigo).subscribe({
+      next: (response) => {
+        this.buscandoDerivacion.set(false);
+        this.aplicarDerivacion(response.object);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.buscandoDerivacion.set(false);
+        this.errorDerivacion.set(
+          error.error?.mensaje || error.error?.message || 'No se pudo buscar la derivación.',
+        );
+      },
+    });
+  }
+
+  quitarDerivacion(): void {
+    this.derivacion.set(null);
+    this.codigoDerivacion.set('');
+    this.errorDerivacion.set(null);
+    this.quitarPaciente();
+    this.quitarEspecialidad();
+    this.motivo.set('');
+  }
+
+  private aplicarDerivacion(derivacion: DerivacionCita): void {
+    if (derivacion.estado !== ESTADO_DERIVACION.PENDIENTE) {
+      this.errorDerivacion.set(mensajeBloqueoDerivacion(derivacion.estado));
+      return;
+    }
+
+    this.derivacion.set(derivacion);
+    this.motivo.set(derivacion.motivo);
+    this.cargarEspecialidadSeleccionada(derivacion.idEspecialidad, derivacion.especialidadNombre);
+    this.onEspecialidadChange(derivacion.idEspecialidad); // solo médicos de esa especialidad
+    this.cargarPacienteDerivado(derivacion.idPaciente);
+  }
+
+  private cargarPacienteDerivado(idPaciente: number): void {
+    this.cargandoNuevoPaciente.set(true);
+
+    this.citaService.obtenerPaciente(idPaciente).subscribe({
+      next: (response) => {
+        const p = response.object;
+
+        this.seleccionarPaciente({
+          idPaciente: p.id,
+          nombre: `${p.nombre} ${p.apellidos}`.trim(),
+          tipoDocumento: p.codigoTipoDocumento,
+          numeroDocumento: p.numeroDocumento,
+          genero: p.genero,
+        });
+        this.cargandoNuevoPaciente.set(false);
+      },
+      error: (error) => {
+        console.error(error);
+        this.toastService.error('No se pudieron cargar los datos del paciente de la derivación.');
+        this.cargandoNuevoPaciente.set(false);
+        this.quitarDerivacion();
+      },
+    });
   }
 
   onPacienteCreado(creado: PacienteRespuesta): void {
