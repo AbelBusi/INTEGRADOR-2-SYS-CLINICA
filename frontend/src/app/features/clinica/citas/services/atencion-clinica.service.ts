@@ -5,8 +5,6 @@ import { environment } from '../../../../../environments/environment';
 import { MensajeResponse } from '../interface/cita.interface';
 import {
   AtencionClinica,
-  Derivacion,
-  DerivacionCrearDTO,
   Diagnostico,
   DiagnosticoCrearDTO,
 } from '../interface/atencion-clinica.interface';
@@ -36,14 +34,4 @@ export class AtencionClinicaService {
     );
   }
 
-
-  crearDerivacion(
-    idDiagnostico: number,
-    dto: DerivacionCrearDTO,
-  ): Observable<MensajeResponse<Derivacion>> {
-    return this.http.post<MensajeResponse<Derivacion>>(
-      `${this.diagnosticosUrl}/${idDiagnostico}/derivaciones`,
-      dto,
-    );
-  }
 }
