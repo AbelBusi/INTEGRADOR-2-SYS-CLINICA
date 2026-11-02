@@ -132,6 +132,8 @@
           [derivaciones]="detalle.derivaciones"
           [soloLectura]="soloLectura"
           (creado)="cambio.emit()"
+          (editado)="cambio.emit()"
+          (eliminado)="cambio.emit()"
         ></app-derivacion-seccion>
       </app-registro-clinico-modal>
     }

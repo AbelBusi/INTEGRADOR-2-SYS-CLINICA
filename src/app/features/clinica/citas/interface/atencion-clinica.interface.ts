@@ -30,6 +30,7 @@ export interface Tratamiento {
 
 export interface Derivacion {
   id: number;
+  codigo: string;
   idDiagnostico: number;
   idEspecialidad: number;
   nombreEspecialidad: string;
@@ -57,7 +58,7 @@ export interface DiagnosticoCrearDTO {
   tipoDiagnostico: number;
   observaciones: string;
 }
-
+export type DerivacionActualizarDTO = DerivacionCrearDTO;
 export interface DerivacionCrearDTO {
   idEspecialidad: number;
   motivo: string;

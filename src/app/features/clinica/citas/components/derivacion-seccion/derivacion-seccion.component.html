@@ -75,18 +75,82 @@
     <ul class="divide-y divide-neutral-200 border border-neutral-300">
       @for (d of derivaciones; track d.id) {
         <li class="px-4 py-3">
-          <div class="flex flex-wrap items-center gap-2">
-  <span class="border border-neutral-300 bg-neutral-100 px-2 py-0.5 text-xs font-bold text-neutral-800">
-    {{ codigoDerivacion(d.id) }}
-  </span>
-            <p class="text-sm font-bold text-neutral-900">{{ d.nombreEspecialidad }}</p>
-            <span
-              class="border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
-              [ngClass]="clasesUrgencia(d.urgencia)">
-    {{ etiquetaUrgencia(d.urgencia) }}
-  </span>
-          </div>
-          <p class="mt-1 text-sm leading-6 text-neutral-700">{{ d.motivo }}</p>
+
+          @if (editandoId() === d.id && !soloLectura) {
+            <app-derivacion-editar
+              [idDiagnostico]="idDiagnostico"
+              [derivacion]="d"
+              [especialidades]="especialidadesParaEdicion(d)"
+              (editado)="alEditado()"
+              (cancelado)="cancelarEdicion()" />
+          } @else {
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="border border-neutral-300 bg-neutral-100 px-2 py-0.5 text-xs font-bold text-neutral-800">
+                    {{ d.codigo }}
+                  </span>
+                  <p class="text-sm font-bold text-neutral-900">{{ d.nombreEspecialidad }}</p>
+                  <span
+                    class="border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                    [ngClass]="clasesUrgencia(d.urgencia)">
+                    {{ etiquetaUrgencia(d.urgencia) }}
+                  </span>
+                  @if (d.estado !== ESTADO.PENDIENTE) {
+                    <span
+                      class="border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                      [ngClass]="clasesEstado(d.estado)">
+                      {{ etiquetaEstado(d.estado) }}
+                    </span>
+                  }
+                </div>
+                <p class="mt-1 text-sm leading-6 text-neutral-700">{{ d.motivo }}</p>
+              </div>
+
+              @if (!soloLectura && d.estado === ESTADO.PENDIENTE) {
+                <div class="flex shrink-0 items-center gap-2">
+                  <button
+                    type="button"
+                    (click)="iniciarEdicion(d.id)"
+                    title="Editar derivación"
+                    class="inline-flex h-9 w-9 items-center justify-center border border-[#58595B] bg-white text-[#58595B] hover:bg-[#58595B] hover:text-white">
+                    <span class="material-icons text-[18px]">edit</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="pedirConfirmacion(d.id)"
+                    title="Eliminar derivación"
+                    class="inline-flex h-9 w-9 items-center justify-center border border-[#D9182A] bg-white text-[#D9182A] hover:bg-[#D9182A] hover:text-white">
+                    <span class="material-icons text-[18px]">delete</span>
+                  </button>
+                </div>
+              }
+            </div>
+
+            @if (confirmandoId() === d.id && !soloLectura) {
+              <div class="mt-3 flex flex-wrap items-center justify-between gap-3 border border-neutral-300 border-l-2 border-l-[#D9182A] bg-neutral-50 px-3 py-2">
+                <p class="text-sm font-semibold text-neutral-800">¿Eliminar esta derivación?</p>
+                <div class="flex gap-2">
+                  <button
+                    type="button"
+                    (click)="cancelarConfirmacion()"
+                    [disabled]="eliminandoId() === d.id"
+                    class="inline-flex h-9 items-center border border-[#58595B] bg-white px-4 text-sm font-bold text-[#58595B] hover:bg-[#58595B] hover:text-white disabled:opacity-50">
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    (click)="eliminar(d)"
+                    [disabled]="eliminandoId() === d.id"
+                    class="inline-flex h-9 items-center gap-2 bg-[#D9182A] px-4 text-sm font-bold text-white hover:bg-[#b71423] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500">
+                    <span class="material-icons text-[18px]">delete</span>
+                    {{ eliminandoId() === d.id ? 'Eliminando...' : 'Sí, eliminar' }}
+                  </button>
+                </div>
+              </div>
+            }
+          }
+
         </li>
       }
     </ul>
