@@ -3,6 +3,8 @@ package com.salud.consultorio.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -16,6 +18,9 @@ public class Derivacion {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_derivacion")
     private Integer id;
+
+    @Column(name = "codigo", length = 15, nullable = false, unique = true)
+    private String codigo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_diagnostico", nullable = false)
@@ -32,8 +37,21 @@ public class Derivacion {
     @Builder.Default
     private Integer urgencia = 1;
 
+    @Column(name = "fecha_derivacion", nullable = false, updatable = false)
+    private LocalDateTime fechaDerivacion;
+
+    @Column(name = "id_cita_medica")
+    private Integer idCitaMedica;
+
     @Column(name = "estado", nullable = false)
     @Builder.Default
     private Integer estado = 1;
+
+    @PrePersist
+    void alPersistir() {
+        if (fechaDerivacion == null) {
+            fechaDerivacion = LocalDateTime.now();
+        }
+    }
 
 }

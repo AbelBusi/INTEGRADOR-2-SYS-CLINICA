@@ -1,5 +1,6 @@
 package com.salud.consultorio.controller;
 
+import com.salud.consultorio.dto.examenSolicitado.ExamenSolicitadoActualizarDTO;
 import com.salud.consultorio.dto.examenSolicitado.ExamenSolicitadoCrearDTO;
 import com.salud.consultorio.dto.examenSolicitado.ExamenSolicitadoRespuestaDTO;
 import com.salud.consultorio.model.payload.MensajeResponse;
@@ -61,6 +62,55 @@ public class ExamenSolicitadoController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("LISTA DE EXAMENES SOLICITADOS DEL DIAGNOSTICO")
                 .object(lista).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(
+            summary = "Editar un examen solicitado de un diagnóstico",
+            description = "Solo el médico asignado y mientras la atención no esté finalizada. " +
+                    "No se repite el mismo examen activo dentro del diagnóstico."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Examen solicitado actualizado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o atención finalizada"),
+            @ApiResponse(responseCode = "403", description = "El diagnóstico no pertenece a una cita del médico autenticado"),
+            @ApiResponse(responseCode = "404", description = "Diagnóstico o examen no encontrados"),
+            @ApiResponse(responseCode = "409", description = "Examen duplicado")
+    })
+    @PutMapping("/{idExamen}")
+    public ResponseEntity<MensajeResponse> actualizar(
+            @PathVariable Integer idDiagnostico,
+            @PathVariable Integer idExamen,
+            @Valid @RequestBody ExamenSolicitadoActualizarDTO dto) {
+
+        ExamenSolicitadoRespuestaDTO respuesta = examenSolicitadoServicio.actualizar(idDiagnostico, idExamen, dto);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Examen solicitado actualizado con exito")
+                .object(respuesta).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(
+            summary = "Eliminar un examen solicitado de un diagnóstico",
+            description = "Eliminación lógica. Solo el médico asignado y mientras la atención no esté finalizada."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Examen solicitado eliminado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Atención finalizada"),
+            @ApiResponse(responseCode = "403", description = "El diagnóstico no pertenece a una cita del médico autenticado"),
+            @ApiResponse(responseCode = "404", description = "Diagnóstico o examen no encontrados")
+    })
+    @DeleteMapping("/{idExamen}")
+    public ResponseEntity<MensajeResponse> eliminar(
+            @PathVariable Integer idDiagnostico,
+            @PathVariable Integer idExamen) {
+
+        examenSolicitadoServicio.eliminar(idDiagnostico, idExamen);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Examen solicitado eliminado con exito")
+                .build(), HttpStatus.OK);
 
     }
 

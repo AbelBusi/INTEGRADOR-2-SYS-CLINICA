@@ -21,6 +21,7 @@ import com.salud.consultorio.repository.IIndicacionRepositorio;
 import com.salud.consultorio.repository.ITratamientoRepositorio;
 import com.salud.consultorio.service.IAtencionClinicaAccesoServicio;
 import com.salud.consultorio.service.IAtencionClinicaServicio;
+import com.salud.consultorio.util.EstadoDerivacion;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,6 @@ import java.util.stream.Collectors;
 public class AtencionClinicaServicioImpl implements IAtencionClinicaServicio {
 
     private static final int ENTIDAD_ACTIVA = 1;
-
     private final IAtencionClinicaAccesoServicio accesoServicio;
     private final ICitaMedicaRepositorio citaMedicaRepositorio;
     private final IDiagnosticoRepositorio diagnosticoRepositorio;
@@ -81,7 +81,7 @@ public class AtencionClinicaServicioImpl implements IAtencionClinicaServicio {
 
         Map<Integer, List<DerivacionRespuestaDTO>> derivaciones = agrupar(
                 derivacionMapper.toDtoList(derivacionRepositorio
-                        .findByDiagnostico_CitaMedica_IdAndEstadoOrderByIdAsc(idCita, ENTIDAD_ACTIVA)),
+                        .findByDiagnostico_CitaMedica_IdAndEstadoInOrderByIdAsc(idCita, EstadoDerivacion.VIGENTES)),
                 DerivacionRespuestaDTO::idDiagnostico);
 
         List<DiagnosticoDetalleDTO> detalle = diagnosticos.stream()
