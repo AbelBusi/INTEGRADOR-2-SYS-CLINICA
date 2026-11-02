@@ -1,0 +1,242 @@
+package com.salud.consultorio.controller;
+
+
+import com.salud.consultorio.dto.empleado.EmpleadoIDPorBuscarNroDocDTO;
+import com.salud.consultorio.dto.paciente.*;
+import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
+import com.salud.consultorio.model.enums.EntidadEstado;
+import com.salud.consultorio.model.payload.MensajeResponse;
+import com.salud.consultorio.service.IPacienteServicio;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("api/v1/pacientes")
+@RequiredArgsConstructor
+@Tag(
+        name = "Pacientes",
+        description = "Endpoints para la gestión de pacientes"
+)
+public class PacienteController {
+
+    private final IPacienteServicio pacienteServicio;
+
+    @Operation(summary = "Registrar un nuevo paciente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Paciente registrado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos")
+    })
+    @PostMapping
+    public ResponseEntity<MensajeResponse> crearPaciente(@Valid @RequestBody PacienteCrearDTO pacienteCrearDTO) {
+
+        PacienteRespuestaDTO paciente = pacienteServicio.crear(pacienteCrearDTO);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Paciente agregado con exito")
+                .object(paciente).build(), HttpStatus.CREATED);
+
+    }
+
+    @Operation(summary = "Listar pacientes")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de pacientes obtenida correctamente"),
+            @ApiResponse(responseCode = "204", description = "No existen pacientes")
+    })
+    @GetMapping
+    public ResponseEntity<MensajeResponse> listarPacientes(
+            @RequestParam(name = "estado", required = false) EntidadEstado estado) {
+
+        List<PacienteLeerDTO> listaPacientes = pacienteServicio.lista(estado);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje(estado == null ? "LISTA DE PACIENTES" : "LISTA DE PACIENTES POR ESTADO: " + estado)
+                .object(listaPacientes).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(summary = "Obtener paciente por ID")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Paciente encontrado"),
+            @ApiResponse(responseCode = "404", description = "Paciente no encontrado")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<MensajeResponse> leerPacientePorId(
+            @PathVariable Integer id) {
+
+        PacienteDetalleDTO dto = pacienteServicio.entidadPorID(id);
+
+        return new ResponseEntity<>(
+                MensajeResponse.builder()
+                        .mensaje("PACIENTE ENCONTRADO")
+                        .object(dto)
+                        .build(), HttpStatus.OK);
+    }
+
+    @Operation(summary = "Actualizar paciente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Paciente actualizado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+            @ApiResponse(responseCode = "404", description = "Paciente no encontrado")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<MensajeResponse> actualizar(
+            @PathVariable Integer id,
+            @Valid @RequestBody PacienteActualizarDTO dto) {
+
+        PacienteRespuestaDTO paciente = pacienteServicio.actualizar(dto, id);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Paciente actualizado con exito")
+                .object(paciente).build(), HttpStatus.CREATED);
+
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<MensajeResponse> cambiarEstado(
+            @PathVariable Integer id,
+            @RequestParam(name = "estado", required = true) EntidadEstado estado
+    ) {
+
+        pacienteServicio.cambiarEstado(id, estado);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("ESTADO DEL PACIENTE CAMBIADO CORRECTAMENTE")
+                .build(), HttpStatus.OK);
+
+    }
+
+    @Operation(summary = "Eliminar paciente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Paciente eliminado correctamente"),
+            @ApiResponse(responseCode = "404", description = "Paciente no encontrado")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<MensajeResponse> eliminarPaciente(@PathVariable Integer id) {
+
+        pacienteServicio.eliminarPorId(id);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Paciente eliminado con exito")
+                .object(null).build(), HttpStatus.NO_CONTENT);
+
+    }
+
+    @Operation(summary = "Listar pacientes sin usuario")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de pacientes obtenida correctamente"),
+            @ApiResponse(responseCode = "204", description = "No existen pacientes")
+    })
+    @GetMapping("sin-usuario")
+    public ResponseEntity<MensajeResponse> listarPacientesSinUsuario() {
+
+        List<PersonaUsuarioDTO> entidad = pacienteServicio.listarPacientesSinUusario();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Lista de Pacientes sin usuario")
+                .object(entidad).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(summary = "Registrar un nuevo paciente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Paciente registrado correctamente"),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos")
+    })
+    @PostMapping("/desde-empleado/{idEmpleado}/convertir-paciente")
+    public ResponseEntity<MensajeResponse> crearEmpleadoConvertidoPaciente(
+            @PathVariable("idEmpleado") Integer idEmpleado
+            ,@Valid @RequestBody EmpleadoConvertirPacienteDTO dto) {
+
+        EmpleadoConvertidoPacienteRespuestaDTO paciente = pacienteServicio.convertirEmpleadoPaciente(idEmpleado, dto);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Paciente agregado con exito")
+                .object(paciente).build(), HttpStatus.CREATED);
+
+    }
+
+    @Operation(summary = "Reactivar paciente")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Paciente reactivado correctamente"),
+            @ApiResponse(responseCode = "404", description = "Paciente no encontrado")
+    })
+    @PatchMapping("/{id}/reactivar")
+    public ResponseEntity<MensajeResponse> reactivarPaciente(@PathVariable Integer id) {
+
+        pacienteServicio.reactivarPorId(id);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Paciente reactivado con exito")
+                .object(null).build(), HttpStatus.NO_CONTENT);
+
+    }
+
+    @Operation(summary = "Obtener id del empleado por su numero de documento")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Empleado encontrado"),
+            @ApiResponse(responseCode = "400", description = "ID inválido"),
+            @ApiResponse(responseCode = "404", description = "Empleado no encontrado")
+    })
+    @GetMapping("/buscar/{numeroDocumento}")
+    public ResponseEntity<MensajeResponse> idPacientePorNumeroDocumento(
+            @PathVariable("numeroDocumento") String numeroDocumento) {
+
+        PacienteIDPorBuscarNroDocDTO dto = pacienteServicio.pacienteIDporDni(numeroDocumento);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("PACIENTE ENCONTRADO")
+                .object(dto).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(
+            summary = "Listar pacientes para selección",
+            description = "Devuelve el ID y nombre de los pacientes activos"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de pacientes obtenida correctamente")
+    })
+    @GetMapping("/resumen")
+    public ResponseEntity<MensajeResponse> listarResumen() {
+
+        List<PacienteResumenDTO> lista = pacienteServicio.listarResumen();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("LISTA DE PACIENTES ACTIVOS")
+                .object(lista)
+                .build(), HttpStatus.OK);
+    }
+
+    @Operation(
+            summary = "Buscar pacientes para selección",
+            description = "Permite buscar pacientes activos por número de documento, nombres o apellidos"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Búsqueda de pacientes realizada correctamente"
+            )
+    })
+    @GetMapping("/buscar")
+    public ResponseEntity<MensajeResponse> buscarPacientes(
+            @RequestParam(required = false) String busqueda
+    ) {
+
+        List<PacienteBusquedaDTO> lista = pacienteServicio.listarResumen(busqueda);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("BÚSQUEDA DE PACIENTES REALIZADA CORRECTAMENTE")
+                .object(lista)
+                .build(), HttpStatus.OK);
+    }
+
+}
