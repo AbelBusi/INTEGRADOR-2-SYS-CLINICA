@@ -1,0 +1,339 @@
+<h1 class="text-center text-2xl font-bold text-neutral-900">
+  Crear cuenta de paciente
+</h1>
+<p class="mt-1 text-center text-sm text-neutral-600">{{ subtitulo() }}</p>
+
+@if (paso() !== 'exito') {
+  <div class="mt-5 flex gap-1" aria-label="Progreso del registro">
+    @for (p of pasos; track p.id; let i = $index) {
+      <div class="flex-1">
+        <div
+          class="h-1"
+          [class]="i < indicePaso() ? 'bg-[#58595B]' : i === indicePaso() ? 'bg-[#D9182A]' : 'bg-neutral-200'"
+        ></div>
+        <p
+          class="mt-1 text-[11px] font-semibold uppercase tracking-wide"
+          [class]="i <= indicePaso() ? 'text-neutral-800' : 'text-neutral-400'"
+        >
+          {{ p.etiqueta }}
+        </p>
+      </div>
+    }
+  </div>
+}
+
+<div class="mt-6">
+  @switch (paso()) {
+
+    @case ('identificacion') {
+      <form (submit)="consultar($event)" class="space-y-4">
+
+        <div>
+          <label for="tipoDocumento" class="mb-1 block text-sm font-semibold text-neutral-700">
+            Tipo de documento
+          </label>
+          <select
+            id="tipoDocumento"
+            [value]="tipoDocumento()"
+            (change)="onTipoChange($any($event.target).value)"
+            class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B]"
+          >
+            @for (t of tiposDocumento; track t.codigo) {
+              <option [value]="t.codigo" [selected]="t.codigo === tipoDocumento()">{{ t.etiqueta }}</option>
+            }
+          </select>
+        </div>
+
+        <div>
+          <label for="numeroDocumento" class="mb-1 block text-sm font-semibold text-neutral-700">
+            Número de documento
+          </label>
+          <input
+            id="numeroDocumento"
+            type="text"
+            required
+            autocomplete="off"
+            [attr.inputmode]="tipoDocumento() === 'DNI' ? 'numeric' : 'text'"
+            [attr.maxlength]="longitudMaxima()"
+            placeholder="Ingrese su número de documento"
+            [value]="numeroDocumento()"
+            (input)="onNumeroInput($any($event.target).value)"
+            class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-[#58595B]"
+          />
+          @if (numeroDocumento() && !documentoValido()) {
+            <p class="mt-1 text-xs text-red-700">
+              {{ tipoDocumento() === 'DNI' ? 'El DNI debe tener 8 dígitos.' : 'Ingrese entre 6 y 15 caracteres.' }}
+            </p>
+          }
+        </div>
+
+        @if (elegibilidad(); as e) {
+          @if (e.estado === 'NO_ELEGIBLE') {
+            <div class="flex items-start gap-2 border border-red-300 bg-red-50 p-3" role="alert">
+              <span class="material-symbols-outlined shrink-0 text-[18px] text-red-700">error</span>
+              <p class="text-xs leading-5 text-red-700">{{ e.mensaje }}</p>
+            </div>
+          }
+          @if (e.estado === 'CUENTA_EXISTENTE') {
+            <div class="flex items-start gap-2 border border-neutral-300 bg-neutral-50 p-3" role="status">
+              <span class="material-symbols-outlined shrink-0 text-[18px] text-[#58595B]">info</span>
+              <p class="text-xs leading-5 text-neutral-700">{{ e.mensaje }}</p>
+            </div>
+          }
+        }
+
+        @if (elegibilidad()?.estado === 'CUENTA_EXISTENTE') {
+          <button
+            type="button"
+            (click)="volver.emit()"
+            class="flex h-11 w-full items-center justify-center gap-2 bg-[#58595B] text-sm font-bold text-white transition-colors hover:bg-[#404142]"
+          >
+            <span>Ir a iniciar sesión</span>
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
+        } @else {
+          <button
+            type="submit"
+            [disabled]="cargando() || !documentoValido()"
+            class="flex h-11 w-full items-center justify-center gap-2 bg-[#58595B] text-sm font-bold text-white transition-colors hover:bg-[#404142] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500"
+          >
+            @if (cargando()) {
+              <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+              <span>Validando...</span>
+            } @else {
+              <span>Continuar</span>
+              <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+            }
+          </button>
+        }
+
+        <button
+          type="button"
+          (click)="volver.emit()"
+          class="w-full text-center text-sm font-semibold text-[#58595B] hover:underline"
+        >
+          Volver a iniciar sesión
+        </button>
+      </form>
+    }
+
+    @case ('datos') {
+      <form (submit)="verificarDatos($event)" class="space-y-4">
+
+        @if (elegibilidad()?.estado === 'PUEDE_AGREGAR_ROL') {
+          <div class="flex items-start gap-2 border border-neutral-300 bg-neutral-50 p-3">
+            <span class="material-symbols-outlined shrink-0 text-[18px] text-[#58595B]">info</span>
+            <p class="text-xs leading-5 text-neutral-700">{{ elegibilidad()?.mensaje }}</p>
+          </div>
+        }
+
+        <div>
+          <label for="nombres" class="mb-1 block text-sm font-semibold text-neutral-700">
+            Nombres
+          </label>
+          <input
+            id="nombres"
+            type="text"
+            required
+            maxlength="60"
+            autocomplete="given-name"
+            placeholder="Ingrese sus nombres"
+            [value]="nombres()"
+            (input)="nombres.set($any($event.target).value)"
+            class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm uppercase text-neutral-900 outline-none placeholder:normal-case placeholder:text-neutral-400 focus:border-[#58595B]"
+          />
+        </div>
+
+        <div>
+          <label for="apellidos" class="mb-1 block text-sm font-semibold text-neutral-700">
+            Apellidos
+          </label>
+          <input
+            id="apellidos"
+            type="text"
+            required
+            maxlength="100"
+            autocomplete="family-name"
+            placeholder="Ingrese sus apellidos"
+            [value]="apellidos()"
+            (input)="apellidos.set($any($event.target).value)"
+            class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm uppercase text-neutral-900 outline-none placeholder:normal-case placeholder:text-neutral-400 focus:border-[#58595B]"
+          />
+        </div>
+
+        <div>
+          <label for="fechaNacimiento" class="mb-1 block text-sm font-semibold text-neutral-700">
+            Fecha de nacimiento
+          </label>
+          <input
+            id="fechaNacimiento"
+            type="date"
+            required
+            autocomplete="bday"
+            [attr.max]="fechaMaxima"
+            [value]="fechaNacimiento()"
+            (input)="fechaNacimiento.set($any($event.target).value)"
+            class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B]"
+          />
+        </div>
+
+        <p class="text-xs leading-5 text-neutral-500">
+          Debe coincidir con los datos registrados en el establecimiento. Se permiten hasta 5 intentos.
+        </p>
+
+        <button
+          type="submit"
+          [disabled]="cargando() || !datosValidos()"
+          class="flex h-11 w-full items-center justify-center gap-2 bg-[#58595B] text-sm font-bold text-white transition-colors hover:bg-[#404142] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500"
+        >
+          @if (cargando()) {
+            <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+            <span>Validando...</span>
+          } @else {
+            <span>Continuar</span>
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          }
+        </button>
+
+        <button
+          type="button"
+          (click)="volverAIdentificacion()"
+          class="w-full text-center text-sm font-semibold text-[#58595B] hover:underline"
+        >
+          Cambiar documento
+        </button>
+      </form>
+    }
+
+    @case ('correo') {
+      <div class="space-y-4">
+
+        @if (tieneCorreo()) {
+          <div class="border border-neutral-300 bg-neutral-50 p-4">
+            <p class="text-xs font-semibold uppercase tracking-wide text-neutral-500">Correo registrado</p>
+            <p class="mt-1 text-sm font-bold text-neutral-900">{{ elegibilidad()?.correoEnmascarado }}</p>
+            <p class="mt-2 text-xs leading-5 text-neutral-600">
+              Enviaremos un código de verificación a este correo.
+            </p>
+          </div>
+        } @else {
+          <div>
+            <label for="correoNuevo" class="mb-1 block text-sm font-semibold text-neutral-700">
+              Correo electrónico
+            </label>
+            <input
+              id="correoNuevo"
+              type="email"
+              autocomplete="email"
+              placeholder="Ingrese su correo electrónico"
+              [value]="correoNuevo()"
+              (input)="correoNuevo.set($any($event.target).value)"
+              class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-[#58595B]"
+            />
+            <p class="mt-1 text-xs leading-5 text-neutral-500">
+              No tiene un correo registrado. Se guardará solo después de verificarlo.
+            </p>
+          </div>
+        }
+
+        <button
+          type="button"
+          (click)="enviarCodigo()"
+          [disabled]="cargando() || (!tieneCorreo() && !correoValido())"
+          class="flex h-11 w-full items-center justify-center gap-2 bg-[#58595B] text-sm font-bold text-white transition-colors hover:bg-[#404142] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500"
+        >
+          @if (cargando()) {
+            <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+            <span>Enviando...</span>
+          } @else {
+            <span>Enviar código</span>
+            <span class="material-symbols-outlined text-[18px]">mail</span>
+          }
+        </button>
+
+        <button
+          type="button"
+          (click)="volverADatos()"
+          class="w-full text-center text-sm font-semibold text-[#58595B] hover:underline"
+        >
+          Atrás
+        </button>
+      </div>
+    }
+
+    @case ('verificacion') {
+      <form (submit)="completar($event)" class="space-y-4">
+
+        <p class="text-center text-sm leading-6 text-neutral-700">
+          Enviamos un código de 6 dígitos a
+          <span class="font-bold text-neutral-900">{{ correoEnviado() }}</span>.
+        </p>
+
+        <div>
+          <label for="codigo" class="mb-1 block text-sm font-semibold text-neutral-700">
+            Código de verificación
+          </label>
+          <input
+            id="codigo"
+            type="text"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            maxlength="6"
+            placeholder="000000"
+            [value]="codigo()"
+            (input)="onCodigoInput($any($event.target).value)"
+            class="h-12 w-full border border-neutral-400 bg-white text-center font-mono text-2xl tracking-[0.5em] text-neutral-900 outline-none placeholder:text-neutral-300 focus:border-[#58595B]"
+          />
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="cargando() || !codigoValido()"
+          class="flex h-11 w-full items-center justify-center gap-2 bg-[#58595B] text-sm font-bold text-white transition-colors hover:bg-[#404142] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500"
+        >
+          @if (cargando()) {
+            <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+            <span>Verificando y creando cuenta...</span>
+          } @else {
+            <span>Verificar y continuar</span>
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          }
+        </button>
+
+        <div class="flex items-center justify-between">
+          <button
+            type="button"
+            (click)="enviarCodigo()"
+            [disabled]="cargando()"
+            class="text-sm font-semibold text-[#58595B] hover:underline disabled:opacity-50"
+          >
+            Reenviar código
+          </button>
+          <button
+            type="button"
+            (click)="volverACorreo()"
+            class="text-sm font-semibold text-[#58595B] hover:underline"
+          >
+            Atrás
+          </button>
+        </div>
+      </form>
+    }
+
+    @case ('exito') {
+      <div class="text-center">
+        <span class="material-symbols-outlined text-[56px] text-[#58595B]">check_circle</span>
+        <p class="mt-2 text-sm leading-6 text-neutral-700">{{ resultado()?.mensaje }}</p>
+
+        <button
+          type="button"
+          (click)="volver.emit()"
+          class="mt-6 flex h-11 w-full items-center justify-center gap-2 bg-[#58595B] text-sm font-bold text-white transition-colors hover:bg-[#404142]"
+        >
+          <span>Ir a iniciar sesión</span>
+          <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+        </button>
+      </div>
+    }
+  }
+</div>
