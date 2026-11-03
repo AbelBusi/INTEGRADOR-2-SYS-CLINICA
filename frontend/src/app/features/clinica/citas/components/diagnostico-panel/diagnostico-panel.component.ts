@@ -1,8 +1,11 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+import { ToastService } from '../../../../../core/services/toast.service';
 import { DiagnosticoDetalle } from '../../interface/atencion-clinica.interface';
+import { DiagnosticoService } from '../../services/diagnostico.service';
 import { etiquetaTipoDiagnostico } from '../../utils/atencion-clinica.util';
+import { DiagnosticoEditarComponent } from '../diagnostico-form/diagnostico-editar.component';
 import { RegistroClinicoModalComponent } from '../registro-clinico-modal/registro-clinico-modal.component';
 import { TratamientoSeccionComponent } from '../tratamiento-seccion/tratamiento-seccion.component';
 import { IndicacionSeccionComponent } from '../indicacion-seccion/indicacion-seccion.component';
@@ -23,6 +26,7 @@ interface ResumenSeccion {
   standalone: true,
   imports: [
     CommonModule,
+    DiagnosticoEditarComponent,
     RegistroClinicoModalComponent,
     TratamientoSeccionComponent,
     IndicacionSeccionComponent,
@@ -38,9 +42,15 @@ export class DiagnosticoPanelComponent {
   @Output() alternar = new EventEmitter<void>();
   @Output() cambio = new EventEmitter<void>();
 
+  private readonly diagnosticoService = inject(DiagnosticoService);
+  private readonly toastService = inject(ToastService);
+
   readonly etiquetaTipo = etiquetaTipoDiagnostico;
 
   seccionAbierta = signal<SeccionClinica | null>(null);
+  editando = signal(false);
+  confirmandoEliminar = signal(false);
+  eliminando = signal(false);
 
   get secciones(): ResumenSeccion[] {
     return [
@@ -81,5 +91,60 @@ export class DiagnosticoPanelComponent {
 
   cerrarSeccion(): void {
     this.seccionAbierta.set(null);
+  }
+
+  iniciarEdicion(): void {
+    if (this.soloLectura) {
+      return;
+    }
+
+    this.confirmandoEliminar.set(false);
+    this.editando.set(true);
+  }
+
+  cancelarEdicion(): void {
+    this.editando.set(false);
+  }
+
+  alEditado(): void {
+    this.editando.set(false);
+    this.cambio.emit();
+  }
+
+  pedirConfirmacion(): void {
+    if (this.soloLectura) {
+      return;
+    }
+
+    this.editando.set(false);
+    this.confirmandoEliminar.set(true);
+  }
+
+  cancelarConfirmacion(): void {
+    this.confirmandoEliminar.set(false);
+  }
+
+  eliminar(): void {
+    if (this.soloLectura || this.eliminando()) {
+      return;
+    }
+
+    this.eliminando.set(true);
+
+    this.diagnosticoService.eliminar(this.detalle.diagnostico.id).subscribe({
+      next: (response) => {
+        this.toastService.success(response?.mensaje || 'Diagnóstico eliminado con éxito');
+        this.eliminando.set(false);
+        this.confirmandoEliminar.set(false);
+        this.cambio.emit();
+      },
+      error: (error) => {
+        console.error(error);
+        this.toastService.error(
+          error.error?.mensaje || error.error?.message || 'No se pudo eliminar el diagnóstico',
+        );
+        this.eliminando.set(false);
+      },
+    });
   }
 }
