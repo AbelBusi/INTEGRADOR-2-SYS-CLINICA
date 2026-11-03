@@ -1,0 +1,12 @@
+<div
+  class="grid grid-cols-2 gap-3"
+  [ngClass]="columnas === 6 ? 'md:grid-cols-3 xl:grid-cols-6' : 'md:grid-cols-4'">
+  @for (tarjeta of tarjetas; track tarjeta.clave) {
+    <div class="rounded-md border border-gray-200 bg-white px-4 py-3">
+      <div class="mb-2 h-1 w-8" [style.background-color]="tarjeta.color"></div>
+      <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{{ tarjeta.texto }}</p>
+      <p class="mt-0.5 text-2xl font-bold text-gray-900">{{ tarjeta.valor }}</p>
+      <p class="text-xs text-gray-500">{{ tarjeta.detalle }}</p>
+    </div>
+  }
+</div>

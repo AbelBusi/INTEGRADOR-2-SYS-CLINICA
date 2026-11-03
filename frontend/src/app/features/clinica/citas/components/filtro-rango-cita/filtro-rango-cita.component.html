@@ -1,0 +1,56 @@
+<div class="space-y-3">
+
+  <div class="flex flex-wrap items-center gap-2">
+    @for (item of rangos; track item.clave) {
+      <button
+        type="button"
+        (click)="elegir(item.clave)"
+        [ngClass]="
+          rango === item.clave
+            ? 'border-[#D9182A] bg-[#D9182A]/5 text-[#D9182A]'
+            : 'border-gray-300 bg-white text-gray-700 hover:border-[#58595B] hover:bg-gray-50'
+        "
+        class="h-8 rounded-md border px-3 text-xs font-semibold transition-colors">
+        {{ item.texto }}
+      </button>
+    }
+  </div>
+
+  <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+
+    <div>
+      <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Desde</label>
+      <input
+        type="date"
+        name="filtroDesde"
+        [ngModel]="desde"
+        (ngModelChange)="cambiarDesde($event)"
+        class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]"
+      />
+    </div>
+
+    <div>
+      <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Hasta</label>
+      <input
+        type="date"
+        name="filtroHasta"
+        [ngModel]="hasta"
+        (ngModelChange)="cambiarHasta($event)"
+        class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]"
+      />
+    </div>
+
+    <ng-content></ng-content>
+
+  </div>
+
+  @if (invalido) {
+    <div class="flex items-start gap-3 rounded-lg border border-[#D9182A]/30 bg-[#D9182A]/5 px-4 py-3" role="alert">
+      <span class="material-icons text-[20px] text-[#D9182A]">error_outline</span>
+      <p class="flex-1 text-sm font-semibold text-[#D9182A]">
+        La fecha inicial no puede ser posterior a la fecha final.
+      </p>
+    </div>
+  }
+
+</div>

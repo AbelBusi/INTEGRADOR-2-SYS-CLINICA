@@ -1,0 +1,60 @@
+@if (datos().length === 0) {
+  <p class="py-6 text-center text-sm text-gray-500">{{ etiquetaVacia }}</p>
+} @else {
+  <div class="flex gap-2">
+
+    <div class="w-8 shrink-0 pt-5">
+      <div class="relative" [style.height.px]="altura">
+        <span class="absolute right-0 top-0 -translate-y-1/2 text-[10px] leading-none text-gray-500">{{ maximo() }}</span>
+        <span class="absolute right-0 top-1/2 -translate-y-1/2 text-[10px] leading-none text-gray-500">{{ maximo() / 2 }}</span>
+        <span class="absolute bottom-0 right-0 translate-y-1/2 text-[10px] leading-none text-gray-500">0</span>
+      </div>
+    </div>
+
+    <div class="min-w-0 flex-1 overflow-x-auto">
+      <div [style.min-width.px]="datos().length * 34">
+
+        <div class="pt-5">
+          <div class="relative" [style.height.px]="altura">
+            <div class="absolute inset-x-0 top-0 border-t border-gray-200"></div>
+            <div class="absolute inset-x-0 top-1/2 border-t border-gray-200"></div>
+            <div class="absolute inset-x-0 bottom-0 border-t border-gray-400"></div>
+
+            <div class="absolute inset-0 flex items-end">
+              @for (punto of datos(); track punto.clave) {
+                <div class="flex h-full flex-1 flex-col items-center justify-end">
+                  @if (punto.conteo.total > 0) {
+                    <div
+                      class="relative flex w-5 flex-col-reverse"
+                      [style.height.%]="altoColumna(punto.conteo.total)">
+                      <span class="absolute -top-4 left-1/2 -translate-x-1/2 text-[10px] font-semibold leading-none text-gray-700">
+                        {{ punto.conteo.total }}
+                      </span>
+                      @for (serie of series; track serie.clave) {
+                        @if (punto.conteo[serie.clave] > 0) {
+                          <div
+                            class="w-full"
+                            [style.height.%]="(punto.conteo[serie.clave] / punto.conteo.total) * 100"
+                            [style.background-color]="serie.color"
+                            [attr.title]="punto.etiqueta + ' · ' + serie.texto + ': ' + punto.conteo[serie.clave]"></div>
+                        }
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="flex pt-1">
+          @for (punto of datos(); track punto.clave) {
+            <span class="flex-1 truncate text-center text-[10px] text-gray-500">{{ punto.etiqueta }}</span>
+          }
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+}

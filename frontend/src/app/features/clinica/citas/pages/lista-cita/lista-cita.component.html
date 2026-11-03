@@ -1,6 +1,6 @@
 <div class="space-y-6">
 
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_auto_auto_auto]">
 
     <div class="flex items-center gap-4 rounded-lg border border-gray-200 bg-white px-5 py-4">
       <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-[#58595B]">
@@ -104,6 +104,14 @@
       [disabled]="!hayFiltros()"
       class="h-10 rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
       Limpiar filtros
+    </button>
+
+    <button
+      type="button"
+      (click)="reporteAbierto.set(true)"
+      class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-[#58595B] bg-white px-4 text-sm font-semibold text-[#58595B] transition-colors hover:bg-[#58595B] hover:text-white xl:w-auto">
+      <span class="material-icons text-[20px]">bar_chart</span>
+      Reportes
     </button>
 
     <button
@@ -306,4 +314,12 @@
     (close)="citaReprogramar.set(null)"
     (guardado)="handleReprogramado($event)"
   ></app-cita-editar-modal>
+}
+
+@if (reporteAbierto()) {
+  <app-reportes-citas
+    [citas]="citas()"
+    [idsPendientes]="idsPendientes()"
+    (close)="reporteAbierto.set(false)"
+  ></app-reportes-citas>
 }

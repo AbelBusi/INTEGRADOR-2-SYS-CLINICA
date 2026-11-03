@@ -1,0 +1,139 @@
+<app-reporte-cita-marco
+  titulo="Agenda del día"
+  icono="event_note"
+  [subtitulo]="fecha() ? fechaIsoTexto(fecha()) : ''"
+  [formato]="formato()"
+  (formatoChange)="formato.set($event)"
+  [generando]="generando()"
+  [puedeExportar]="puedeExportar()"
+  [error]="errorExportacion()"
+  (exportar)="exportar()"
+  (close)="cerrar()">
+
+  <div class="space-y-3">
+
+    <div class="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        (click)="desplazar(-1)"
+        class="inline-flex h-8 items-center gap-1 rounded-md border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+        <span class="material-icons text-[16px]">chevron_left</span>
+        Día anterior
+      </button>
+      <button
+        type="button"
+        (click)="irAHoy()"
+        class="h-8 rounded-md border border-[#D9182A] bg-[#D9182A]/5 px-3 text-xs font-semibold text-[#D9182A] transition-colors hover:bg-[#D9182A]/10">
+        Hoy
+      </button>
+      <button
+        type="button"
+        (click)="desplazar(1)"
+        class="inline-flex h-8 items-center gap-1 rounded-md border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+        Día siguiente
+        <span class="material-icons text-[16px]">chevron_right</span>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+
+      <div>
+        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Fecha</label>
+        <input
+          type="date"
+          name="fecha"
+          [ngModel]="fecha()"
+          (ngModelChange)="fecha.set($event)"
+          class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]"
+        />
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Médico</label>
+        <select
+          name="medico"
+          [ngModel]="idMedico()"
+          (ngModelChange)="idMedico.set($event)"
+          class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
+          <option value="todos">Todos los médicos</option>
+          @for (medico of medicos(); track medico.idMedico) {
+            <option [ngValue]="medico.idMedico">{{ medico.medico }}</option>
+          }
+        </select>
+      </div>
+
+      <div>
+        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Estado</label>
+        <select
+          name="estado"
+          [ngModel]="estado()"
+          (ngModelChange)="estado.set($event)"
+          class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
+          <option value="todos">Todos los estados</option>
+          @for (opcion of opcionesEstado; track opcion.valor) {
+            <option [ngValue]="opcion.valor">{{ opcion.texto }}</option>
+          }
+        </select>
+      </div>
+
+    </div>
+
+  </div>
+
+  @if (citasDia().length === 0) {
+    <div class="rounded-md border border-dashed border-gray-300 px-4 py-12 text-center">
+      <span class="material-icons text-[36px] text-gray-300">event_available</span>
+      <p class="mt-2 text-sm font-semibold text-gray-700">No hay citas para esta fecha</p>
+      <p class="mt-1 text-xs text-gray-500">Cambia la fecha, el médico o el estado.</p>
+    </div>
+  } @else {
+
+    <app-tarjetas-reporte-cita [tarjetas]="tarjetas()"></app-tarjetas-reporte-cita>
+
+    <section>
+      <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+        Citas del día ({{ citasDia().length }})
+      </h3>
+
+      <div class="max-h-96 overflow-auto rounded-md border border-gray-200">
+        <table class="w-full min-w-[720px] text-sm">
+          <thead class="sticky top-0 bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+          <tr>
+            <th class="px-3 py-2 text-left font-semibold">Horario</th>
+            <th class="px-3 py-2 text-left font-semibold">Paciente</th>
+            <th class="px-3 py-2 text-left font-semibold">Médico</th>
+            <th class="px-3 py-2 text-left font-semibold">Motivo</th>
+            <th class="px-3 py-2 text-left font-semibold">Estado</th>
+          </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (cita of citasDia(); track cita.id) {
+              <tr>
+                <td class="whitespace-nowrap px-3 py-2 font-medium text-gray-800">{{ cita.inicio }} - {{ cita.salida }}</td>
+                <td class="px-3 py-2 font-medium text-gray-800">{{ cita.paciente }}</td>
+                <td class="px-3 py-2 text-gray-700">{{ cita.medico }}</td>
+                <td class="max-w-[240px] truncate px-3 py-2 text-gray-600" [attr.title]="cita.motivo">{{ cita.motivo }}</td>
+                <td class="px-3 py-2">
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span
+                      class="inline-flex border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                      [ngClass]="estadoInfo(cita.estado).clases">
+                      {{ estadoInfo(cita.estado).texto }}
+                    </span>
+                    @if (cita.estado === 1 && estaPendiente(cita.id)) {
+                      <span class="inline-flex border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+                        Sin regularizar
+                      </span>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  }
+
+</app-reporte-cita-marco>

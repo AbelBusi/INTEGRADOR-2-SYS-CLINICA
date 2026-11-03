@@ -16,7 +16,7 @@ import { TableColumn } from '../../../../../shared/components/custom-table/table
 import { HistorialCitaModalComponent } from '../../components/historial-cita-modal/historial-cita-modal.component';
 import { RegularizarCitaAdministrativoModalComponent } from '../../components/regularizar-cita-administrativo-modal/regularizar-cita-administrativo-modal.component';
 import { MotivoRegularizacionAdministrativa, OPCIONES_REGULARIZACION_ADMINISTRATIVA } from '../../interface/cita.interface';
-
+import { ReportesCitasComponent } from '../../components/reportes-citas/reportes-citas.component';
 @Component({
   selector: 'app-lista-cita',
   standalone: true,
@@ -29,6 +29,7 @@ import { MotivoRegularizacionAdministrativa, OPCIONES_REGULARIZACION_ADMINISTRAT
     VerDetalleCitaModalComponent,
     HistorialCitaModalComponent,
     RegularizarCitaAdministrativoModalComponent,
+    ReportesCitasComponent,
   ],
   templateUrl: './lista-cita.component.html',
 })
@@ -45,7 +46,7 @@ export class ListaCitaComponent implements OnInit {
   filtroFecha = signal('');
   sortField = signal('');
   citaHistorial = signal<CitaFila | null>(null);
-
+  reporteAbierto = signal(false);
   idsPendientes = signal<Set<number>>(new Set());
   soloPendientes = signal(false);
   citaRegularizar = signal<CitaFila | null>(null);
