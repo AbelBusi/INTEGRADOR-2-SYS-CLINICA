@@ -185,9 +185,18 @@
     </span>
           @if (estaPendiente(row)) {
             <span class="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
-        Sin regularizar
-      </span>
+              Sin regularizar
+            </span>
           }
+
+          @if (enAtencion(row)) {
+            <span class="inline-flex items-center rounded-full border border-[#0d6b68] bg-[#0d6b68]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0d6b68]">En atención</span>
+          }
+          @if (idsSinActividad().has(row.id)) {
+            <span class="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">Sin actividad</span>
+          }
+
+
         </div>
       }
 
@@ -240,7 +249,7 @@
 
               <button
                 type="button"
-                [title]="puedeCancelar(row) ? 'Cancelar cita' : motivoNoCancelable"
+                [title]="puedeCancelar(row) ? 'Cancelar cita' : motivoNoCancelable(row)"
                 (click)="cancelar(row)"
                 [disabled]="procesando() || !puedeCancelar(row)"
                 class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">
@@ -254,10 +263,9 @@
 
           <button
             type="button"
-            title="Eliminar"
+            [title]="puedeEliminar(row) ? 'Eliminar' : motivoNoEliminable"
             (click)="eliminar(row)"
-            [disabled]="procesando()"
-            class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] disabled:cursor-not-allowed disabled:opacity-50">
+            [disabled]="procesando() || !puedeEliminar(row)"            class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] disabled:cursor-not-allowed disabled:opacity-50">
             <span class="material-icons text-[18px]">delete</span>
             <span>Eliminar</span>
           </button>

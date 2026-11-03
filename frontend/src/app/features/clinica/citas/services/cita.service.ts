@@ -164,6 +164,16 @@ export class CitaService {
     );
   }
 
+  listarAtencionesSinActividad(): Observable<MensajeResponse<Cita[]>> {
+    return this.http.get<MensajeResponse<Cita[]>>(`${this.baseUrl}/atenciones-sin-actividad`);
+  }
+
+  listarMisAtencionesSinActividadMedico(): Observable<MensajeResponse<Cita[]>> {
+    return this.http.get<MensajeResponse<Cita[]>>(
+      `${this.baseUrl}/mis-citas/medico/atenciones-sin-actividad`,
+    );
+  }
+
   regularizarAdministrativo(
     id: number,
     motivo: MotivoRegularizacionAdministrativa,
@@ -175,5 +185,4 @@ export class CitaService {
       { motivo, observacion: observacion.trim(), reprogramacion: reprogramacion ?? null },
     );
   }
-
 }

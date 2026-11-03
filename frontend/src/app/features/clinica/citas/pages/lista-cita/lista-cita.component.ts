@@ -10,13 +10,15 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { VerDetalleCitaModalComponent } from '../../components/ver-detalle-cita-modal/ver-detalle-cita-modal.component';
 import { CitaCrearModalComponent } from '../../components/cita-crear-modal/cita-crear-modal.component';
 import { CitaEditarModalComponent } from '../../components/cita-editar-modal/cita-editar-modal.component';
-import { puedeCancelarCita, MOTIVO_NO_CANCELABLE } from '../../utils/ventana-cita.util';
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
 import { HistorialCitaModalComponent } from '../../components/historial-cita-modal/historial-cita-modal.component';
 import { RegularizarCitaAdministrativoModalComponent } from '../../components/regularizar-cita-administrativo-modal/regularizar-cita-administrativo-modal.component';
 import { MotivoRegularizacionAdministrativa, OPCIONES_REGULARIZACION_ADMINISTRATIVA } from '../../interface/cita.interface';
 import { ReportesCitasComponent } from '../../components/reportes-citas/reportes-citas.component';
+import { enAtencion as enAtencionCita } from '../../utils/atencion-cita.util';
+import { puedeCancelarCita, motivoNoCancelableCita } from '../../utils/ventana-cita.util';
+
 @Component({
   selector: 'app-lista-cita',
   standalone: true,
@@ -41,6 +43,10 @@ export class ListaCitaComponent implements OnInit {
   cargando = signal(false);
   procesando = signal(false);
 
+  idsSinActividad = signal<Set<number>>(new Set());
+  readonly motivoNoEliminable =
+    'No se puede eliminar: la cita tiene atención iniciada o ya fue atendida.';
+
   busqueda = signal('');
   filtroEstado = signal<number | 'todos'>('todos');
   filtroFecha = signal('');
@@ -63,6 +69,21 @@ export class ListaCitaComponent implements OnInit {
     this.modalAccionesAbierto.set(true);
   }
 
+  enAtencion(cita: CitaFila): boolean {
+    return enAtencionCita(cita);
+  }
+  motivoNoCancelable(cita: CitaFila): string {
+    return motivoNoCancelableCita(cita);
+  }
+
+  puedeEditar(cita: CitaFila): boolean {
+    return !cita.inicioAtencion && new Date() < new Date(`${cita.fecha}T${cita.inicio}`);
+  }
+
+  puedeEliminar(cita: CitaFila): boolean {
+    return cita.estado !== 3 && !cita.inicioAtencion;
+  }
+
   citaReprogramar = signal<{
     cita: CitaFila;
     motivo: MotivoRegularizacionAdministrativa;
@@ -74,15 +95,17 @@ export class ListaCitaComponent implements OnInit {
     this.citaSeleccionada.set(null);
   }
 
-  readonly motivoNoCancelable = MOTIVO_NO_CANCELABLE;
-
   readonly motivoNoEditable = 'No se puede editar una cita cuyo horario ya comenzó.';
 
-  puedeEditar(cita: CitaFila): boolean {
-    return new Date() < new Date(`${cita.fecha}T${cita.inicio}`);
-  }
   estaPendiente(cita: CitaFila): boolean {
     return this.idsPendientes().has(cita.id);
+  }
+
+  private cargarSinActividad(): void {
+    this.citaService.listarAtencionesSinActividad().subscribe({
+      next: (r) => this.idsSinActividad.set(new Set((r.object || []).map((c) => c.id))),
+      error: (e) => console.error('No se pudieron cargar las atenciones sin actividad:', e),
+    });
   }
 
   puedeCancelar(cita: CitaFila): boolean {
@@ -215,6 +238,7 @@ export class ListaCitaComponent implements OnInit {
     this.citaService.listar().subscribe({
       next: (response) => {
         this.citas.set((response.object || []).map(normalizarCita));
+        this.cargarPendientes();
         this.cargarPendientes();
         this.cargando.set(false);
       },

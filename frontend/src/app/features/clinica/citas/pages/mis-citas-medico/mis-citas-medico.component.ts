@@ -11,12 +11,13 @@ import { VerDetalleCitaModalComponent } from '../../components/ver-detalle-cita-
 import { HistorialCitaModalComponent } from '../../components/historial-cita-modal/historial-cita-modal.component';
 import { ObservacionCitaModalComponent } from '../../components/observacion-cita-modal/observacion-cita-modal.component';
 import { RegularizarCitaModalComponent } from '../../components/regularizar-cita-modal/regularizar-cita-modal.component';
-import { puedeCancelarCita, MOTIVO_NO_CANCELABLE } from '../../utils/ventana-cita.util';
 import { ResolucionRegularizacion } from '../../interface/cita.interface';
 import { AtencionClinicaModalComponent } from '../../components/atencion-clinica-modal/atencion-clinica-modal.component';
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
-import { citaVencida, puedeAtenderCita } from '../../utils/atencion-cita.util';
+import { citaVencida, puedeAtenderCita, enAtencion as enAtencionCita, } from '../../utils/atencion-cita.util';
+import { puedeCancelarCita, motivoNoCancelableCita } from '../../utils/ventana-cita.util';
+
 
 @Component({
   selector: 'app-mis-citas-medico',
@@ -46,6 +47,14 @@ export class MisCitasMedicoComponent implements OnInit, OnDestroy {
   filtroEstado = signal<number | 'todos'>('todos');
   filtroFecha = signal('');
   sortField = signal('');
+  idsSinActividad = signal<Set<number>>(new Set());
+
+  enAtencion(cita: CitaFila): boolean {
+    return enAtencionCita(cita);
+  }
+  motivoNoCancelable(cita: CitaFila): string {
+    return motivoNoCancelableCita(cita);
+  }
 
   citaVer = signal<CitaFila | null>(null);
   citaHistorial = signal<CitaFila | null>(null);
@@ -57,8 +66,6 @@ export class MisCitasMedicoComponent implements OnInit, OnDestroy {
   ahora = signal(new Date());
   private temporizador: ReturnType<typeof setInterval> | null = null;
   totalPendientes = computed(() => this.citas().filter((c) => this.estaPendiente(c)).length);
-
-  readonly motivoNoCancelable = MOTIVO_NO_CANCELABLE;
 
   estaPendiente(cita: CitaFila): boolean {
     return this.idsPendientes().has(cita.id) || citaVencida(cita, this.ahora());
@@ -72,6 +79,13 @@ export class MisCitasMedicoComponent implements OnInit, OnDestroy {
     if (!this.procesando()) {
       this.citaRegularizar.set(null);
     }
+  }
+
+  private cargarSinActividad(): void {
+    this.citaService.listarMisAtencionesSinActividadMedico().subscribe({
+      next: (r) => this.idsSinActividad.set(new Set((r.object || []).map((c) => c.id))),
+      error: (e) => console.error('No se pudieron cargar las atenciones sin actividad:', e),
+    });
   }
 
   confirmarRegularizacion(datos: {
@@ -135,7 +149,7 @@ export class MisCitasMedicoComponent implements OnInit, OnDestroy {
       this.busqueda().trim() !== '' ||
       this.filtroEstado() !== 'todos' ||
       this.filtroFecha() !== '' ||
-      this.soloPendientes,
+      this.soloPendientes(),
   );
 
   filas = computed(() => {
@@ -189,6 +203,7 @@ export class MisCitasMedicoComponent implements OnInit, OnDestroy {
 
     this.citaService.listarMisCitasMedico().subscribe({
       next: (response) => {
+        this.cargarSinActividad();
         this.cargarPendientes();
         this.citas.set((response.object || []).map(normalizarCita));
         this.cargando.set(false);
@@ -203,6 +218,11 @@ export class MisCitasMedicoComponent implements OnInit, OnDestroy {
         this.cargando.set(false);
       },
     });
+  }
+
+  alCerrarAtencion(): void {
+    this.citaAtencionClinica.set(null);
+    this.cargar(true);
   }
 
   estadoInfo(estado: number) {
@@ -254,6 +274,7 @@ export class MisCitasMedicoComponent implements OnInit, OnDestroy {
     this.busqueda.set('');
     this.filtroEstado.set('todos');
     this.filtroFecha.set('');
+    this.soloPendientes.set(false);
   }
 
   handleSort(field: string): void {

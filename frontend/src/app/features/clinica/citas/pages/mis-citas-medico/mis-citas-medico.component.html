@@ -177,9 +177,17 @@
     </span>
           @if (estaPendiente(row)) {
             <span class="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
-        Sin regularizar
-      </span>
+              Sin regularizar
+            </span>
           }
+
+          @if (enAtencion(row)) {
+            <span class="inline-flex items-center rounded-full border border-[#0d6b68] bg-[#0d6b68]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0d6b68]">En atención</span>
+          }
+          @if (idsSinActividad().has(row.id)) {
+            <span class="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">Sin actividad</span>
+          }
+
         </div>
       }
 
@@ -218,12 +226,12 @@
           @if (puedeAtender(row)) {
             <button
               type="button"
-              title="Iniciar la atención de la cita"
+              [title]="enAtencion(row) ? 'Continuar la atención en curso' : 'Iniciar la atención de la cita'"
               (click)="atenderCita(row)"
               [disabled]="procesando()"
               class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68] disabled:cursor-not-allowed disabled:opacity-50">
               <span class="material-icons text-[18px]">medical_services</span>
-              <span>Atender cita</span>
+              <span>{{ enAtencion(row) ? 'Continuar atención' : 'Atender cita' }}</span>
             </button>
           }
 
@@ -244,7 +252,7 @@
 
               <button
                 type="button"
-                [title]="puedeCancelar(row) ? 'Cancelar cita' : motivoNoCancelable"
+                [title]="puedeCancelar(row) ? 'Cancelar cita' : motivoNoCancelable(row)"
                 (click)="abrirCancelar(row)"
                 [disabled]="procesando() || !puedeCancelar(row)"
                 class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-gray-700 transition-colors hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 disabled:cursor-not-allowed disabled:opacity-50">
@@ -287,7 +295,7 @@
     icono="event_busy"
     variante="peligro"
     [procesando]="procesando()"
-    (close)="cerrarCancelar()"
+    (close)="alCerrarAtencion()"
     (confirmar)="confirmarCancelacion($event)"
   ></app-observacion-cita-modal>
 }

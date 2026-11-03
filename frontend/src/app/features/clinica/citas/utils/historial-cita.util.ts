@@ -106,6 +106,8 @@ function calcularDescripcion(evento: HistorialCita, nombres: NombresHistorial): 
       return 'El médico registró la atención de la cita.';
     case 'ELIMINADA':
       return 'La cita fue eliminada del sistema.';
+    default:
+      return "Se registro un evento en el historial de la cita";
   }
 }
 

@@ -18,6 +18,7 @@ export interface Cita {
   horaSalida: HoraApi;
   motivo: string;
   estado: number;
+  inicioAtencion?: string | number[] | null;
 }
 
 export interface CitaFila extends Cita {
@@ -148,7 +149,15 @@ export function infoEstado(estado: number): InfoEstadoCita {
 }
 
 export type AccionHistorial =
-  'CREADA' | 'MODIFICADA' | 'REPROGRAMADA' | 'CANCELADA' | 'ATENDIDA' | 'ELIMINADA';
+  | 'CREADA'
+  | 'MODIFICADA'
+  | 'REPROGRAMADA'
+  | 'CANCELADA'
+  | 'ATENDIDA'
+  | 'ELIMINADA'
+  | 'INICIADA'
+  | 'CLINICA_MODIFICADA'
+  | 'INTENTO_BLOQUEADO';
 
 export interface HistorialCita {
   id: number;
@@ -176,6 +185,9 @@ export const ACCIONES_HISTORIAL: Record<AccionHistorial, InfoAccionHistorial> = 
   CANCELADA: { texto: 'Cita cancelada', icono: 'event_busy', punto: 'bg-[#D9182A]' },
   ATENDIDA: { texto: 'Atención médica registrada', icono: 'task_alt', punto: 'bg-[#0d6b68]' },
   ELIMINADA: { texto: 'Cita eliminada', icono: 'delete', punto: 'bg-neutral-400' },
+  INICIADA: { texto: 'Atención iniciada', icono: 'play_circle', punto: 'bg-[#0d6b68]' },
+  CLINICA_MODIFICADA: { texto: 'Registro clínico posterior', icono: 'assignment', punto: 'bg-amber-500', },
+  INTENTO_BLOQUEADO: { texto: 'Operación bloqueada', icono: 'block', punto: 'bg-[#D9182A]' },
 };
 
 export type MotivoRegularizacionAdministrativa =
