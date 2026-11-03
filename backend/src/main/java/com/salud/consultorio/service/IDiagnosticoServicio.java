@@ -1,5 +1,6 @@
 package com.salud.consultorio.service;
 
+import com.salud.consultorio.dto.diagnostico.DiagnosticoActualizarDTO;
 import com.salud.consultorio.dto.diagnostico.DiagnosticoCrearDTO;
 import com.salud.consultorio.dto.diagnostico.DiagnosticoRespuestaDTO;
 
@@ -13,4 +14,7 @@ public interface IDiagnosticoServicio {
 
     DiagnosticoRespuestaDTO entidadPorID(Integer idDiagnostico);
 
+    DiagnosticoRespuestaDTO actualizar(Integer idDiagnostico, DiagnosticoActualizarDTO dto);
+
+    void eliminar(Integer idDiagnostico);
 }
