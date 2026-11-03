@@ -12,7 +12,7 @@ import {
 import { CambiarClaveModalComponent } from '../../features/auth/components/cambiar-clave-modal/cambiar-clave-modal.component';
 import { environment } from '../../../environments/environment';
 import { MENU_BASE, PAGE_TITLES } from './dashboard-menu.config';
-
+import { MiPerfilModalComponent } from '../../features/perfil/components/mi-perfil-modal/mi-perfil-modal.component';
 interface UsuarioRolInfo {
   id: number;
   usuario: string;
@@ -34,7 +34,14 @@ interface MensajeResponse {
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, CambiarClaveModalComponent],
+  imports: [
+    CommonModule,
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    CambiarClaveModalComponent,
+    MiPerfilModalComponent,
+  ],
   templateUrl: './dashboard-layout.component.html',
 })
 export class DashboardLayoutComponent implements OnInit {
@@ -49,7 +56,7 @@ export class DashboardLayoutComponent implements OnInit {
 
   usuarioInfo = signal<UsuarioRolInfo | null>(null);
   cargandoPerfil = signal<boolean>(true);
-
+  perfilAbierto = signal<boolean>(false);
   inicialAvatar = computed(() => {
     const info = this.usuarioInfo();
     return info && info.nombreCompleto ? info.nombreCompleto.charAt(0).toUpperCase() : '?';
@@ -140,6 +147,14 @@ export class DashboardLayoutComponent implements OnInit {
   toggleSidebar() {
     this.open = !this.open;
     if (!this.open) this.expandedItem = null;
+  }
+
+  abrirPerfil() {
+    this.perfilAbierto.set(true);
+  }
+
+  cerrarPerfil() {
+    this.perfilAbierto.set(false);
   }
 
   toggleMenu(label: string) {

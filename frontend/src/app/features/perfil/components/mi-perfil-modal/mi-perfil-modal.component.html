@@ -1,0 +1,458 @@
+<div
+  class="fixed inset-0 z-50 flex items-end justify-center bg-[#1F1F1F]/60 sm:items-center sm:p-4"
+  (click)="cerrarDesdeFondo()">
+  @if (toast(); as t) {
+    <div
+      class="fixed left-1/2 top-4 z-[60] w-[calc(100%-2rem)] max-w-md -translate-x-1/2"
+      (click)="$event.stopPropagation()"
+    >
+      <div
+        role="alert"
+        class="flex items-start gap-3 border bg-white p-3"
+        [ngClass]="t.tipo === 'ok' ? 'border-[#0d6b68]' : 'border-[#D9182A]'"
+      >
+        <span class="material-icons shrink-0 text-[20px]" [ngClass]="t.tipo === 'ok' ? 'text-[#0d6b68]' : 'text-[#D9182A]'">
+          {{ t.tipo === 'ok' ? 'check_circle' : 'error' }}
+        </span>
+
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-bold text-[#222222]">{{ t.tipo === 'ok' ? 'Listo' : 'No se pudo completar' }}</p>
+          <p class="mt-0.5 text-xs leading-5 text-[#58595B]">{{ t.texto }}</p>
+        </div>
+
+        <button type="button" (click)="cerrarToast()" aria-label="Cerrar mensaje" class="text-[#58595B] hover:text-[#D9182A]">
+          <span class="material-icons text-[20px]">close</span>
+        </button>
+      </div>
+    </div>
+  }
+  <div
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="mi-perfil-titulo"
+    class="flex h-full w-full flex-col overflow-hidden bg-white sm:h-auto sm:max-h-[90vh] sm:max-w-3xl sm:rounded-lg"
+    (click)="$event.stopPropagation()"
+  >
+
+
+
+    <div class="flex h-1 shrink-0">
+      <div class="w-1/2 bg-[#58595B]"></div>
+      <div class="w-1/2 bg-[#D9182A]"></div>
+    </div>
+
+    <div class="flex shrink-0 items-start gap-4 border-b border-neutral-200 px-5 py-4">
+
+      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#292929] text-lg font-bold text-white">
+        {{ inicial() }}
+      </div>
+
+      <div class="min-w-0 flex-1">
+        <h2 id="mi-perfil-titulo" class="truncate text-base font-bold text-[#222222]">
+          {{ nombreCompleto() || 'Mi perfil' }}
+        </h2>
+
+        @if (perfil(); as p) {
+          <p class="mt-0.5 text-xs font-medium text-[#58595B]">{{ p.usuario }}</p>
+
+          <div class="mt-2 flex flex-wrap items-center gap-2">
+            @for (rol of p.roles; track rol.idRol) {
+              <span class="inline-flex items-center rounded-full border border-[#D9182A]/20 bg-[#D9182A]/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#D9182A]">
+                {{ rol.nombre }}
+              </span>
+            }
+
+            <span
+              [ngClass]="p.estado === 1
+                ? 'bg-[#0d6b68]/10 text-[#0d6b68] border-[#0d6b68]/20'
+                : 'bg-[#D9182A]/10 text-[#D9182A] border-[#D9182A]/20'"
+              class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+              <span class="h-1.5 w-1.5 rounded-full" [ngClass]="p.estado === 1 ? 'bg-[#0d6b68]' : 'bg-[#D9182A]'"></span>
+              {{ p.estado === 1 ? 'Activa' : 'Desactivada' }}
+            </span>
+          </div>
+        }
+      </div>
+
+      <button type="button" (click)="cerrar()" aria-label="Cerrar"
+              class="sass-action p-1.5 text-[#58595B] transition-colors hover:bg-neutral-100 hover:text-[#D9182A]">
+        <span class="material-icons text-xl">close</span>
+      </button>
+    </div>
+
+    <div class="flex shrink-0 overflow-x-auto border-b border-neutral-200 px-2">
+      <button type="button" (click)="cambiarPestana('datos')"
+              class="-mb-px flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm transition-colors"
+              [ngClass]="pestana() === 'datos'
+                ? 'border-[#D9182A] font-bold text-[#D9182A]'
+                : 'border-transparent font-medium text-[#58595B] hover:text-[#292929]'">
+        <span class="material-icons text-[18px]">badge</span>
+        Mis datos
+      </button>
+
+      <button type="button" (click)="cambiarPestana('contacto')"
+              class="-mb-px flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm transition-colors"
+              [ngClass]="pestana() === 'contacto'
+                ? 'border-[#D9182A] font-bold text-[#D9182A]'
+                : 'border-transparent font-medium text-[#58595B] hover:text-[#292929]'">
+        <span class="material-icons text-[18px]">contact_phone</span>
+        Contacto y correo
+      </button>
+
+      <button type="button" (click)="cambiarPestana('clave')"
+              class="-mb-px flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-3 text-sm transition-colors"
+              [ngClass]="pestana() === 'clave'
+                ? 'border-[#D9182A] font-bold text-[#D9182A]'
+                : 'border-transparent font-medium text-[#58595B] hover:text-[#292929]'">
+        <span class="material-icons text-[18px]">lock</span>
+        Contraseña
+      </button>
+    </div>
+
+    <div class="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+
+      @if (cargando()) {
+
+        <div class="animate-pulse space-y-4">
+          <div class="h-4 w-1/3 rounded bg-neutral-200"></div>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="h-10 rounded bg-neutral-100"></div>
+            <div class="h-10 rounded bg-neutral-100"></div>
+            <div class="h-10 rounded bg-neutral-100"></div>
+            <div class="h-10 rounded bg-neutral-100"></div>
+          </div>
+        </div>
+
+      } @else if (errorCarga()) {
+
+        <div class="flex items-start gap-3 border border-red-300 bg-red-50 p-4" role="alert">
+          <span class="material-icons shrink-0 text-[20px] text-red-700">error</span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-bold text-red-900">No se pudo cargar tu perfil</p>
+            <p class="mt-0.5 text-xs leading-5 text-red-700">{{ errorCarga() }}</p>
+          </div>
+          <button type="button" (click)="cargarPerfil()"
+                  class="inline-flex h-9 items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+            <span class="material-icons text-[18px]">refresh</span>
+            Reintentar
+          </button>
+        </div>
+
+      } @else if (perfil(); as p) {
+
+        @switch (pestana()) {
+
+          @case ('datos') {
+
+            <div class="space-y-6">
+
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-[#58595B]">Datos personales</h3>
+                <p class="mt-0.5 text-xs text-gray-500">Solo consulta. Para corregirlos, comunícate con el administrador.</p>
+
+                <dl class="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+                  <div>
+                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Nombres</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ p.nombres }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Apellidos</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ p.apellidos }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ p.tipoDocumento || 'Documento' }}</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ p.numeroDocumento }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Fecha de nacimiento</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ p.fechaNacimiento | date: 'dd/MM/yyyy' }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Sexo</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ p.genero }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Nacionalidad</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ p.nacionalidad || '—' }}</dd>
+                  </div>
+                </dl>
+              </div>
+
+              @if (p.datosAdicionales.length > 0) {
+                <div class="border-t border-neutral-200 pt-5">
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-[#58595B]">Información profesional</h3>
+
+                  <dl class="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+                    @for (dato of p.datosAdicionales; track dato.etiqueta) {
+                      <div>
+                        <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">{{ dato.etiqueta }}</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ dato.valor }}</dd>
+                      </div>
+                    }
+                  </dl>
+                </div>
+              }
+
+              <div class="border-t border-neutral-200 pt-5">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-[#58595B]">Cuenta</h3>
+                <p class="mt-0.5 text-xs text-gray-500">Solo consulta. Los roles los asigna el administrador.</p>
+
+                <dl class="mt-4 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+                  <div>
+                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Usuario</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ p.usuario }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Estado</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ p.estado === 1 ? 'Activo' : 'Desactivado' }}</dd>
+                  </div>
+                  <div class="sm:col-span-2">
+                    <dt class="text-xs font-semibold uppercase tracking-wide text-gray-500">Roles</dt>
+                    <dd class="mt-1 text-sm text-gray-900">
+                      @for (rol of p.roles; track rol.idRol; let ultimo = $last) {
+                        {{ rol.nombre }}{{ ultimo ? '' : ', ' }}
+                      }
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+
+            </div>
+          }
+
+          @case ('contacto') {
+
+            <div class="space-y-6">
+
+              <form [formGroup]="formContacto" (ngSubmit)="guardarContacto()" class="space-y-4">
+
+                <div>
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-[#58595B]">Teléfono y dirección</h3>
+                  <p class="mt-0.5 text-xs text-gray-500">Puedes actualizar estos datos cuando lo necesites.</p>
+                </div>
+
+
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label for="perfil-telefono" class="mb-1 block text-sm font-semibold text-gray-700">
+                      Teléfono <span class="text-[#D9182A]">*</span>
+                    </label>
+                    <input id="perfil-telefono" type="tel" inputmode="numeric" maxlength="9" formControlName="telefono"
+                           autocomplete="tel-national" placeholder="987654321" (input)="soloNumeros($event)"
+                           class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none transition-colors placeholder:text-gray-400 focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]" />
+                    @if ((formContacto.controls.telefono.touched || formContacto.controls.telefono.dirty) && formContacto.controls.telefono.invalid) {
+                      <p class="mt-1 text-xs text-[#D9182A]">
+                        @if (formContacto.controls.telefono.hasError('required')) {
+                          El teléfono es obligatorio.
+                        } @else {
+                          Debe tener exactamente 9 dígitos.
+                        }
+                      </p>
+                    }
+                  </div>
+
+                  <div>
+                    <label for="perfil-direccion" class="mb-1 block text-sm font-semibold text-gray-700">Dirección <span class="text-[#D9182A]">*</span></label>
+                    <input id="perfil-direccion" type="text" formControlName="direccion" autocomplete="street-address" maxlength="150"
+                           class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none transition-colors placeholder:text-gray-400 focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]" />
+                    @if (formContacto.controls.direccion.touched && formContacto.controls.direccion.invalid) {
+                      <p class="mt-1 text-xs text-[#D9182A]">La dirección es obligatoria.</p>
+                    }
+
+                  </div>
+                </div>
+
+                <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                  <button type="button" (click)="restablecerContacto()" [disabled]="guardandoContacto() || formContacto.pristine"
+                          class="inline-flex h-10 w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:opacity-60 sm:w-auto">
+                    Descartar
+                  </button>
+                  <button type="submit" [disabled]="guardandoContacto() || formContacto.pristine"
+                          class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#D9182A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 sm:w-auto">
+                    @if (guardandoContacto()) {
+                      <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+                      Guardando...
+                    } @else {
+                      <span class="material-icons text-[20px]">save</span>
+                      Guardar cambios
+                    }
+                  </button>
+                </div>
+              </form>
+
+              <div class="space-y-4 border-t border-neutral-200 pt-5">
+
+                <div>
+                  <h3 class="text-xs font-bold uppercase tracking-wider text-[#58595B]">Correo electrónico</h3>
+                  <p class="mt-0.5 text-xs text-gray-500">Para cambiarlo, verificamos el nuevo correo con un código.</p>
+                </div>
+
+                @switch (pasoCorreo()) {
+
+                  @case ('cerrado') {
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div class="min-w-0">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Correo actual</p>
+                        <p class="mt-1 break-all text-sm text-gray-900">{{ p.correo || 'Sin correo registrado' }}</p>
+                      </div>
+                      <button type="button" (click)="abrirCambioCorreo()"
+                              class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 sm:w-auto">
+                        <span class="material-icons text-[20px]">edit</span>
+                        Cambiar correo
+                      </button>
+                    </div>
+                  }
+
+                  @case ('nuevo') {
+                    <form [formGroup]="formNuevoCorreo" (ngSubmit)="solicitarCodigo()" class="space-y-4">
+                      <div>
+                        <label for="perfil-nuevo-correo" class="mb-1 block text-sm font-semibold text-gray-700">Nuevo correo</label>
+                        <input id="perfil-nuevo-correo" type="email" formControlName="nuevoCorreo" autocomplete="email" placeholder="nombre@correo.com"
+                               class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none transition-colors placeholder:text-gray-400 focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]" />
+                        @if (formNuevoCorreo.controls.nuevoCorreo.touched && formNuevoCorreo.controls.nuevoCorreo.invalid) {
+                          <p class="mt-1 text-xs text-[#D9182A]">Ingresa un correo válido.</p>
+                        }
+                      </div>
+
+                      <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                        <button type="button" (click)="cancelarCambioCorreo()" [disabled]="procesandoCorreo()"
+                                class="inline-flex h-10 w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:opacity-60 sm:w-auto">
+                          Cancelar
+                        </button>
+                        <button type="submit" [disabled]="procesandoCorreo()"
+                                class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#D9182A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 sm:w-auto">
+                          @if (procesandoCorreo()) {
+                            <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+                            Enviando...
+                          } @else {
+                            <span class="material-icons text-[20px]">send</span>
+                            Enviar código
+                          }
+                        </button>
+                      </div>
+                    </form>
+                  }
+
+                  @case ('codigo') {
+                    <form [formGroup]="formCodigo" (ngSubmit)="confirmarCodigo()" class="space-y-4">
+                      <p class="text-sm text-[#58595B]">
+                        Enviamos un código de 6 dígitos a
+                        <span class="font-bold text-gray-900">{{ correoDestino() }}</span>.
+                        Vence en 10 minutos.
+                      </p>
+
+                      <div class="sm:max-w-xs">
+                        <label for="perfil-codigo" class="mb-1 block text-sm font-semibold text-gray-700">Código de verificación</label>
+                        <input id="perfil-codigo" type="text" inputmode="numeric" maxlength="6" formControlName="codigo" autocomplete="one-time-code" placeholder="000000"
+                               class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-center text-base font-bold tracking-[0.4em] text-gray-700 outline-none transition-colors placeholder:text-gray-400 focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]" />
+                        @if (formCodigo.controls.codigo.touched && formCodigo.controls.codigo.invalid) {
+                          <p class="mt-1 text-xs text-[#D9182A]">El código tiene 6 dígitos.</p>
+                        }
+                      </div>
+
+                      <div class="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                        <button type="button" (click)="cancelarCambioCorreo()" [disabled]="procesandoCorreo()"
+                                class="inline-flex h-10 w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:opacity-60 sm:w-auto">
+                          Cancelar
+                        </button>
+                        <button type="button" (click)="abrirCambioCorreo()" [disabled]="procesandoCorreo()"
+                                class="inline-flex h-10 w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:opacity-60 sm:w-auto">
+                          Usar otro correo
+                        </button>
+                        <button type="submit" [disabled]="procesandoCorreo()"
+                                class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#D9182A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 sm:w-auto">
+                          @if (procesandoCorreo()) {
+                            <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+                            Verificando...
+                          } @else {
+                            <span class="material-icons text-[20px]">verified</span>
+                            Confirmar cambio
+                          }
+                        </button>
+                      </div>
+                    </form>
+                  }
+                }
+              </div>
+
+            </div>
+          }
+
+          @case ('clave') {
+
+            <form [formGroup]="formClave" (ngSubmit)="cambiarClave()" class="space-y-4">
+
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-[#58595B]">Cambiar contraseña</h3>
+                <p class="mt-0.5 text-xs text-gray-500">Al cambiarla, se cerrará tu sesión en todos los dispositivos.</p>
+              </div>
+
+
+              <div class="space-y-4 sm:max-w-md">
+                <div>
+                  <label for="perfil-clave-actual" class="mb-1 block text-sm font-semibold text-gray-700">Contraseña actual</label>
+                  <div class="relative">
+                    <input id="perfil-clave-actual" [type]="verClaveActual() ? 'text' : 'password'" formControlName="claveActual" autocomplete="current-password"
+                           class="h-10 w-full rounded-md border border-gray-300 bg-white pl-3 pr-10 text-sm text-gray-700 outline-none transition-colors focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]" />
+                    <button type="button" (click)="verClaveActual.set(!verClaveActual())" aria-label="Mostrar u ocultar contraseña"
+                            class="absolute right-3 top-1/2 flex -translate-y-1/2 items-center text-gray-400 hover:text-[#58595B]">
+                      <span class="material-icons text-[20px]">{{ verClaveActual() ? 'visibility_off' : 'visibility' }}</span>
+                    </button>
+                  </div>
+                  @if (formClave.controls.claveActual.touched && formClave.controls.claveActual.invalid) {
+                    <p class="mt-1 text-xs text-[#D9182A]">Ingresa tu contraseña actual.</p>
+                  }
+                </div>
+
+                <div>
+                  <label for="perfil-clave-nueva" class="mb-1 block text-sm font-semibold text-gray-700">Nueva contraseña</label>
+                  <div class="relative">
+                    <input id="perfil-clave-nueva" [type]="verClaveNueva() ? 'text' : 'password'" formControlName="nuevaClave" autocomplete="new-password"
+                           class="h-10 w-full rounded-md border border-gray-300 bg-white pl-3 pr-10 text-sm text-gray-700 outline-none transition-colors focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]" />
+                    <button type="button" (click)="verClaveNueva.set(!verClaveNueva())" aria-label="Mostrar u ocultar contraseña"
+                            class="absolute right-3 top-1/2 flex -translate-y-1/2 items-center text-gray-400 hover:text-[#58595B]">
+                      <span class="material-icons text-[20px]">{{ verClaveNueva() ? 'visibility_off' : 'visibility' }}</span>
+                    </button>
+                  </div>
+                  @if (formClave.controls.nuevaClave.touched && formClave.controls.nuevaClave.invalid) {
+                    <p class="mt-1 text-xs text-[#D9182A]">Mínimo 8 caracteres, con mayúscula, minúscula y número.</p>
+                  }
+                </div>
+
+                <div>
+                  <label for="perfil-clave-confirmar" class="mb-1 block text-sm font-semibold text-gray-700">Confirmar contraseña</label>
+                  <input id="perfil-clave-confirmar" [type]="verClaveNueva() ? 'text' : 'password'" formControlName="confirmacionClave" autocomplete="new-password"
+                         class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none transition-colors focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]" />
+                  @if (formClave.controls.confirmacionClave.touched && formClave.hasError('noCoincide')) {
+                    <p class="mt-1 text-xs text-[#D9182A]">Las contraseñas no coinciden.</p>
+                  }
+                </div>
+              </div>
+
+              <div class="flex justify-end">
+                <button type="submit" [disabled]="guardandoClave()"
+                        class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#D9182A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:text-gray-500 sm:w-auto">
+                  @if (guardandoClave()) {
+                    <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+                    Actualizando...
+                  } @else {
+                    <span class="material-icons text-[20px]">key</span>
+                    Actualizar contraseña
+                  }
+                </button>
+              </div>
+            </form>
+          }
+        }
+      }
+    </div>
+
+    <div class="flex shrink-0 justify-end border-t border-neutral-200 bg-neutral-50 px-5 py-3">
+      <button type="button" (click)="cerrar()"
+              class="inline-flex h-10 w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 sm:w-auto">
+        Cerrar
+      </button>
+    </div>
+
+  </div>
+</div>
