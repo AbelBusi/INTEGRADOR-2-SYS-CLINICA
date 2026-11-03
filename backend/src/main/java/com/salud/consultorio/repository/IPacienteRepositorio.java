@@ -194,4 +194,6 @@ public interface IPacienteRepositorio extends JpaRepository<Paciente, Integer> {
     @Query("SELECT p FROM Paciente p WHERE p.id = :id")
     Optional<Paciente> buscarPorIdBloqueado(@Param("id") Integer id);
 
+    Optional<Paciente> findByPersonaId(Integer idPersona);
+
 }

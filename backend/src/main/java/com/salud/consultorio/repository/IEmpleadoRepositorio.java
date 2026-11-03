@@ -191,4 +191,7 @@ public interface IEmpleadoRepositorio extends JpaRepository<Empleado, Integer> {
             """)
     List<PersonaUsuarioDTO> listarParaCrearUsuario();
 
+    Optional<Empleado> findByPersonaId(Integer idPersona);
+
+
 }

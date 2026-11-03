@@ -18,6 +18,5 @@ public interface IPersonaRepositorio extends JpaRepository<Persona, Integer> {
     boolean existsByTelefonoAndIdNot(String telefono, Integer id);
 
     boolean existsByCorreoAndIdNot(String correo, Integer id);
-
-
+    boolean existsByCorreoIgnoreCaseAndIdNot(String correo, Integer id);
 }

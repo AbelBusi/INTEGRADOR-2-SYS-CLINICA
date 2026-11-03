@@ -160,4 +160,7 @@ public interface IMedicoRepositorio extends JpaRepository<Medico, Integer> {
 
     Optional<Medico> findByEmpleado_Persona_Id(Integer idPersona);
 
+    Optional<Medico> findByEmpleadoId(Integer idEmpleado);
+
+
 }
