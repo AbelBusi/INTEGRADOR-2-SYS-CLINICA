@@ -4,6 +4,7 @@ import com.salud.consultorio.auth.exception.CorreoEnvioException;
 import com.salud.consultorio.auth.exception.UsuarioInactivoException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -103,6 +104,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CorreoEnvioException.class)
     public ResponseEntity<Map<String, Object>> manejarCorreoEnvio(CorreoEnvioException ex) {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of("mensaje", ex.getMessage()));
+    }
+
+    @ExceptionHandler(PessimisticLockingFailureException.class)
+    public ResponseEntity<Map<String, Object>> handleBloqueo(PessimisticLockingFailureException e) {
+        Map<String, Object> respuesta = new HashMap<>();
+        respuesta.put("mensaje", "La cita está siendo modificada por otro usuario. Inténtalo nuevamente.");
+        respuesta.put("object", null);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(respuesta);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.salud.consultorio.dto.citaMedica;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public record CitaMedicaRespuestaDTO(
@@ -14,5 +15,6 @@ public record CitaMedicaRespuestaDTO(
         LocalTime horaInicio,
         LocalTime horaSalida,
         String motivo,
-        Integer estado
+        Integer estado,
+        LocalDateTime inicioAtencio
 ) {}

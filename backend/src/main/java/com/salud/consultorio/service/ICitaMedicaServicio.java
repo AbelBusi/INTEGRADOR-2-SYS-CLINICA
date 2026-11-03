@@ -40,7 +40,9 @@ public interface ICitaMedicaServicio {
 
     void iniciarAtencion(Integer id);
 
-    CitaMedicaRespuestaDTO regularizarAdministrativo(Integer id, MotivoRegularizacionAdministrativa motivo,
-                                                     String observacion, CitaMedicaActualizarDTO reprogramacion);
+    List<CitaMedicaRespuestaDTO> listaAtencionesSinActividad();
+    List<CitaMedicaRespuestaDTO> listaMisAtencionesSinActividadMedico();
+
+    CitaMedicaRespuestaDTO regularizarAdministrativo(Integer id, MotivoRegularizacionAdministrativa motivo, String observacion, CitaMedicaActualizarDTO reprogramacion);
 
 }

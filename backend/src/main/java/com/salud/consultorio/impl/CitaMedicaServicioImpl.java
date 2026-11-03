@@ -1,6 +1,7 @@
 package com.salud.consultorio.impl;
 
 import com.salud.consultorio.auth.UsuarioAutenticadoProvider;
+import com.salud.consultorio.auth.exception.OperacionBloqueadaException;
 import com.salud.consultorio.dto.citaMedica.CitaMedicaActualizarDTO;
 import com.salud.consultorio.dto.citaMedica.CitaMedicaCrearDTO;
 import com.salud.consultorio.dto.citaMedica.CitaMedicaRespuestaDTO;
@@ -17,6 +18,7 @@ import com.salud.consultorio.service.ICitaMedicaServicio;
 import com.salud.consultorio.service.IHistorialCitaServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -54,6 +56,12 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
     private final UsuarioAutenticadoProvider usuarioAutenticadoProvider;
     private final IDiagnosticoRepositorio diagnosticoRepositorio;
 
+    @Value("${consultorio.atencion.umbral-inactividad-minutos:30}")
+    private long umbralInactividadMinutos;
+
+    private static final String MSG_EN_ATENCION =
+            "La cita tiene la atención iniciada: esta operación no está permitida.";
+
     private static final Duration LIMITE_CANCELACION = Duration.ofHours(2);
     private final Clock clock;
     @Transactional(readOnly = true)
@@ -85,7 +93,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
         CitaMedica cita = citaMedicaRepositorio.buscarPorIdBloqueado(id).orElse(null);
 
-        if (cita == null || cita.getEstado() != CITA_PROGRAMADA) {
+        if (cita == null || cita.getEstado() != CITA_PROGRAMADA || enAtencion(cita)) {
             return;
         }
 
@@ -205,6 +213,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         CitaMedica cita = obtenerCitaBloqueada(id);
 
         validarCitaProgramada(cita, "editar");
+        validarSinAtencion(cita, "EDITAR");
 
         if (motivoRegularizacion == null) {
             LocalDateTime inicioCita = LocalDateTime.of(cita.getFechaCita(), cita.getHoraInicio());
@@ -292,6 +301,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         CitaMedica cita = obtenerCitaBloqueada(id);
 
         validarCitaProgramada(cita, "cancelar");
+        validarSinAtencion(cita, "CANCELAR");
         validarVentanaCancelacion(cita);
 
         String detalle = normalizarObservacion(observacion);
@@ -300,22 +310,47 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = {OperacionBloqueadaException.class, AccessDeniedException.class})
     @Override
     public void atender(Integer id, String observacion) {
 
+        Medico medico = obtenerMedicoAutenticado();
         CitaMedica cita = obtenerCitaBloqueada(id);
 
-        validarCitaProgramada(cita, "atender");
-        registrarInicioSiCorresponde(cita);
+        validarPropiedadMedico(cita, medico);
+        validarCitaProgramada(cita, "finalizar la atención de");
+
+        if (!enAtencion(cita)) {
+            throw new IllegalArgumentException("Debe iniciar la atención antes de finalizarla.");
+        }
 
         String detalle = normalizarObservacion(observacion);
+        LocalDateTime ahora = LocalDateTime.now(clock);
+
+        cita.setFinAtencion(ahora);
+        cita.setUltimaActividad(ahora);
 
         aplicarResolucion(cita, CITA_ATENDIDA, AccionHistorialCita.ATENDIDA, detalle, false);
-
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
+    @Override
+    public List<CitaMedicaRespuestaDTO> listaAtencionesSinActividad() {
+        return citaMedicaRepositorio.listaAtencionesSinActividad(null, limiteInactividad());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<CitaMedicaRespuestaDTO> listaMisAtencionesSinActividadMedico() {
+        return citaMedicaRepositorio.listaAtencionesSinActividad(
+                obtenerMedicoAutenticado().getId(), limiteInactividad());
+    }
+
+    private LocalDateTime limiteInactividad() {
+        return LocalDateTime.now(clock).minusMinutes(umbralInactividadMinutos);
+    }
+
+    @Transactional(noRollbackFor = {OperacionBloqueadaException.class, AccessDeniedException.class})
     @Override
     public void iniciarAtencion(Integer id) {
 
@@ -324,7 +359,28 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
         validarPropiedadMedico(cita, medico);
         validarCitaProgramada(cita, "iniciar la atención de");
-        registrarInicioSiCorresponde(cita);
+
+        LocalDateTime ahora = LocalDateTime.now(clock);
+
+        if (enAtencion(cita)) {
+            cita.setUltimaActividad(ahora);
+            return;
+        }
+
+        validarVentanaAtencion(cita);
+
+        Map<String, Object> anteriores = new LinkedHashMap<>();
+        anteriores.put("estado", cita.getEstado());
+        anteriores.put("inicioAtencion", null);
+
+        cita.setInicioAtencion(ahora);
+        cita.setUltimaActividad(ahora);
+
+        Map<String, Object> nuevos = new LinkedHashMap<>();
+        nuevos.put("estado", cita.getEstado());
+        nuevos.put("inicioAtencion", ahora.toString());
+
+        historialCitaServicio.registrar(cita, AccionHistorialCita.INICIADA, anteriores, nuevos, null);
 
     }
 
@@ -342,6 +398,8 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         CitaMedica cita = obtenerCitaBloqueada(id);
 
         validarCitaProgramada(cita, "regularizar");
+        validarSinAtencion(cita, "REGULARIZAR_ADMINISTRATIVO");
+
 
         if (!horarioFinalizado(cita, LocalDateTime.now(clock))) {
             throw new IllegalArgumentException(
@@ -435,12 +493,13 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = {OperacionBloqueadaException.class, AccessDeniedException.class})
     @Override
     public void regularizar(Integer id, ResolucionRegularizacion resolucion, String observacion) {
 
+        Medico medico = obtenerMedicoAutenticado();
         CitaMedica cita = obtenerCitaBloqueada(id);
-
+        validarPropiedadMedico(cita, medico);
         validarCitaProgramada(cita, "regularizar");
 
         if (!horarioFinalizado(cita, LocalDateTime.now(clock))) {
@@ -465,12 +524,19 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
                 throw new IllegalArgumentException(
                         "Para regularizar la cita como atendida debe registrar al menos un diagnóstico.");
             }
+            cita.setFinAtencion(LocalDateTime.now(clock));
             aplicarResolucion(cita, CITA_ATENDIDA, AccionHistorialCita.ATENDIDA, justificacion, true);
         } else {
+            if (diagnosticoRepositorio.existsByCitaMedica_IdAndEstado(cita.getId(), ENTIDAD_ACTIVA)) {
+                bloquear(cita, "REGULARIZAR_NO_ASISTIO",
+                        "No se puede registrar que el paciente no se presentó: la cita ya tiene información clínica.");
+            }
+            validarSinAtencion(cita, "REGULARIZAR_NO_ASISTIO");
             aplicarResolucion(cita, CITA_CANCELADA, AccionHistorialCita.CANCELADA, justificacion, true);
         }
 
     }
+
 
     @Transactional
     @Override
@@ -481,6 +547,12 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         if (cita.getEstado() == CITA_ELIMINADA) {
             throw new IllegalArgumentException("La cita médica ya se encuentra eliminada.");
         }
+
+        if (cita.getEstado() == CITA_ATENDIDA) {
+            bloquear(cita, "ELIMINAR", "No se puede eliminar una cita atendida: forma parte del historial clínico.");
+        }
+
+        validarSinAtencion(cita, "ELIMINAR");
 
         Integer estadoAnterior = cita.getEstado();
 
@@ -519,6 +591,25 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
     }
 
+    private boolean enAtencion(CitaMedica cita) {
+        return cita.getEstado() == CITA_PROGRAMADA && cita.getInicioAtencion() != null;
+    }
+
+    private void validarSinAtencion(CitaMedica cita, String operacion) {
+        if (cita.getInicioAtencion() != null) {
+            bloquear(cita, operacion, MSG_EN_ATENCION);
+        }
+    }
+
+    private void bloquear(CitaMedica cita, String operacion, String mensaje) {
+        Map<String, Object> datos = new LinkedHashMap<>();
+        datos.put("operacion", operacion);
+        datos.put("estado", cita.getEstado());
+        historialCitaServicio.registrar(cita, AccionHistorialCita.INTENTO_BLOQUEADO, null, datos, mensaje);
+        throw new OperacionBloqueadaException(mensaje);
+    }
+
+
     private void registrarInicioSiCorresponde(CitaMedica cita) {
 
         if (cita.getInicioAtencion() != null) {
@@ -549,11 +640,13 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
     }
 
     private void validarPropiedadMedico(CitaMedica cita, Medico medico) {
-
         if (!Objects.equals(cita.getMedico().getId(), medico.getId())) {
-            throw new AccessDeniedException("La cita médica no está asignada al médico autenticado.");
+            String mensaje = "La cita médica no está asignada al médico autenticado.";
+            Map<String, Object> datos = new LinkedHashMap<>();
+            datos.put("operacion", "ACCESO_ATENCION");
+            historialCitaServicio.registrar(cita, AccionHistorialCita.INTENTO_BLOQUEADO, null, datos, mensaje);
+            throw new AccessDeniedException(mensaje);
         }
-
     }
 
     private Paciente obtenerPacienteAutenticado() {
@@ -764,7 +857,8 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
                 c.getHoraInicio(),
                 c.getHoraSalida(),
                 c.getMotivo(),
-                c.getEstado()
+                c.getEstado(),
+                c.getInicioAtencion()
         );
 
     }
@@ -824,7 +918,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         nuevos.put("estado", estadoNuevo);
 
         if (regularizacion) {
-            nuevos.put("regularizacion", true);
+            nuevos.put("resolucion", accion.name());
         }
 
         cita.setEstado(estadoNuevo);
