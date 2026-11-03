@@ -45,6 +45,11 @@ public class Usuario {
     @Column(name = "requiere_cambio_clave", nullable = false)
     private boolean requiereCambioClave;
 
+    @Column(name = "registro_presencial", nullable = false,
+            columnDefinition = "BOOLEAN NOT NULL DEFAULT TRUE")
+    @Builder.Default
+    private boolean registroPresencial = true;
+
     @Column(name = "estado",nullable = false)
     @Builder.Default
     private Integer estado = 1;

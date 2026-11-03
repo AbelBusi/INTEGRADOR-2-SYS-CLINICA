@@ -156,6 +156,43 @@ public class CorreoServicio {
         }
     }
 
+    public void enviarCodigoVerificacionRegistro(String destino, String codigo, int minutos) {
+        try {
+            ClassPathResource escudo = new ClassPathResource("email/escudo-peru.png");
+            ClassPathResource logoMins = new ClassPathResource("email/logo-minsa.png");
+
+            Context ctx = new Context(new Locale("es", "PE"));
+            ctx.setVariable("codigo", codigo);
+            ctx.setVariable("minutos", minutos);
+            ctx.setVariable("horaLimite",
+                    LocalDateTime.now(LIMA).plusMinutes(minutos).format(HORA).toLowerCase());
+            ctx.setVariable("tieneEscudo", escudo.exists());
+            ctx.setVariable("tieneLogoMinsa", logoMins.exists());
+
+            String html = templateEngine.process("email/codigo-verificacion-registro", ctx);
+
+            MimeMessage mime = mailSender.createMimeMessage();
+            MimeMessageHelper helper =
+                    new MimeMessageHelper(mime, true, StandardCharsets.UTF_8.name());
+
+            helper.setFrom(remitente, "MINSA - Hospital José Olaya");
+            helper.setTo(destino);
+            helper.setSubject("Código de verificación de correo - Hospital José Olaya");
+            helper.setText("Tu código de verificación es: " + codigo
+                    + ". Expira en " + minutos + " minutos.", html);
+
+            if (escudo.exists()) helper.addInline("escudo", escudo, "image/png");
+            if (logoMins.exists()) helper.addInline("logoMinsa", logoMins, "image/png");
+
+            mailSender.send(mime);
+
+        } catch (Exception e) {
+            log.error("Falló el envío del código de verificación a {}", enmascarar(destino), e);
+            throw new CorreoEnvioException(
+                    "No se pudo enviar el código de verificación. Verifica el correo e inténtalo de nuevo.", e);
+        }
+    }
+
     private String enmascarar(String correo) {
         int arroba = correo == null ? -1 : correo.indexOf('@');
         return arroba <= 1 ? "***" : correo.charAt(0) + "***" + correo.substring(arroba);

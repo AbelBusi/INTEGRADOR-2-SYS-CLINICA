@@ -85,6 +85,21 @@ public class IAuthServicioImpl implements IAuthServicio {
         Persona persona = personaRepositorio.findById(dto.idPersona())
                 .orElseThrow(() -> new EntityNotFoundException("No existe la persona indicada"));
 
+        return crearCuenta(persona, dto, true);
+    }
+
+    @Transactional
+    @Override
+    public UsuarioCreadoDTO crearUsuarioPortal(Integer idPersona) {
+
+        Persona persona = personaRepositorio.findById(idPersona)
+                .orElseThrow(() -> new EntityNotFoundException("No existe la persona indicada"));
+
+        return crearCuenta(persona, new UsuarioAltaDTO(persona.getId(), TipoUsuario.PACIENTE, null), false);
+    }
+
+    private UsuarioCreadoDTO crearCuenta(Persona persona, UsuarioAltaDTO dto, boolean registroPresencial) {
+
         if (usuarioServicio.existeUsuarioPersona(persona.getId())) {
             throw new DataIntegrityViolationException(
                     "La persona ya tiene una cuenta de usuario. Para darle otro rol, gestiona los roles de su cuenta existente"
@@ -111,6 +126,7 @@ public class IAuthServicioImpl implements IAuthServicio {
                 .claveAcceso(passwordEncoder.encode(claveTemporal))
                 .persona(persona)
                 .requiereCambioClave(true)
+                .registroPresencial(registroPresencial)
                 .build();
 
         Usuario guardado = usuarioRepositorio.save(usuario);
@@ -128,6 +144,7 @@ public class IAuthServicioImpl implements IAuthServicio {
 
         return new UsuarioCreadoDTO(guardado.getId(), nombreUsuario, enmascararCorreo(correo));
     }
+
     @Transactional
     @Override
     public LoginResponse ingresar(InicioSolicitud request) {

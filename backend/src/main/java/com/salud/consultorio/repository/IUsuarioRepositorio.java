@@ -30,6 +30,8 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
             @Param("id") Integer id
     );
 
+    Optional<Usuario> findByPersona_Id(Integer idPersona);
+
     Optional<Usuario> findByUsuario(String usuario);
 
     @Query("""

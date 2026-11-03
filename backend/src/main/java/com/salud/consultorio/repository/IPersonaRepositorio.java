@@ -4,6 +4,8 @@ import com.salud.consultorio.model.entity.Persona;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface IPersonaRepositorio extends JpaRepository<Persona, Integer> {
 
@@ -18,5 +20,9 @@ public interface IPersonaRepositorio extends JpaRepository<Persona, Integer> {
     boolean existsByTelefonoAndIdNot(String telefono, Integer id);
 
     boolean existsByCorreoAndIdNot(String correo, Integer id);
+
     boolean existsByCorreoIgnoreCaseAndIdNot(String correo, Integer id);
+
+    Optional<Persona> findByTipoDocumento_CodigoIgnoreCaseAndNumeroDocumento(String codigo, String numeroDocumento);
+
 }
