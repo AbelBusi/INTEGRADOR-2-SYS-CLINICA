@@ -4,9 +4,11 @@ package com.salud.consultorio.controller;
 import com.salud.consultorio.dto.empleado.EmpleadoIDPorBuscarNroDocDTO;
 import com.salud.consultorio.dto.paciente.*;
 import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
+import com.salud.consultorio.dto.usuario.UsuarioCreadoDTO;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.payload.MensajeResponse;
 import com.salud.consultorio.service.IPacienteServicio;
+import com.salud.consultorio.service.IPacienteUsuarioServicio;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -29,6 +31,7 @@ import java.util.List;
 public class PacienteController {
 
     private final IPacienteServicio pacienteServicio;
+    private final IPacienteUsuarioServicio pacienteUsuarioServicio;
 
     @Operation(summary = "Registrar un nuevo paciente")
     @ApiResponses(value = {
@@ -237,6 +240,39 @@ public class PacienteController {
                 .mensaje("BÚSQUEDA DE PACIENTES REALIZADA CORRECTAMENTE")
                 .object(lista)
                 .build(), HttpStatus.OK);
+    }
+
+    @Operation(summary = "Estado de usuario de cada paciente (si tiene correo y si ya tiene cuenta)")
+    @GetMapping("usuario-estado")
+    public ResponseEntity<MensajeResponse> estadoUsuario() {
+
+        List<PacienteUsuarioEstadoDTO> lista = pacienteUsuarioServicio.listarEstado();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("ESTADO DE USUARIO DE LOS PACIENTES")
+                .object(lista).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(
+            summary = "Registrar usuario para un paciente",
+            description = "Solo pacientes activos con correo y sin cuenta. Crea la cuenta con el rol PACIENTE y envía las credenciales temporales al correo registrado"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Usuario creado y credenciales enviadas"),
+            @ApiResponse(responseCode = "400", description = "Paciente inactivo o sin correo"),
+            @ApiResponse(responseCode = "404", description = "Paciente no encontrado"),
+            @ApiResponse(responseCode = "409", description = "El paciente ya tiene usuario")
+    })
+    @PostMapping("/{id}/registrar-usuario")
+    public ResponseEntity<MensajeResponse> registrarUsuario(@PathVariable Integer id) {
+
+        UsuarioCreadoDTO usuario = pacienteUsuarioServicio.registrarUsuario(id);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Usuario creado y credenciales enviadas al correo registrado")
+                .object(usuario).build(), HttpStatus.CREATED);
+
     }
 
 }

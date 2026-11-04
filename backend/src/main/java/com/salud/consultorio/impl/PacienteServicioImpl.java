@@ -81,6 +81,7 @@ public class PacienteServicioImpl implements IPacienteServicio {
             throw new DataIntegrityViolationException("No se puede duplicar codigos de seguro");
         }
 
+
         Paciente paciente = pacienteMapper.toEntity(dto);
 
         Persona persona = personaServicio.crear(dto.persona());
@@ -287,6 +288,14 @@ public class PacienteServicioImpl implements IPacienteServicio {
             throw new DataIntegrityViolationException(
                     "El codigo de aseguradora ya pertenece a otra persona"
             );
+        }
+
+    }
+
+    private void validarCorreoObligatorio(String correo) {
+
+        if (correo == null || correo.isBlank()) {
+            throw new IllegalArgumentException("El correo electrónico del paciente es obligatorio");
         }
 
     }

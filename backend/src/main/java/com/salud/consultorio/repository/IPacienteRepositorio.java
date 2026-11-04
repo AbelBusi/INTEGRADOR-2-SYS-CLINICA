@@ -196,4 +196,18 @@ public interface IPacienteRepositorio extends JpaRepository<Paciente, Integer> {
 
     Optional<Paciente> findByPersonaId(Integer idPersona);
 
+    @Query("""
+            SELECT new com.salud.consultorio.dto.paciente.PacienteUsuarioEstadoDTO(
+                pa.id,
+                pe.id,
+                CASE WHEN pe.correo IS NOT NULL AND TRIM(pe.correo) <> '' THEN true ELSE false END,
+                CASE WHEN u.id IS NULL THEN false ELSE true END
+            )
+            FROM Paciente pa
+            JOIN pa.persona pe
+            LEFT JOIN Usuario u ON u.persona.id = pe.id
+            WHERE pa.estado IN (1, 2)
+            """)
+    List<PacienteUsuarioEstadoDTO> listarEstadoUsuario();
+
 }
