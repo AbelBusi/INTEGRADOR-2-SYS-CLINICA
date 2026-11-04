@@ -28,6 +28,15 @@ public interface IUsuarioRolRepositorio extends JpaRepository<UsuarioRol, Intege
             Integer idRol
     );
 
+    @Query("""
+            SELECT CASE WHEN COUNT(m) > 0 THEN true ELSE false END
+            FROM Medico m
+            WHERE m.empleado.persona.id = :idPersona
+              AND m.estado = 1
+              AND m.empleado.estado = 1
+            """)
+    boolean personaEsMedicoActivo(@Param("idPersona") Integer idPersona);
+
     Optional<UsuarioRol> findByUsuario_IdAndRol_Id(Integer idUsuario, Integer idRol);
 
     long countByUsuario_IdAndEstadoAndRol_Estado(Integer idUsuario, Integer estadoAsignacion, Integer estadoRol);

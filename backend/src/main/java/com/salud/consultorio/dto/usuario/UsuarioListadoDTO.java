@@ -10,6 +10,7 @@ public record UsuarioListadoDTO(
         String nombreCompleto,
         String numeroDocumento,
         Integer estado,
+        boolean registroPresencial,
         List<RolResumenDTO> roles
 ) {
 }

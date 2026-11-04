@@ -5,6 +5,7 @@ import com.salud.consultorio.model.entity.Diagnostico;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -46,5 +47,14 @@ public interface IDerivacionRepositorio extends JpaRepository<Derivacion, Intege
 
     boolean existsByDiagnostico_IdAndEspecialidad_IdAndEstadoInAndIdNot(
             Integer idDiagnostico, Integer idEspecialidad, Collection<Integer> estados, Integer id);
+
+    boolean existsByDiagnostico_IdAndEstado(Integer idDiagnostico, Integer estado);
+
+    @Modifying(flushAutomatically = true)
+    @Query("update Derivacion d set d.estado = :nuevo where d.diagnostico.id = :idDiagnostico and d.estado = :actual")
+    int cambiarEstadoPorDiagnostico(
+            @Param("idDiagnostico") Integer idDiagnostico,
+            @Param("actual") Integer actual,
+            @Param("nuevo") Integer nuevo);
 
 }

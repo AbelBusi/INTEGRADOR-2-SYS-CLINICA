@@ -19,4 +19,6 @@ public interface IHorarioAtencionServicio {
 
     List<MedicoAgendaFiltroDTO> listaMedicosAgenda();
 
+    EmpleadoHorarioRespuesta obtenerMiHorario();
+
 }

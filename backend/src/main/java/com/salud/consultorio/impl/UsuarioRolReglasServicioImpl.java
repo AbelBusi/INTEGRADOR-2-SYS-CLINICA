@@ -11,12 +11,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.Normalizer;
+
 @Service
 @RequiredArgsConstructor
 public class UsuarioRolReglasServicioImpl implements IUsuarioRolReglasServicio {
 
     private static final String ROL_PACIENTE = "PACIENTE";
-
+    private static final String ROL_MEDICO = "MEDICO";
     private final IUsuarioRepositorio usuarioRepositorio;
     private final IRolRepositorio rolRepositorio;
     private final IUsuarioRolRepositorio usuarioRolRepositorio;
@@ -88,6 +90,19 @@ public class UsuarioRolReglasServicioImpl implements IUsuarioRolReglasServicio {
             );
         }
 
+        if (esRolMedico(rol) && !usuarioRolRepositorio.personaEsMedicoActivo(idPersona)) {
+            throw new IllegalArgumentException(
+                    "No se puede asignar el rol MEDICO: la persona no tiene un registro de médico activo"
+            );
+        }
+
+    }
+
+    private boolean esRolMedico(Rol rol) {
+        String nombre = Normalizer.normalize(rol.getNombre(), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .trim();
+        return ROL_MEDICO.equalsIgnoreCase(nombre);
     }
 
     private boolean esRolPaciente(Rol rol) {

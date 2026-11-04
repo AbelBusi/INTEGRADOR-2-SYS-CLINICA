@@ -52,6 +52,12 @@ public class CitaMedica {
     @Column(name = "motivo", nullable = false, length = 200)
     private String motivo;
 
+    @Column(name = "fin_atencion")
+    private LocalDateTime finAtencion;
+
+    @Column(name = "ultima_actividad")
+    private LocalDateTime ultimaActividad;
+
     @Column(name = "estado", nullable = false)
     @Builder.Default
     private Integer estado = 1;

@@ -123,4 +123,12 @@ public class HorarioAtencionController {
 
     }
 
+    @Operation(summary = "Obtener el horario del médico autenticado")
+    @GetMapping("/mi-horario")
+    public ResponseEntity<MensajeResponse> miHorario() {
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Información del horario del médico autenticado")
+                .object(horarioAtencionServicio.obtenerMiHorario()).build(), HttpStatus.OK);
+    }
+
 }

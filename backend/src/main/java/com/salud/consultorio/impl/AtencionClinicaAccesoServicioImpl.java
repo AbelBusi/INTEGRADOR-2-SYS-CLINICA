@@ -6,11 +6,13 @@ import com.salud.consultorio.model.entity.Diagnostico;
 import com.salud.consultorio.model.entity.Empleado;
 import com.salud.consultorio.model.entity.Medico;
 import com.salud.consultorio.model.entity.Usuario;
+import com.salud.consultorio.model.enums.AccionHistorialCita;
 import com.salud.consultorio.repository.ICitaMedicaRepositorio;
 import com.salud.consultorio.repository.IDiagnosticoRepositorio;
 import com.salud.consultorio.repository.IMedicoRepositorio;
 import com.salud.consultorio.repository.IUsuarioRepositorio;
 import com.salud.consultorio.service.IAtencionClinicaAccesoServicio;
+import com.salud.consultorio.service.IHistorialCitaServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
@@ -18,6 +20,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -38,6 +42,7 @@ public class AtencionClinicaAccesoServicioImpl implements IAtencionClinicaAcceso
     private final IMedicoRepositorio medicoRepositorio;
     private final IUsuarioRepositorio usuarioRepositorio;
     private final UsuarioAutenticadoProvider usuarioAutenticadoProvider;
+    private final IHistorialCitaServicio historialCitaServicio;
 
     private final Clock clock;
 
@@ -56,6 +61,20 @@ public class AtencionClinicaAccesoServicioImpl implements IAtencionClinicaAcceso
         if (LocalDateTime.now(clock).isBefore(LocalDateTime.of(cita.getFechaCita(), cita.getHoraInicio()))) {
             throw new IllegalArgumentException(
                     "No se puede registrar información clínica antes de la fecha y hora programadas de la cita.");
+        }
+
+        LocalDateTime ahora = LocalDateTime.now(clock);
+
+        if (cita.getEstado() == CITA_PROGRAMADA && cita.getInicioAtencion() != null) {
+            cita.setUltimaActividad(ahora);
+        }
+
+        if (cita.getEstado() == CITA_ATENDIDA) {
+            Map<String, Object> datos = new LinkedHashMap<>();
+            datos.put("estado", cita.getEstado());
+            datos.put("finAtencion", String.valueOf(cita.getFinAtencion()));
+            historialCitaServicio.registrar(cita, AccionHistorialCita.CLINICA_MODIFICADA, datos, datos,
+                    "Registro clínico posterior a la finalización de la atención.");
         }
 
         return cita;

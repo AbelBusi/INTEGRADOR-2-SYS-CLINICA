@@ -85,6 +85,21 @@ public class IAuthServicioImpl implements IAuthServicio {
         Persona persona = personaRepositorio.findById(dto.idPersona())
                 .orElseThrow(() -> new EntityNotFoundException("No existe la persona indicada"));
 
+        return crearCuenta(persona, dto, true);
+    }
+
+    @Transactional
+    @Override
+    public UsuarioCreadoDTO crearUsuarioPortal(Integer idPersona) {
+
+        Persona persona = personaRepositorio.findById(idPersona)
+                .orElseThrow(() -> new EntityNotFoundException("No existe la persona indicada"));
+
+        return crearCuenta(persona, new UsuarioAltaDTO(persona.getId(), TipoUsuario.PACIENTE, null), false);
+    }
+
+    private UsuarioCreadoDTO crearCuenta(Persona persona, UsuarioAltaDTO dto, boolean registroPresencial) {
+
         if (usuarioServicio.existeUsuarioPersona(persona.getId())) {
             throw new DataIntegrityViolationException(
                     "La persona ya tiene una cuenta de usuario. Para darle otro rol, gestiona los roles de su cuenta existente"
@@ -99,7 +114,7 @@ public class IAuthServicioImpl implements IAuthServicio {
             );
         }
 
-        List<Rol> roles = resolverRoles(dto);
+        List<Rol> roles = resolverRoles(persona, dto);
 
         roles.forEach(rol -> usuarioRolReglasServicio.validarRolAsignable(persona.getId(), rol));
 
@@ -111,6 +126,7 @@ public class IAuthServicioImpl implements IAuthServicio {
                 .claveAcceso(passwordEncoder.encode(claveTemporal))
                 .persona(persona)
                 .requiereCambioClave(true)
+                .registroPresencial(registroPresencial)
                 .build();
 
         Usuario guardado = usuarioRepositorio.save(usuario);
@@ -128,6 +144,7 @@ public class IAuthServicioImpl implements IAuthServicio {
 
         return new UsuarioCreadoDTO(guardado.getId(), nombreUsuario, enmascararCorreo(correo));
     }
+
     @Transactional
     @Override
     public LoginResponse ingresar(InicioSolicitud request) {
@@ -339,7 +356,6 @@ public class IAuthServicioImpl implements IAuthServicio {
         return usuario.isRequiereCambioClave();
     }
 
-    /** Roles vigentes del usuario (asignación activa + rol activo), ordenados por id. */
     private List<Rol> rolesVigentes(String nombreUsuario) {
 
         return usuarioRolRepositorio
@@ -350,7 +366,6 @@ public class IAuthServicioImpl implements IAuthServicio {
                 .toList();
     }
 
-    /** El rol pedido debe estar entre los vigentes del propio usuario. */
     private Rol resolverRolVigente(Usuario usuario, Integer idRol) {
 
         return rolesVigentes(usuario.getUsuario()).stream()
@@ -371,7 +386,6 @@ public class IAuthServicioImpl implements IAuthServicio {
                 .toList();
     }
 
-    /** Abre una sesión limitada al rol indicado y cierra la anterior. */
     private TokenResponse emitirSesion(Usuario usuario, Rol rol) {
 
         String jwtToken = jwtServicio.generarToken(usuario, rol);
@@ -383,29 +397,50 @@ public class IAuthServicioImpl implements IAuthServicio {
         return new TokenResponse(jwtToken, refreshToken, requiereCambio(usuario));
     }
 
-    private List<Rol> resolverRoles(UsuarioAltaDTO dto) {
+    private List<Rol> resolverRoles(Persona persona, UsuarioAltaDTO dto) {
 
-        if (dto.tipo() == TipoUsuario.PACIENTE) {
-            Rol rolPaciente = rolRepositorio.findByNombreIgnoreCase(ROL_PACIENTE)
-                    .filter(rol -> Integer.valueOf(1).equals(rol.getEstado()))
-                    .orElseThrow(() ->
-                            new EntityNotFoundException(
-                                    "El rol PACIENTE no existe o no está activo"
-                            )
-                    );
-            return List.of(rolPaciente);
-        }
+        boolean esPaciente = usuarioRolRepositorio.personaEsPacienteActivo(persona.getId());
+        boolean esEmpleado = usuarioRolRepositorio.personaEsEmpleadoActivo(persona.getId());
 
-        if (dto.idRoles() == null || dto.idRoles().isEmpty()) {
+        if (!esPaciente && !esEmpleado) {
             throw new IllegalArgumentException(
-                    "Debes indicar al menos un rol para los empleados"
+                    "La persona no está registrada como paciente ni como empleado activo"
             );
         }
 
-        return dto.idRoles().stream()
-                .distinct()
-                .map(this::validarRolAsignableAEmpleado)
-                .toList();
+        List<Integer> idRoles = dto.idRoles() == null ? List.of() : dto.idRoles();
+
+        if (idRoles.size() != idRoles.stream().distinct().count()) {
+            throw new IllegalArgumentException("No se permiten roles duplicados");
+        }
+
+        if (!idRoles.isEmpty() && !esEmpleado) {
+            throw new IllegalArgumentException(
+                    "Solo se pueden asignar roles laborales a personas registradas como empleados"
+            );
+        }
+
+        if (!esPaciente && idRoles.isEmpty()) {
+            throw new IllegalArgumentException("Debes indicar al menos un rol para los empleados");
+        }
+
+        List<Rol> roles = new ArrayList<>();
+
+        if (esPaciente) {
+            roles.add(obtenerRolPaciente());
+        }
+
+        idRoles.stream().map(this::validarRolAsignableAEmpleado).forEach(roles::add);
+
+        return roles;
+    }
+
+    private Rol obtenerRolPaciente() {
+        return rolRepositorio.findByNombreIgnoreCase(ROL_PACIENTE)
+                .filter(rol -> Integer.valueOf(1).equals(rol.getEstado()))
+                .orElseThrow(() ->
+                        new EntityNotFoundException("El rol PACIENTE no existe o no está activo")
+                );
     }
 
     private Rol validarRolAsignableAEmpleado(Integer idRol) {

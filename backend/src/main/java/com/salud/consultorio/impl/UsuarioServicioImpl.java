@@ -139,6 +139,7 @@ public class UsuarioServicioImpl implements IUsuarioServicio {
                         u.nombreCompleto(),
                         u.numeroDocumento(),
                         u.estado(),
+                        u.registroPresencial(),
                         roles.getOrDefault(u.id(), List.of())
                 ))
                 .toList();

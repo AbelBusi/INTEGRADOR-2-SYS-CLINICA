@@ -362,4 +362,18 @@ public class CitaMedicaController {
 
     }
 
+    @GetMapping("/atenciones-sin-actividad")
+    public ResponseEntity<MensajeResponse> listarAtencionesSinActividad() {
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("ATENCIONES SIN ACTIVIDAD")
+                .object(citaMedicaServicio.listaAtencionesSinActividad()).build(), HttpStatus.OK);
+    }
+
+    @GetMapping("/mis-citas/medico/atenciones-sin-actividad")
+    public ResponseEntity<MensajeResponse> listarMisAtencionesSinActividadMedico() {
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("MIS ATENCIONES SIN ACTIVIDAD")
+                .object(citaMedicaServicio.listaMisAtencionesSinActividadMedico()).build(), HttpStatus.OK);
+    }
+
 }

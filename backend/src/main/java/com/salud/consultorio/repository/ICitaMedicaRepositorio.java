@@ -3,13 +3,16 @@ package com.salud.consultorio.repository;
 import com.salud.consultorio.dto.citaMedica.CitaMedicaRespuestaDTO;
 import com.salud.consultorio.model.entity.CitaMedica;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.QueryHint;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -47,7 +50,8 @@ public interface ICitaMedicaRepositorio extends JpaRepository<CitaMedica, Intege
                 c.horaInicio,
                 c.horaSalida,
                 c.motivo,
-                c.estado
+                c.estado,
+                c.inicioAtencion
             )
             FROM CitaMedica c
             JOIN c.paciente pa
@@ -73,7 +77,8 @@ public interface ICitaMedicaRepositorio extends JpaRepository<CitaMedica, Intege
                 c.horaInicio,
                 c.horaSalida,
                 c.motivo,
-                c.estado
+                c.estado,
+                c.inicioAtencion
             )
             FROM CitaMedica c
             JOIN c.paciente pa
@@ -87,6 +92,7 @@ public interface ICitaMedicaRepositorio extends JpaRepository<CitaMedica, Intege
             """)
     Optional<CitaMedicaRespuestaDTO> buscarDetallePorId(@Param("id") Integer id);
 
+    @QueryHints(@QueryHint(name = "jakarta.persistence.lock.timeout", value = "5000"))
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM CitaMedica c WHERE c.id = :id")
     Optional<CitaMedica> buscarPorIdBloqueado(@Param("id") Integer id);
@@ -103,7 +109,8 @@ public interface ICitaMedicaRepositorio extends JpaRepository<CitaMedica, Intege
                 c.horaInicio,
                 c.horaSalida,
                 c.motivo,
-                c.estado
+                c.estado,
+                c.inicioAtencion
             )
             FROM CitaMedica c
             JOIN c.paciente pa
@@ -132,7 +139,8 @@ public interface ICitaMedicaRepositorio extends JpaRepository<CitaMedica, Intege
                 c.horaInicio,
                 c.horaSalida,
                 c.motivo,
-                c.estado
+                c.estado,
+                c.inicioAtencion
             )
             FROM CitaMedica c
             JOIN c.paciente pa
@@ -179,7 +187,8 @@ public interface ICitaMedicaRepositorio extends JpaRepository<CitaMedica, Intege
                 c.horaInicio,
                 c.horaSalida,
                 c.motivo,
-                c.estado
+                c.estado,
+                c.inicioAtencion
             )
             FROM CitaMedica c
             JOIN c.paciente pa
@@ -191,6 +200,7 @@ public interface ICitaMedicaRepositorio extends JpaRepository<CitaMedica, Intege
             WHERE c.estado = 1
               AND (c.fechaCita < :hoy OR (c.fechaCita = :hoy AND c.horaSalida <= :ahora))
               AND (:idMedico IS NULL OR md.id = :idMedico)
+              AND c.inicioAtencion IS NULL
             ORDER BY c.fechaCita, c.horaInicio
             """)
     List<CitaMedicaRespuestaDTO> listaPendientesRegularizacion(
@@ -204,7 +214,29 @@ public interface ICitaMedicaRepositorio extends JpaRepository<CitaMedica, Intege
         FROM CitaMedica c
         WHERE c.estado = 1
           AND (c.fechaCita < :fecha OR (c.fechaCita = :fecha AND c.horaSalida <= :hora))
+          AND c.inicioAtencion IS NULL
         ORDER BY c.fechaCita, c.horaInicio
         """)
     List<Integer> listaIdsVencidasHasta(@Param("fecha") LocalDate fecha, @Param("hora") LocalTime hora);
+
+    @Query("""
+        SELECT new com.salud.consultorio.dto.citaMedica.CitaMedicaRespuestaDTO(
+            c.id, pa.id, CONCAT(pp.nombre, ' ', pp.apellidos), md.id,
+            CONCAT(mp.nombre, ' ', mp.apellidos), us.id, c.fechaCita,
+            c.horaInicio, c.horaSalida, c.motivo, c.estado, c.inicioAtencion
+        )
+        FROM CitaMedica c
+        JOIN c.paciente pa JOIN pa.persona pp
+        JOIN c.medico md JOIN md.empleado em JOIN em.persona mp
+        JOIN c.usuario us
+        WHERE c.estado = 1
+          AND c.inicioAtencion IS NOT NULL
+          AND COALESCE(c.ultimaActividad, c.inicioAtencion) <= :limite
+          AND (:idMedico IS NULL OR md.id = :idMedico)
+        ORDER BY c.fechaCita, c.horaInicio
+        """)
+    List<CitaMedicaRespuestaDTO> listaAtencionesSinActividad(
+            @Param("idMedico") Integer idMedico,
+            @Param("limite") LocalDateTime limite);
+
 }

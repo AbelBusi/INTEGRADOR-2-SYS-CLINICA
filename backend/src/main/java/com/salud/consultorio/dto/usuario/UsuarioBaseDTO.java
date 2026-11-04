@@ -5,6 +5,7 @@ public record UsuarioBaseDTO(
         String usuario,
         String nombreCompleto,
         String numeroDocumento,
-        Integer estado
+        Integer estado,
+        boolean registroPresencial
 ) {
 }
