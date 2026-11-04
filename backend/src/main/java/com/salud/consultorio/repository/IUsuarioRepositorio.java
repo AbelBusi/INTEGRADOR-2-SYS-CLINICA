@@ -3,6 +3,7 @@ package com.salud.consultorio.repository;
 import com.salud.consultorio.auth.dto.rol.UsuarioRolDTO;
 import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
 import com.salud.consultorio.dto.usuario.UsuarioBaseDTO;
+import com.salud.consultorio.model.entity.Persona;
 import com.salud.consultorio.model.entity.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,7 +76,8 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
                 u.usuario,
                 CONCAT(u.persona.nombre, ' ', u.persona.apellidos),
                 u.persona.numeroDocumento,
-                u.estado
+                u.estado,
+                u.registroPresencial
             )
             FROM Usuario u
             WHERE (:estado IS NULL AND u.estado <> 0) OR u.estado = :estado
@@ -88,7 +91,8 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
                 u.usuario,
                 CONCAT(u.persona.nombre, ' ', u.persona.apellidos),
                 u.persona.numeroDocumento,
-                u.estado
+                u.estado,
+                u.registroPresencial
             )
             FROM Usuario u
             WHERE ((:estado IS NULL AND u.estado <> 0) OR u.estado = :estado)
@@ -103,7 +107,8 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
                 u.usuario,
                 CONCAT(u.persona.nombre, ' ', u.persona.apellidos),
                 u.persona.numeroDocumento,
-                u.estado
+                u.estado,
+                u.registroPresencial
             )
             FROM Usuario u
             WHERE ((:estado IS NULL AND u.estado <> 0) OR u.estado = :estado)
@@ -156,4 +161,24 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
           AND UPPER(ur.rol.nombre) = :nombreRol
         """)
     boolean tieneRolActivo(@Param("idUsuario") Integer idUsuario, @Param("nombreRol") String nombreRol);
+
+    @Query("""
+            SELECT p
+            FROM Persona p
+            JOIN FETCH p.tipoDocumento
+            WHERE p.estado = 1
+              AND (
+                    EXISTS (SELECT 1 FROM Paciente pa WHERE pa.persona.id = p.id AND pa.estado = 1)
+                 OR EXISTS (SELECT 1 FROM Empleado e WHERE e.persona.id = p.id AND e.estado = 1)
+              )
+              AND NOT EXISTS (SELECT 1 FROM Usuario u WHERE u.persona.id = p.id)
+              AND (
+                    LOWER(p.numeroDocumento) LIKE :patron
+                 OR LOWER(CONCAT(p.nombre, ' ', p.apellidos)) LIKE :patron
+                 OR LOWER(CONCAT(p.apellidos, ' ', p.nombre)) LIKE :patron
+              )
+            ORDER BY p.apellidos, p.nombre
+            """)
+    List<Persona> buscarPersonasParaCrearUsuario(@Param("patron") String patron, Pageable pageable);
+
 }

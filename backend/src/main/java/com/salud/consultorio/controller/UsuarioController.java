@@ -1,11 +1,7 @@
 package com.salud.consultorio.controller;
 
 import com.salud.consultorio.auth.service.IAuthServicio;
-import com.salud.consultorio.dto.usuario.UsuarioAltaDTO;
-import com.salud.consultorio.dto.usuario.UsuarioCreadoDTO;
-import com.salud.consultorio.dto.usuario.UsuarioListadoDTO;
-import com.salud.consultorio.dto.usuario.UsuarioRolAsignarDTO;
-import com.salud.consultorio.dto.usuario.UsuarioRolesDTO;
+import com.salud.consultorio.dto.usuario.*;
 import com.salud.consultorio.model.enums.EntidadEstado;
 import com.salud.consultorio.model.payload.MensajeResponse;
 import com.salud.consultorio.service.IUsuarioRolServicio;
@@ -21,8 +17,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
-import com.salud.consultorio.dto.usuario.RolesAsignablesDTO;
 import com.salud.consultorio.service.IRolesAsignablesServicio;
 
 import java.util.List;
@@ -235,6 +229,21 @@ public class UsuarioController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Usuario creado y credenciales enviadas al correo registrado")
                 .object(usuario).build(), HttpStatus.CREATED);
+
+    }
+
+    @Operation(
+            summary = "Buscar pacientes o empleados sin usuario",
+            description = "Mínimo 3 caracteres. Busca por nombre, apellidos o número de documento. Máximo 10 resultados"
+    )
+    @GetMapping("/personas/buscar")
+    public ResponseEntity<MensajeResponse> buscarPersonas(@RequestParam(name = "busqueda") String busqueda) {
+
+        List<PersonaBusquedaUsuarioDTO> lista = rolesAsignablesServicio.buscar(busqueda);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("RESULTADO DE LA BÚSQUEDA")
+                .object(lista).build(), HttpStatus.OK);
 
     }
 

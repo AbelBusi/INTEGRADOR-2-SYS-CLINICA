@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.salud.consultorio.dto.usuario.PersonaBusquedaUsuarioDTO;
+import org.springframework.data.domain.PageRequest;
 
 import java.text.Normalizer;
 import java.util.ArrayList;
@@ -42,6 +44,35 @@ public class RolesAsignablesServicioImpl implements IRolesAsignablesServicio {
     @Override
     public List<PersonaUsuarioDTO> listarPersonasSinUsuario() {
         return usuarioRepositorio.listarPersonasParaCrearUsuario();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<PersonaBusquedaUsuarioDTO> buscar(String busqueda) {
+
+        String termino = (busqueda == null ? "" : busqueda)
+                .replaceAll("[%_\\\\]", "")
+                .replaceAll("\\s+", " ")
+                .trim();
+
+        if (termino.length() < 3) {
+            throw new IllegalArgumentException("Ingresa al menos 3 caracteres para buscar");
+        }
+
+        String patron = "%" + termino.toLowerCase(Locale.ROOT) + "%";
+
+        return usuarioRepositorio.buscarPersonasParaCrearUsuario(patron, PageRequest.of(0, 10)).stream()
+                .map(persona -> new PersonaBusquedaUsuarioDTO(
+                        persona.getId(),
+                        persona.getNombre() + " " + persona.getApellidos(),
+                        persona.getTipoDocumento().getDescripcion(),
+                        persona.getNumeroDocumento(),
+                        persona.getGenero(),
+                        usuarioRolRepositorio.personaEsPacienteActivo(persona.getId()),
+                        usuarioRolRepositorio.personaEsEmpleadoActivo(persona.getId()),
+                        persona.getCorreo() != null && !persona.getCorreo().isBlank()
+                ))
+                .toList();
     }
 
     @Transactional(readOnly = true)
