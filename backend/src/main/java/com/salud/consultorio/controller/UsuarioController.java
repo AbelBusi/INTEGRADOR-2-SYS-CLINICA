@@ -21,6 +21,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import com.salud.consultorio.dto.usuario.PersonaUsuarioDTO;
+import com.salud.consultorio.dto.usuario.RolesAsignablesDTO;
+import com.salud.consultorio.service.IRolesAsignablesServicio;
+
 import java.util.List;
 
 @RestController
@@ -31,6 +35,7 @@ public class UsuarioController {
     private final IUsuarioServicio usuarioServicio;
     private final IUsuarioRolServicio usuarioRolServicio;
     private final IAuthServicio authServicio;
+    private final IRolesAsignablesServicio rolesAsignablesServicio;
 
     @Operation(summary = "Obtener un usuario con todos sus roles activos")
     @ApiResponses(value = {
@@ -182,6 +187,33 @@ public class UsuarioController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("LISTA DE USUARIOS PACIENTES")
                 .object(listaEntidades).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(summary = "Listar personas activas (pacientes o empleados) que aún no tienen usuario")
+    @GetMapping("/personas-sin-usuario")
+    public ResponseEntity<MensajeResponse> listarPersonasSinUsuario() {
+
+        List<PersonaUsuarioDTO> lista = rolesAsignablesServicio.listarPersonasSinUsuario();
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("LISTA DE PERSONAS SIN USUARIO")
+                .object(lista).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(
+            summary = "Roles que puede recibir una persona al crear su usuario",
+            description = "Indica si es paciente, empleado o médico, los roles compatibles, los obligatorios y el recomendado"
+    )
+    @GetMapping("/personas/{idPersona}/roles-asignables")
+    public ResponseEntity<MensajeResponse> rolesAsignables(@PathVariable Integer idPersona) {
+
+        RolesAsignablesDTO dto = rolesAsignablesServicio.obtener(idPersona);
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("ROLES ASIGNABLES")
+                .object(dto).build(), HttpStatus.OK);
 
     }
 

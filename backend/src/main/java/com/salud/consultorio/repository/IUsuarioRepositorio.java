@@ -131,6 +131,23 @@ public interface IUsuarioRepositorio extends JpaRepository<Usuario, Integer> {
     boolean esEmpleado(@Param("idUsuario") Integer idUsuario);
 
     @Query("""
+            SELECT new com.salud.consultorio.dto.usuario.PersonaUsuarioDTO(
+                p.id,
+                CONCAT(p.nombre, ' ', p.apellidos),
+                p.numeroDocumento
+            )
+            FROM Persona p
+            WHERE p.estado = 1
+              AND (
+                    EXISTS (SELECT 1 FROM Paciente pa WHERE pa.persona.id = p.id AND pa.estado = 1)
+                 OR EXISTS (SELECT 1 FROM Empleado e WHERE e.persona.id = p.id AND e.estado = 1)
+              )
+              AND NOT EXISTS (SELECT 1 FROM Usuario u WHERE u.persona.id = p.id)
+            ORDER BY p.apellidos, p.nombre
+            """)
+    List<PersonaUsuarioDTO> listarPersonasParaCrearUsuario();
+
+    @Query("""
         SELECT CASE WHEN COUNT(ur) > 0 THEN true ELSE false END
         FROM UsuarioRol ur
         WHERE ur.usuario.id = :idUsuario
