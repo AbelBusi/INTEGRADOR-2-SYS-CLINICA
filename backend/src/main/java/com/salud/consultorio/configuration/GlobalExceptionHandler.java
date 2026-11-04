@@ -1,6 +1,7 @@
 package com.salud.consultorio.configuration;
 
 import com.salud.consultorio.auth.exception.CorreoEnvioException;
+import com.salud.consultorio.auth.exception.OperacionBloqueadaException;
 import com.salud.consultorio.auth.exception.UsuarioInactivoException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -19,6 +20,14 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(OperacionBloqueadaException.class)
+    public ResponseEntity<Map<String, Object>> handleOperacionBloqueada(OperacionBloqueadaException e) {
+        Map<String, Object> respuesta = new HashMap<>();
+        respuesta.put("mensaje", e.getMessage());
+        respuesta.put("object", null);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(respuesta);
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String,String> handleMethodArgumentNotValidException(MethodArgumentNotValidException e){

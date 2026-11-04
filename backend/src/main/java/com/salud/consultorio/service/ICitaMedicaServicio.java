@@ -45,4 +45,8 @@ public interface ICitaMedicaServicio {
 
     CitaMedicaRespuestaDTO regularizarAdministrativo(Integer id, MotivoRegularizacionAdministrativa motivo, String observacion, CitaMedicaActualizarDTO reprogramacion);
 
+    void iniciarRegularizacion(Integer id, String observacion);
+    void iniciarRegularizacionAdministrativa(Integer id, String observacion);
+    void renovarOperacion(Integer id);
+    void liberarOperacion(Integer id);
 }

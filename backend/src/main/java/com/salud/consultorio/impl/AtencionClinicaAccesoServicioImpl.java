@@ -7,6 +7,7 @@ import com.salud.consultorio.model.entity.Empleado;
 import com.salud.consultorio.model.entity.Medico;
 import com.salud.consultorio.model.entity.Usuario;
 import com.salud.consultorio.model.enums.AccionHistorialCita;
+import com.salud.consultorio.model.enums.OperacionCita;
 import com.salud.consultorio.repository.ICitaMedicaRepositorio;
 import com.salud.consultorio.repository.IDiagnosticoRepositorio;
 import com.salud.consultorio.repository.IMedicoRepositorio;
@@ -19,6 +20,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -33,9 +35,12 @@ public class AtencionClinicaAccesoServicioImpl implements IAtencionClinicaAcceso
     private static final int CITA_CANCELADA = 2;
     private static final int CITA_ATENDIDA = 3;
     private static final int CITA_REPROGRAMADA = 4;
+    private static final int CITA_ATENCION_NO_FINALIZADA = 5;
 
     private static final int ENTIDAD_ACTIVA = 1;
     private static final String ROL_MEDICO = "MEDICO";
+
+    private static final Duration PLAZO_REGULARIZACION = Duration.ofHours(24);
 
     private final ICitaMedicaRepositorio citaMedicaRepositorio;
     private final IDiagnosticoRepositorio diagnosticoRepositorio;
@@ -43,6 +48,7 @@ public class AtencionClinicaAccesoServicioImpl implements IAtencionClinicaAcceso
     private final IUsuarioRepositorio usuarioRepositorio;
     private final UsuarioAutenticadoProvider usuarioAutenticadoProvider;
     private final IHistorialCitaServicio historialCitaServicio;
+    private final ReservaOperacionCita reservaOperacion;
 
     private final Clock clock;
 
@@ -58,15 +64,32 @@ public class AtencionClinicaAccesoServicioImpl implements IAtencionClinicaAcceso
         validarPropiedad(cita, medico);
         validarEstadoParaRegistrar(cita);
 
-        if (LocalDateTime.now(clock).isBefore(LocalDateTime.of(cita.getFechaCita(), cita.getHoraInicio()))) {
+        LocalDateTime ahora = LocalDateTime.now(clock);
+
+        if (ahora.isBefore(LocalDateTime.of(cita.getFechaCita(), cita.getHoraInicio()))) {
             throw new IllegalArgumentException(
                     "No se puede registrar información clínica antes de la fecha y hora programadas de la cita.");
         }
 
-        LocalDateTime ahora = LocalDateTime.now(clock);
+        if (cita.getEstado() == CITA_PROGRAMADA) {
 
-        if (cita.getEstado() == CITA_PROGRAMADA && cita.getInicioAtencion() != null) {
-            cita.setUltimaActividad(ahora);
+            Integer idUsuario = usuarioAutenticadoProvider.obtener().getId();
+            LocalDateTime fin = LocalDateTime.of(cita.getFechaCita(), cita.getHoraSalida());
+
+            if (!ahora.isBefore(fin.plus(PLAZO_REGULARIZACION))) {
+                throw new IllegalArgumentException(
+                        "Venció el plazo de 24 horas: ya no se puede registrar información clínica en esta cita.");
+            }
+
+            if (ahora.isBefore(fin)) {
+                reservaOperacion.exigirLibre(cita, idUsuario, "REGISTRO_CLINICO");
+            } else {
+                reservaOperacion.reservar(cita, OperacionCita.REGULARIZACION_MEDICA, idUsuario, "REGISTRO_CLINICO");
+            }
+
+            if (cita.getInicioAtencion() != null) {
+                cita.setUltimaActividad(ahora);
+            }
         }
 
         if (cita.getEstado() == CITA_ATENDIDA) {
@@ -148,6 +171,8 @@ public class AtencionClinicaAccesoServicioImpl implements IAtencionClinicaAcceso
                     "No se puede registrar información clínica en una cita médica cancelada.");
             case CITA_REPROGRAMADA -> throw new IllegalArgumentException(
                     "No se puede registrar información clínica en una cita médica reprogramada.");
+            case CITA_ATENCION_NO_FINALIZADA -> throw new IllegalArgumentException(
+                    "No se puede registrar información clínica: la atención no fue finalizada dentro del plazo de 24 horas.");
             default -> throw new IllegalArgumentException("La cita médica tiene un estado desconocido.");
         }
 

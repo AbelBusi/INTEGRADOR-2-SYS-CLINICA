@@ -210,16 +210,6 @@ public interface ICitaMedicaRepositorio extends JpaRepository<CitaMedica, Intege
     );
 
     @Query("""
-        SELECT c.id
-        FROM CitaMedica c
-        WHERE c.estado = 1
-          AND (c.fechaCita < :fecha OR (c.fechaCita = :fecha AND c.horaSalida <= :hora))
-          AND c.inicioAtencion IS NULL
-        ORDER BY c.fechaCita, c.horaInicio
-        """)
-    List<Integer> listaIdsVencidasHasta(@Param("fecha") LocalDate fecha, @Param("hora") LocalTime hora);
-
-    @Query("""
         SELECT new com.salud.consultorio.dto.citaMedica.CitaMedicaRespuestaDTO(
             c.id, pa.id, CONCAT(pp.nombre, ' ', pp.apellidos), md.id,
             CONCAT(mp.nombre, ' ', mp.apellidos), us.id, c.fechaCita,
@@ -238,5 +228,14 @@ public interface ICitaMedicaRepositorio extends JpaRepository<CitaMedica, Intege
     List<CitaMedicaRespuestaDTO> listaAtencionesSinActividad(
             @Param("idMedico") Integer idMedico,
             @Param("limite") LocalDateTime limite);
+
+    @Query("""
+    SELECT c.id
+    FROM CitaMedica c
+    WHERE c.estado = 1
+      AND (c.fechaCita < :fecha OR (c.fechaCita = :fecha AND c.horaSalida <= :hora))
+    ORDER BY c.fechaCita, c.horaInicio
+    """)
+    List<Integer> listaIdsVencidasHasta(@Param("fecha") LocalDate fecha, @Param("hora") LocalTime hora);
 
 }

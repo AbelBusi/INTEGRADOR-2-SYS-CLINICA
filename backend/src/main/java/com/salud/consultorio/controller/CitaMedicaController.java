@@ -376,4 +376,36 @@ public class CitaMedicaController {
                 .object(citaMedicaServicio.listaMisAtencionesSinActividadMedico()).build(), HttpStatus.OK);
     }
 
+    @Operation(summary = "Iniciar la regularización clínica (reserva la cita para el médico)")
+    @PatchMapping("/{id}/iniciar-regularizacion")
+    public ResponseEntity<MensajeResponse> iniciarRegularizacion(
+            @PathVariable Integer id,
+            @Valid @RequestBody(required = false) CitaMedicaObservacionDTO dto) {
+        citaMedicaServicio.iniciarRegularizacion(id, dto == null ? null : dto.observacion());
+        return new ResponseEntity<>(MensajeResponse.builder().mensaje("Regularización iniciada").build(), HttpStatus.OK);
+    }
+
+    @Operation(summary = "Iniciar la regularización administrativa (reserva la cita)")
+    @PatchMapping("/{id}/iniciar-regularizacion-administrativa")
+    public ResponseEntity<MensajeResponse> iniciarRegularizacionAdministrativa(
+            @PathVariable Integer id,
+            @Valid @RequestBody(required = false) CitaMedicaObservacionDTO dto) {
+        citaMedicaServicio.iniciarRegularizacionAdministrativa(id, dto == null ? null : dto.observacion());
+        return new ResponseEntity<>(MensajeResponse.builder().mensaje("Regularización administrativa iniciada").build(), HttpStatus.OK);
+    }
+
+    @Operation(summary = "Renovar la reserva de la operación en curso")
+    @PatchMapping("/{id}/renovar-operacion")
+    public ResponseEntity<MensajeResponse> renovarOperacion(@PathVariable Integer id) {
+        citaMedicaServicio.renovarOperacion(id);
+        return new ResponseEntity<>(MensajeResponse.builder().mensaje("Operación renovada").build(), HttpStatus.OK);
+    }
+
+    @Operation(summary = "Liberar la reserva de la operación en curso")
+    @PatchMapping("/{id}/liberar-operacion")
+    public ResponseEntity<MensajeResponse> liberarOperacion(@PathVariable Integer id) {
+        citaMedicaServicio.liberarOperacion(id);
+        return new ResponseEntity<>(MensajeResponse.builder().mensaje("Operación liberada").build(), HttpStatus.OK);
+    }
+
 }
