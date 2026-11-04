@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { forkJoin, timer } from 'rxjs';
 import {
   PersonaUsuario,
-  RolResumen,
+  RolesAsignables,
   TipoUsuario,
   UsuarioCreado,
 } from '../../interface/usuario.interface';
@@ -70,27 +70,34 @@ const DURACION_MINIMA_MS = 1800;
 export class CrearUsuarioPanelComponent implements OnInit {
   @Output() usuarioCreado = new EventEmitter<void>();
 
-  tipo = signal<TipoUsuario>('PACIENTE');
   personas = signal<PersonaUsuario[]>([]);
-  roles = signal<RolResumen[]>([]);
   idPersona = signal<number | null>(null);
+  configuracion = signal<RolesAsignables | null>(null);
   idRoles = signal<number[]>([]);
 
   cargandoPersonas = signal(false);
+  cargandoRoles = signal(false);
   fase = signal<Fase>('formulario');
   resultado = signal<UsuarioCreado | null>(null);
 
-  rolesEmpleado = computed(() =>
-    this.roles().filter((rol) => rol.nombre.trim().toUpperCase() !== 'PACIENTE'),
-  );
+  rolesSeleccionados = computed(() => {
+    const config = this.configuracion();
 
-  etiquetaPersona = computed(() => (this.tipo() === 'PACIENTE' ? 'Paciente' : 'Empleado'));
+    if (!config) {
+      return [];
+    }
+
+    const ids = this.idRoles();
+    return config.roles.filter((rol) => rol.obligatorio || ids.includes(rol.idRol));
+  });
 
   puedeCrear = computed(
     () =>
       this.fase() === 'formulario' &&
       this.idPersona() !== null &&
-      (this.tipo() === 'PACIENTE' || this.idRoles().length > 0),
+      this.configuracion() !== null &&
+      !this.cargandoRoles() &&
+      this.rolesSeleccionados().length > 0,
   );
 
   constructor(
@@ -100,46 +107,68 @@ export class CrearUsuarioPanelComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarPersonas();
+  }
 
-    this.usuarioService.listarRoles().subscribe({
-      next: (response) => this.roles.set(response.object || []),
+  onPersonaChange(idPersona: number | null): void {
+    this.idPersona.set(idPersona);
+    this.configuracion.set(null);
+    this.idRoles.set([]);
+
+    if (idPersona === null) {
+      return;
+    }
+
+    this.cargandoRoles.set(true);
+
+    this.usuarioService.obtenerRolesAsignables(idPersona).subscribe({
+      next: (response) => {
+        if (this.idPersona() !== idPersona) {
+          return;
+        }
+
+        const config = response.object;
+
+        this.configuracion.set(config);
+        this.idRoles.set(
+          config.roles.filter((rol) => rol.recomendado && !rol.obligatorio).map((rol) => rol.idRol),
+        );
+        this.cargandoRoles.set(false);
+      },
       error: (error) => {
+        if (this.idPersona() !== idPersona) {
+          return;
+        }
+
         console.error(error);
-        this.toastService.error('No se pudieron cargar los roles.');
+        this.cargandoRoles.set(false);
+        this.idPersona.set(null);
+        this.toastService.error(
+          error.error?.mensaje || 'No se pudieron cargar los roles de la persona.',
+        );
       },
     });
   }
 
-  onTipoChange(tipo: TipoUsuario): void {
-    this.tipo.set(tipo);
-    this.idPersona.set(null);
-    this.idRoles.set([]);
-    this.cargarPersonas();
-  }
-
   alternarRol(idRol: number): void {
+    const rol = this.configuracion()?.roles.find((opcion) => opcion.idRol === idRol);
+
+    if (!rol || rol.obligatorio) {
+      return;
+    }
+
     this.idRoles.update((actual) =>
       actual.includes(idRol) ? actual.filter((id) => id !== idRol) : [...actual, idRol],
     );
   }
 
   private cargarPersonas(): void {
-    const tipo = this.tipo();
-
     this.personas.set([]);
     this.cargandoPersonas.set(true);
 
-    const peticion =
-      tipo === 'PACIENTE'
-        ? this.usuarioService.listarPacientesSinUsuario()
-        : this.usuarioService.listarEmpleadosSinUsuario();
-
-    peticion.subscribe({
+    this.usuarioService.listarPersonasSinUsuario().subscribe({
       next: (response) => {
-        if (this.tipo() === tipo) {
-          this.personas.set(response.object || []);
-          this.cargandoPersonas.set(false);
-        }
+        this.personas.set(response.object || []);
+        this.cargandoPersonas.set(false);
       },
       error: (error) => {
         console.error(error);
@@ -149,22 +178,36 @@ export class CrearUsuarioPanelComponent implements OnInit {
     });
   }
 
-  crear(): void {
+  async crear(): Promise<void> {
     const idPersona = this.idPersona();
+    const config = this.configuracion();
 
-    if (idPersona === null || !this.puedeCrear()) {
+    if (idPersona === null || config === null || !this.puedeCrear()) {
       return;
     }
 
-    const esEmpleado = this.tipo() === 'EMPLEADO';
+    const seleccionados = this.rolesSeleccionados();
+
+    const confirmar = await this.toastService.confirmar(
+      'Crear usuario',
+      `Se creará una cuenta para "${config.nombreCompleto}" con los roles: ${seleccionados
+        .map((rol) => rol.nombre)
+        .join(', ')}. ¿Deseas continuar?`,
+    );
+
+    if (!confirmar) {
+      return;
+    }
+
+    const tipo: TipoUsuario = config.esPaciente ? 'PACIENTE' : 'EMPLEADO';
 
     this.fase.set('generando');
 
     forkJoin({
       creado: this.usuarioService.crear({
         idPersona,
-        tipo: this.tipo(),
-        idRoles: esEmpleado ? this.idRoles() : [],
+        tipo,
+        idRoles: seleccionados.filter((rol) => !rol.obligatorio).map((rol) => rol.idRol),
       }),
       pausa: timer(DURACION_MINIMA_MS),
     }).subscribe({
@@ -184,6 +227,7 @@ export class CrearUsuarioPanelComponent implements OnInit {
   crearOtro(): void {
     this.resultado.set(null);
     this.idPersona.set(null);
+    this.configuracion.set(null);
     this.idRoles.set([]);
     this.fase.set('formulario');
     this.cargarPersonas();

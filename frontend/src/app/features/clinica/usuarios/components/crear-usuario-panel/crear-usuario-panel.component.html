@@ -11,33 +11,23 @@
 
       <div class="p-6 space-y-4">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[220px_minmax(0,1fr)_auto] gap-4 items-end">
+        <div class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_auto] gap-4 items-end">
 
           <div class="space-y-1.5">
-            <label class="block text-xs font-bold text-gray-600">Tipo de usuario</label>
-            <select
-              name="tipo"
-              [ngModel]="tipo()"
-              (ngModelChange)="onTipoChange($event)"
-              class="h-10 w-full bg-white border border-gray-300 rounded-md px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
-              <option value="PACIENTE">Paciente</option>
-              <option value="EMPLEADO">Empleado</option>
-            </select>
-          </div>
-
-          <div class="space-y-1.5">
-            <label class="block text-xs font-bold text-gray-600">{{ etiquetaPersona() }}</label>
+            <label class="block text-xs font-bold text-gray-600">Persona</label>
             <select
               name="idPersona"
               [ngModel]="idPersona()"
-              (ngModelChange)="idPersona.set($event)"
-              [disabled]="cargandoPersonas()"
+              (ngModelChange)="onPersonaChange($event)"
+              [disabled]="cargandoPersonas() || cargandoRoles()"
               class="h-10 w-full bg-white border border-gray-300 rounded-md px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B] disabled:bg-gray-100">
               <option [ngValue]="null" disabled>
-                {{ cargandoPersonas() ? 'Cargando...' : 'Seleccionar ' + etiquetaPersona().toLowerCase() }}
+                {{ cargandoPersonas() ? 'Cargando...' : 'Seleccionar paciente o empleado' }}
               </option>
               @for (persona of personas(); track persona.idPersona) {
-                <option [ngValue]="persona.idPersona">{{ persona.nombreCompleto }}</option>
+                <option [ngValue]="persona.idPersona">
+                  {{ persona.nombreCompleto }}{{ persona.numeroDocumento ? ' · ' + persona.numeroDocumento : '' }}
+                </option>
               }
             </select>
           </div>
@@ -53,39 +43,101 @@
 
         </div>
 
-        @if (tipo() === 'EMPLEADO') {
-          <div class="space-y-1.5">
-            <label class="block text-xs font-bold text-gray-600">
-              Roles <span class="font-medium text-gray-400">(puedes elegir varios)</span>
-            </label>
+        @if (cargandoRoles()) {
+          <div class="flex items-center gap-2 text-xs font-medium text-gray-500">
+            <span class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#D9182A]"></span>
+            Identificando el perfil de la persona...
+          </div>
+        }
 
-            <div class="flex flex-wrap gap-2">
-              @for (rol of rolesEmpleado(); track rol.idRol) {
-                <label
-                  class="inline-flex cursor-pointer items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
-                  [ngClass]="idRoles().includes(rol.idRol)
-                    ? 'border-[#D9182A]/40 bg-[#D9182A]/[0.04] text-gray-900'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-[#58595B]'">
-                  <input
-                    type="checkbox"
-                    class="h-4 w-4 rounded border-gray-300 accent-[#D9182A]"
-                    [checked]="idRoles().includes(rol.idRol)"
-                    (change)="alternarRol(rol.idRol)"
-                  />
-                  {{ rol.nombre }}
-                </label>
+        @if (configuracion(); as config) {
+
+          <div class="space-y-4 rounded-md border border-gray-200 p-4">
+
+            <div class="flex flex-wrap items-center gap-1.5">
+              @if (config.esPaciente) {
+                <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-gray-600">Paciente</span>
+              }
+              @if (config.esEmpleado) {
+                <span class="inline-flex items-center rounded-full bg-[#0d6b68]/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#0d6b68]">
+                  Empleado{{ config.cargo ? ' · ' + config.cargo : '' }}
+                </span>
+              }
+              @if (config.esMedico) {
+                <span class="inline-flex items-center rounded-full bg-[#0d6b68]/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#0d6b68]">Médico registrado</span>
               }
             </div>
 
-            @if (idRoles().length === 0) {
-              <p class="text-[11px] font-medium text-gray-500">Selecciona al menos un rol para el empleado.</p>
+            <div class="space-y-1.5">
+              <label class="block text-xs font-bold text-gray-600">
+                Roles
+                @if (config.esEmpleado) {
+                  <span class="font-medium text-gray-400">(los automáticos no se pueden quitar)</span>
+                }
+              </label>
+
+              <div class="flex flex-wrap gap-2">
+                @for (rol of config.roles; track rol.idRol) {
+                  <label
+                    class="inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors"
+                    [ngClass]="[
+                      rol.obligatorio ? 'cursor-default' : 'cursor-pointer',
+                      rol.obligatorio || idRoles().includes(rol.idRol)
+                        ? 'border-[#D9182A]/40 bg-[#D9182A]/[0.04] text-gray-900'
+                        : 'border-gray-300 bg-white text-gray-700 hover:border-[#58595B]'
+                    ]">
+                    <input
+                      type="checkbox"
+                      class="h-4 w-4 rounded border-gray-300 accent-[#D9182A]"
+                      [checked]="rol.obligatorio || idRoles().includes(rol.idRol)"
+                      [disabled]="rol.obligatorio"
+                      (change)="alternarRol(rol.idRol)"
+                    />
+                    {{ rol.nombre }}
+                    @if (rol.obligatorio) {
+                      <span class="text-[10px] font-bold uppercase tracking-wide text-gray-500">Automático</span>
+                    } @else if (rol.recomendado) {
+                      <span class="text-[10px] font-bold uppercase tracking-wide text-[#0d6b68]">Recomendado</span>
+                    }
+                  </label>
+                }
+              </div>
+
+              @if (rolesSeleccionados().length === 0) {
+                <p class="text-[11px] font-medium text-gray-500">Selecciona al menos un rol para el empleado.</p>
+              }
+            </div>
+
+            @for (aviso of config.avisos; track aviso) {
+              <div class="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2.5">
+                <span class="material-icons mt-px text-[18px] text-amber-700">info</span>
+                <p class="text-xs leading-5 text-amber-800">{{ aviso }}</p>
+              </div>
             }
+
+            <div class="rounded-md border border-gray-200 bg-[#fafafa] px-4 py-3">
+              <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Roles que se asignarán a la cuenta</p>
+              <div class="mt-2 flex flex-wrap gap-1.5">
+                @for (rol of rolesSeleccionados(); track rol.idRol) {
+                  <span class="inline-flex items-center rounded-full border border-gray-300 bg-white px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-gray-700">
+                    {{ rol.nombre }}
+                  </span>
+                } @empty {
+                  <span class="text-sm text-gray-400">—</span>
+                }
+              </div>
+              <p class="mt-2 text-[11px] text-gray-500">
+                Se crea una sola cuenta y se envía un solo correo con la contraseña temporal.
+              </p>
+            </div>
+
           </div>
+
         }
 
         @if (!cargandoPersonas() && personas().length === 0) {
           <p class="text-xs font-medium text-gray-500">
-            No hay {{ tipo() === 'PACIENTE' ? 'pacientes' : 'empleados' }} pendientes de usuario.
+            No hay pacientes ni empleados pendientes de usuario.
           </p>
         }
 
@@ -101,7 +153,6 @@
       </div>
 
     }
-
     @case ('generando') {
 
       <div class="flex flex-col items-center justify-center px-6 py-14 text-center" role="status" aria-live="polite">
