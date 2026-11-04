@@ -1,0 +1,143 @@
+<app-reporte-cita-marco
+  titulo="Actividad clínica"
+  icono="medical_information"
+  [subtitulo]="documento().periodo"
+  [formato]="formato()"
+  (formatoChange)="formato.set($event)"
+  [generando]="generando()"
+  [puedeExportar]="puedeExportar()"
+  [error]="errorExportacion()"
+  (exportar)="exportar()"
+  (close)="cerrar()">
+
+  <app-filtro-rango-cita
+    [desde]="desde()"
+    [hasta]="hasta()"
+    [rango]="rango()"
+    (cambio)="cambiarRango($event)">
+
+    <div class="flex items-end">
+      <button
+        type="button"
+        (click)="analizar()"
+        [disabled]="cargando() || rangoInvalido()"
+        class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#58595B] px-4 text-sm font-semibold text-white transition-colors hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50">
+        <span class="material-icons text-[20px]">analytics</span>
+        Analizar
+      </button>
+    </div>
+
+  </app-filtro-rango-cita>
+
+  @if (desactualizado() && !cargando()) {
+    <div class="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3" role="status">
+      <span class="material-icons text-[20px] text-amber-700">info</span>
+      <p class="flex-1 text-sm font-semibold text-amber-800">
+        Cambiaste el periodo. Pulsa «Analizar» para actualizar los resultados.
+      </p>
+    </div>
+  }
+
+  @if (truncado()) {
+    <p class="text-xs text-gray-500">
+      Hay {{ atendidas().length }} atenciones en el periodo; se analizan las {{ limite }} más recientes.
+    </p>
+  }
+
+  @if (cargando()) {
+
+    <div class="rounded-md border border-gray-200 px-4 py-10">
+      <p class="text-center text-sm font-semibold text-gray-700">Leyendo atenciones clínicas...</p>
+      <div class="mx-auto mt-3 h-2 max-w-md bg-gray-100">
+        <div class="h-full bg-[#0d6b68]" [style.width.%]="porcentajeProgreso()"></div>
+      </div>
+      <p class="mt-2 text-center text-xs text-gray-500">{{ progreso() }} de {{ aAnalizar().length }}</p>
+    </div>
+
+  } @else if (analizado() && atenciones().length === 0) {
+
+    <div class="rounded-md border border-dashed border-gray-300 px-4 py-12 text-center">
+      <span class="material-icons text-[36px] text-gray-300">assignment</span>
+      <p class="mt-2 text-sm font-semibold text-gray-700">No hay atenciones atendidas en el periodo</p>
+      <p class="mt-1 text-xs text-gray-500">Amplía el rango de fechas y pulsa «Analizar».</p>
+    </div>
+
+  } @else if (analizado()) {
+
+    @if (fallidas() > 0) {
+      <div class="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3" role="status">
+        <span class="material-icons text-[20px] text-amber-700">info</span>
+        <p class="flex-1 text-sm font-semibold text-amber-800">
+          No se pudieron leer {{ fallidas() }} atención(es); los resultados no las incluyen.
+        </p>
+      </div>
+    }
+
+    <app-tarjetas-reporte-cita [tarjetas]="tarjetas()" [columnas]="6"></app-tarjetas-reporte-cita>
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+      <section class="rounded-md border border-gray-200 bg-white p-4 lg:col-span-2">
+        <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Diagnósticos más frecuentes</h3>
+        <app-grafico-barras-cita [filas]="graficoDiagnosticos()" etiquetaVacia="Sin diagnósticos registrados."></app-grafico-barras-cita>
+      </section>
+
+      <section class="rounded-md border border-gray-200 bg-white p-4">
+        <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Medicamentos más prescritos</h3>
+        <app-grafico-barras-cita [filas]="graficoMedicamentos()" etiquetaVacia="Sin tratamientos registrados."></app-grafico-barras-cita>
+      </section>
+
+      <section class="rounded-md border border-gray-200 bg-white p-4">
+        <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Exámenes más solicitados</h3>
+        <app-grafico-barras-cita [filas]="graficoExamenes()" etiquetaVacia="Sin exámenes solicitados."></app-grafico-barras-cita>
+      </section>
+
+      <section class="rounded-md border border-gray-200 bg-white p-4">
+        <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Derivaciones por especialidad</h3>
+        <app-grafico-barras-cita [filas]="graficoEspecialidades()" etiquetaVacia="Sin derivaciones registradas."></app-grafico-barras-cita>
+      </section>
+
+      <section class="rounded-md border border-gray-200 bg-white p-4">
+        <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Derivaciones por urgencia</h3>
+        <app-grafico-barras-cita [filas]="graficoUrgencias()" etiquetaVacia="Sin derivaciones registradas."></app-grafico-barras-cita>
+      </section>
+
+      <section class="rounded-md border border-gray-200 bg-white p-4 lg:col-span-2">
+        <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Diagnósticos por tipo</h3>
+        <app-grafico-barras-cita [filas]="graficoTipos()" etiquetaVacia="Sin diagnósticos registrados."></app-grafico-barras-cita>
+      </section>
+
+    </div>
+
+    <section>
+      <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Detalle de diagnósticos</h3>
+
+      <div class="max-h-80 overflow-auto rounded-md border border-gray-200">
+        <table class="w-full min-w-[520px] text-sm">
+          <thead class="sticky top-0 bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+          <tr>
+            <th class="px-3 py-2 text-left font-semibold">Código y diagnóstico</th>
+            <th class="px-3 py-2 text-center font-semibold">Casos</th>
+            <th class="px-3 py-2 text-center font-semibold">% del total</th>
+          </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            @for (fila of resumen().topDiagnosticos; track fila.clave) {
+              <tr>
+                <td class="px-3 py-2 font-medium text-gray-800">{{ fila.etiqueta }}</td>
+                <td class="px-3 py-2 text-center font-bold text-gray-900">{{ fila.total }}</td>
+                <td class="px-3 py-2 text-center text-gray-700">{{ fila.detalle }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <p class="mt-1.5 text-xs text-gray-500">
+        Información agregada: no incluye datos de identificación de los pacientes.
+      </p>
+    </section>
+
+  }
+
+</app-reporte-cita-marco>

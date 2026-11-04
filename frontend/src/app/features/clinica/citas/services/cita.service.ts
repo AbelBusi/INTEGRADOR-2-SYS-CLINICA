@@ -174,6 +174,12 @@ export class CitaService {
     );
   }
 
+  obtenerMiHorario(): Observable<MensajeResponse<EmpleadoHorario>> {
+    return this.http.get<MensajeResponse<EmpleadoHorario>>(
+      `${environment.apiUrl}/horarios/mi-horario`,
+    );
+  }
+
   regularizarAdministrativo(
     id: number,
     motivo: MotivoRegularizacionAdministrativa,

@@ -16,19 +16,21 @@
     [rango]="rango()"
     (cambio)="aplicarRango($event)">
 
-    <div>
-      <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Médico</label>
-      <select
-        name="medico"
-        [ngModel]="idMedico()"
-        (ngModelChange)="idMedico.set($event)"
-        class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
-        <option value="todos">Todos los médicos</option>
-        @for (medico of medicos(); track medico.idMedico) {
-          <option [ngValue]="medico.idMedico">{{ medico.medico }}</option>
-        }
-      </select>
-    </div>
+    @if (medicos().length > 1) {
+      <div>
+        <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Médico</label>
+        <select
+          name="medico"
+          [ngModel]="idMedico()"
+          (ngModelChange)="idMedico.set($event)"
+          class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
+          <option value="todos">Todos los médicos</option>
+          @for (medico of medicos(); track medico.idMedico) {
+            <option [ngValue]="medico.idMedico">{{ medico.medico }}</option>
+          }
+        </select>
+      </div>
+    }
 
     <div>
       <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Estado</label>

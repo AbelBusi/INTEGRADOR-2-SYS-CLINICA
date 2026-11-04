@@ -17,7 +17,7 @@ import { CustomTableComponent } from '../../../../../shared/components/custom-ta
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
 import { citaVencida, puedeAtenderCita, enAtencion as enAtencionCita, } from '../../utils/atencion-cita.util';
 import { puedeCancelarCita, motivoNoCancelableCita } from '../../utils/ventana-cita.util';
-
+import { ReportesPortalMedicoComponent } from '../../components/reportes-portal-medico/reportes-portal-medico.component';
 
 @Component({
   selector: 'app-mis-citas-medico',
@@ -29,6 +29,7 @@ import { puedeCancelarCita, motivoNoCancelableCita } from '../../utils/ventana-c
     VerDetalleCitaModalComponent,
     HistorialCitaModalComponent,
     AtencionClinicaModalComponent,
+    ReportesPortalMedicoComponent,
     RegularizarCitaModalComponent,
   ],
   templateUrl: './mis-citas-medico.component.html',
@@ -41,7 +42,7 @@ export class MisCitasMedicoComponent implements OnInit, OnDestroy {
   cargando = signal(false);
   procesando = signal(false);
   error = signal<string | null>(null);
-
+  reportesAbierto = signal(false);
   busqueda = signal('');
   filtroEstado = signal<number | 'todos'>('todos');
   filtroFecha = signal('');

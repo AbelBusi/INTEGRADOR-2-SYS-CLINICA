@@ -10,19 +10,21 @@
   (exportar)="exportar()"
   (close)="cerrar()">
 
-  <div class="max-w-sm">
-    <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Médico</label>
-    <select
-      name="medico"
-      [ngModel]="idMedico()"
-      (ngModelChange)="idMedico.set($event)"
-      class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
-      <option value="todos">Todos los médicos</option>
-      @for (medico of medicos(); track medico.idMedico) {
-        <option [ngValue]="medico.idMedico">{{ medico.medico }}</option>
-      }
-    </select>
-  </div>
+  @if (medicos().length > 1) {
+    <div class="max-w-sm">
+      <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Médico</label>
+      <select
+        name="medico"
+        [ngModel]="idMedico()"
+        (ngModelChange)="idMedico.set($event)"
+        class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
+        <option value="todos">Todos los médicos</option>
+        @for (medico of medicos(); track medico.idMedico) {
+          <option [ngValue]="medico.idMedico">{{ medico.medico }}</option>
+        }
+      </select>
+    </div>
+  }
 
   @if (filas().length === 0) {
     <div class="rounded-md border border-dashed border-gray-300 px-4 py-12 text-center">

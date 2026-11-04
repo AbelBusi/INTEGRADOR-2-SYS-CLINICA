@@ -77,7 +77,7 @@
   }
 
 
-  <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_auto_auto]">
+  <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_auto_auto_auto]">
 
     <div
       class="flex h-10 items-center gap-2 rounded-md border border-gray-300 bg-white px-3 transition-colors focus-within:border-[#58595B] focus-within:ring-1 focus-within:ring-[#58595B]">
@@ -117,6 +117,14 @@
       [disabled]="!hayFiltros()"
       class="h-10 rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50">
       Limpiar filtros
+    </button>
+
+    <button
+      type="button"
+      (click)="reportesAbierto.set(true)"
+      class="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#58595B] bg-white px-4 text-sm font-semibold text-[#58595B] transition-colors hover:bg-[#58595B] hover:text-white">
+      <span class="material-icons text-[20px]">bar_chart</span>
+      Reportes
     </button>
 
     <button
@@ -289,4 +297,12 @@
     (close)="citaAtencionClinica.set(null)"
     (finalizada)="alFinalizarAtencion()"
   ></app-atencion-clinica-modal>
+}
+
+@if (reportesAbierto()) {
+  <app-reportes-portal-medico
+    [citas]="citas()"
+    [idsPendientes]="idsPendientes()"
+    (close)="reportesAbierto.set(false)"
+  ></app-reportes-portal-medico>
 }
