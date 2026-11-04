@@ -1,14 +1,20 @@
 package com.salud.consultorio.impl;
 
+import com.salud.consultorio.auth.UsuarioAutenticadoProvider;
 import com.salud.consultorio.dto.horarioAtencion.*;
 import com.salud.consultorio.model.entity.Empleado;
 import com.salud.consultorio.model.entity.HorarioAtencion;
+import com.salud.consultorio.model.entity.Medico;
+import com.salud.consultorio.model.entity.Usuario;
 import com.salud.consultorio.model.mapper.IHorarioAtencionMapper;
 import com.salud.consultorio.repository.IHorarioAtencionRepositorio;
+import com.salud.consultorio.repository.IMedicoRepositorio;
+import com.salud.consultorio.repository.IUsuarioRepositorio;
 import com.salud.consultorio.service.IEmpleadoServicio;
 import com.salud.consultorio.service.IHorarioAtencionServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +31,26 @@ public class HorarioAtencionServicioImpl implements IHorarioAtencionServicio {
     private final IHorarioAtencionRepositorio horarioAtencionRepositorio;
     private final IEmpleadoServicio empleadoServicio;
     private final IHorarioAtencionMapper horarioAtencionMapper;
+    private final UsuarioAutenticadoProvider usuarioAutenticadoProvider;
+    private final IUsuarioRepositorio usuarioRepositorio;
+    private final IMedicoRepositorio medicoRepositorio;
+
+    @Transactional(readOnly = true)
+    @Override
+    public EmpleadoHorarioRespuesta obtenerMiHorario() {
+
+        Usuario usuario = usuarioAutenticadoProvider.obtener();
+
+        if (!usuarioRepositorio.tieneRolActivo(usuario.getId(), "MEDICO")) {
+            throw new AccessDeniedException("El usuario autenticado no tiene el rol MEDICO activo.");
+        }
+
+        Medico medico = medicoRepositorio
+                .findByEmpleado_Persona_Id(usuario.getPersona().getId())
+                .orElseThrow(() -> new AccessDeniedException("El usuario autenticado no está asociado a un médico."));
+
+        return obtenerPorID(medico.getEmpleado().getId());
+    }
 
     @Transactional
     @Override
