@@ -159,11 +159,12 @@
 
               <div>
                 <label class="text-[10px] uppercase font-bold text-[#D9182A] tracking-wider block mb-1">
-                  Correo <span class="normal-case font-medium text-neutral-400">(opcional)</span>
+                  Correo <span class="normal-case font-medium text-neutral-400">(Requerido)</span>
                 </label>
                 <input
                   type="email"
                   name="correo"
+                  required
                   #correoInput="ngModel"
                   [(ngModel)]="pacienteForm.correo"
                   maxlength="100"
@@ -172,7 +173,7 @@
                   [class.border-[#D9182A]]="correoInput.invalid && (correoInput.dirty || correoInput.touched)"
                 />
                 @if (correoInput.invalid && (correoInput.dirty || correoInput.touched)) {
-                  <div class="text-[10px] text-[#D9182A] font-medium mt-1">El correo no tiene un formato válido.</div>
+                  <div class="text-[10px] text-[#D9182A] font-medium mt-1">Ingresa un correo válido.</div>
                 }
               </div>
 

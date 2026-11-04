@@ -14,6 +14,11 @@ import {
   TipoDocumentoResumen,
 } from '../interface/paciente.interface';
 
+import {
+  PacienteUsuarioEstado,
+  UsuarioRegistrado,
+} from '../interface/paciente-usuario.interface';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -69,6 +74,17 @@ export class PacienteService {
   ): Observable<MensajeResponse<EmpleadoBusqueda>> {
     return this.http.get<MensajeResponse<EmpleadoBusqueda>>(
       `${environment.apiUrl}/empleados/buscar/${encodeURIComponent(numeroDocumento)}`,
+    );
+  }
+
+  listarEstadoUsuario(): Observable<MensajeResponse<PacienteUsuarioEstado[]>> {
+    return this.http.get<MensajeResponse<PacienteUsuarioEstado[]>>(`${this.baseUrl}/usuario-estado`);
+  }
+
+  registrarUsuario(id: number): Observable<MensajeResponse<UsuarioRegistrado>> {
+    return this.http.post<MensajeResponse<UsuarioRegistrado>>(
+      `${this.baseUrl}/${id}/registrar-usuario`,
+      null,
     );
   }
 

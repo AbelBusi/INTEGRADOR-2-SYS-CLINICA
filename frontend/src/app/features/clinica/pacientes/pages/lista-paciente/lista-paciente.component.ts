@@ -12,7 +12,8 @@ import { EditarPacienteModalComponent } from '../../components/editar-paciente-m
 import { ExportModalComponent } from '../../../../../shared/components/export-modal/export-modal.component';
 import { ExportDataSource } from '../../../../../shared/export/interface/export.interface';
 import { crearPacienteExportConfig } from '../../export/paciente-export.config';
-
+import { catchError, forkJoin, of } from 'rxjs';
+import { PacienteUsuarioEstado } from '../../interface/paciente-usuario.interface';
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
 import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
@@ -48,6 +49,8 @@ export class ListaPacienteComponent implements OnInit {
   sortField = 'paciente';
   filtroEstado: FiltroEstado = 'todos';
   isBuscarOpen = false;
+  estadosUsuario = new Map<number, PacienteUsuarioEstado>();
+  registrandoId: number | null = null;
 
   columns: TableColumn<Paciente>[] = [
     { header: 'Paciente', field: 'paciente', sortable: true, type: 'custom' },
@@ -101,9 +104,15 @@ export class ListaPacienteComponent implements OnInit {
 
     const estado = this.filtroEstado === 'todos' ? undefined : this.filtroEstado;
 
-    this.pacienteService.listar(estado).subscribe({
-      next: (response) => {
-        this.pacientes = response.object || [];
+    forkJoin({
+      lista: this.pacienteService.listar(estado),
+      estados: this.pacienteService.listarEstadoUsuario().pipe(catchError(() => of(null))),
+    }).subscribe({
+      next: ({ lista, estados }) => {
+        this.pacientes = lista.object || [];
+        this.estadosUsuario = new Map<number, PacienteUsuarioEstado>(
+          (estados?.object ?? []).map((e) => [e.idPaciente, e] as [number, PacienteUsuarioEstado]),
+        );
         this.cargando = false;
         this.cdr.detectChanges();
       },
@@ -115,6 +124,7 @@ export class ListaPacienteComponent implements OnInit {
       },
     });
   }
+
 
   get pacientesFiltrados(): Paciente[] {
     const term = this.search.trim().toLowerCase();
@@ -241,6 +251,65 @@ export class ListaPacienteComponent implements OnInit {
               error.error?.mensaje || 'Hubo un error al eliminar el paciente',
             );
             this.cargando = false;
+            this.cdr.detectChanges();
+          },
+        });
+      });
+  }
+
+  puedeRegistrarUsuario(item: Paciente): boolean {
+    const estado = this.estadosUsuario.get(item.id);
+    return item.estado === 1 && !!estado && estado.tieneCorreo && !estado.tieneUsuario;
+  }
+
+  tituloRegistrarUsuario(item: Paciente): string {
+    const estado = this.estadosUsuario.get(item.id);
+
+    if (item.estado !== 1) {
+      return 'El paciente debe estar activo para registrarle un usuario';
+    }
+    if (estado?.tieneUsuario) {
+      return 'El paciente ya tiene un usuario';
+    }
+    if (!estado?.tieneCorreo) {
+      return 'El paciente no tiene correo registrado. Edita sus datos para poder registrarle un usuario';
+    }
+    return 'Registrar usuario';
+  }
+
+  registrarUsuario(item: Paciente): void {
+    if (this.cargando || this.registrandoId !== null || !this.puedeRegistrarUsuario(item)) {
+      return;
+    }
+
+    this.toastService
+      .confirmar(
+        'Registrar usuario',
+        `Se creará una cuenta de acceso para "${item.paciente}" y las credenciales temporales se enviarán a su correo registrado. ¿Deseas continuar?`,
+      )
+      .then((confirmar) => {
+        if (!confirmar) {
+          return;
+        }
+
+        this.registrandoId = item.id;
+        this.cdr.detectChanges();
+
+        this.pacienteService.registrarUsuario(item.id).subscribe({
+          next: (response) => {
+            const correo = response.object?.correoEnmascarado;
+            this.toastService.success(
+              correo
+                ? `Usuario creado. Credenciales enviadas a ${correo}`
+                : response?.mensaje || 'Usuario creado con éxito',
+            );
+            this.registrandoId = null;
+            this.cargarPacientes();
+          },
+          error: (error) => {
+            console.error(error);
+            this.toastService.error(error.error?.mensaje || 'No se pudo registrar el usuario.');
+            this.registrandoId = null;
             this.cdr.detectChanges();
           },
         });
