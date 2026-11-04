@@ -1,18 +1,16 @@
+
 services:
 
   mariadb:
     image: mariadb:12.3
     container_name: hospital-mariadb
-
     environment:
       MARIADB_DATABASE: SISHPTL
       MARIADB_USER: hospital_user
       MARIADB_PASSWORD: ${DB_PASSWORD}
       MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-
     volumes:
       - mariadb_data:/var/lib/mysql
-
     restart: unless-stopped
 
   backend:
@@ -26,32 +24,54 @@ services:
       DB_DATASOURCE: ${DB_DATASOURCE}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-
       JWT_SECRET: ${JWT_SECRET}
-
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
-
       TEXTBEE_API_KEY: ${TEXTBEE_API_KEY}
-
     depends_on:
       - mariadb
-
     restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
     container_name: hospital-frontend
-
     ports:
       - "80:80"
-
     depends_on:
       - backend
+    restart: unless-stopped
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: hospital-prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: hospital-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      - prometheus
     restart: unless-stopped
 
 volumes:
   mariadb_data:
   uploads_data:
+  prometheus_data:
+  grafana_data:

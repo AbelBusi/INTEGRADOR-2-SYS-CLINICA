@@ -33,6 +33,7 @@ public class SecurityFilterConfig {
                 .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth-> auth
+                        .requestMatchers("/actuator/health", "/actuator/prometheus").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/auth/roles/**").permitAll()
                         .requestMatchers("/api/v1/pacientes/**").permitAll()
