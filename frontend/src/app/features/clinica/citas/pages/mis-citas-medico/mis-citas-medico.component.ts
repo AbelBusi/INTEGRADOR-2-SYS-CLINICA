@@ -29,7 +29,6 @@ import { puedeCancelarCita, motivoNoCancelableCita } from '../../utils/ventana-c
     VerDetalleCitaModalComponent,
     HistorialCitaModalComponent,
     AtencionClinicaModalComponent,
-    ObservacionCitaModalComponent,
     RegularizarCitaModalComponent,
   ],
   templateUrl: './mis-citas-medico.component.html',

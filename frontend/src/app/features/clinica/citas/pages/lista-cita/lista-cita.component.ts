@@ -18,12 +18,14 @@ import { MotivoRegularizacionAdministrativa, OPCIONES_REGULARIZACION_ADMINISTRAT
 import { ReportesCitasComponent } from '../../components/reportes-citas/reportes-citas.component';
 import { enAtencion as enAtencionCita } from '../../utils/atencion-cita.util';
 import { puedeCancelarCita, motivoNoCancelableCita } from '../../utils/ventana-cita.util';
+import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
 
 @Component({
   selector: 'app-lista-cita',
   standalone: true,
   imports: [
     CommonModule,
+    TienePermisoDirective,
     FormsModule,
     CustomTableComponent,
     CitaCrearModalComponent,

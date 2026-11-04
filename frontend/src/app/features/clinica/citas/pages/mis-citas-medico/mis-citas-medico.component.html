@@ -248,17 +248,6 @@
                 <span>Regularizar</span>
               </button>
 
-            } @else {
-
-              <button
-                type="button"
-                [title]="puedeCancelar(row) ? 'Cancelar cita' : motivoNoCancelable(row)"
-                (click)="abrirCancelar(row)"
-                [disabled]="procesando() || !puedeCancelar(row)"
-                class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-gray-700 transition-colors hover:border-amber-500 hover:bg-amber-50 hover:text-amber-700 disabled:cursor-not-allowed disabled:opacity-50">
-                <span class="material-icons text-[18px]">event_busy</span>
-                <span class="text-sm font-medium">Cancelar cita</span>
-              </button>
             }
           }
         </div>
@@ -282,22 +271,6 @@
     [cita]="cita"
     (close)="citaHistorial.set(null)"
   ></app-historial-cita-modal>
-}
-
-@if (citaCancelar(); as cita) {
-  <app-observacion-cita-modal
-    [cita]="cita"
-    titulo="Cancelar cita"
-    descripcion="La cita quedará cancelada y el horario se liberará."
-    etiquetaCampo="Motivo de cancelación (opcional)"
-    placeholder="¿Por qué se cancela la cita?"
-    textoConfirmar="Cancelar cita"
-    icono="event_busy"
-    variante="peligro"
-    [procesando]="procesando()"
-    (close)="alCerrarAtencion()"
-    (confirmar)="confirmarCancelacion($event)"
-  ></app-observacion-cita-modal>
 }
 
 @if (citaRegularizar(); as cita) {
