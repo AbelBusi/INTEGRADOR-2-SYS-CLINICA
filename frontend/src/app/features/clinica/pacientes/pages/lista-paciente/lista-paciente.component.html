@@ -138,6 +138,23 @@
                   class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 sm:px-2 lg:px-2.5">
             <span class="material-icons text-[18px]">edit</span> <span class="hidden lg:inline">Editar</span></button>
 
+          <span *appTienePermiso="'PACIENTE_CREAR'" [attr.title]="tituloRegistrarUsuario(row)" class="inline-flex">
+            <button type="button"
+                    (click)="registrarUsuario(row)"
+                    [disabled]="!puedeRegistrarUsuario(row) || registrandoId !== null"
+                    [ngClass]="puedeRegistrarUsuario(row)
+                      ? 'border-gray-300 bg-white text-gray-700 hover:border-[#58595B] hover:bg-gray-50'
+                      : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'"
+                    class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border px-2.5 text-sm font-medium transition-colors sm:px-2 lg:px-2.5">
+              @if (registrandoId === row.id) {
+                <span class="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-[#D9182A]"></span>
+              } @else {
+                <span class="material-icons text-[18px]">manage_accounts</span>
+              }
+              <span class="hidden lg:inline">Usuario</span>
+            </button>
+          </span>
+
           @if (row.estado === 1) {
             <button type="button" title="Desactivar" *appTienePermiso="'PACIENTE_CAMBIAR_ESTADO'"
                     (click)="cambiarEstado(row, 'INACTIVO')"
@@ -151,7 +168,7 @@
               <span class="material-icons text-[18px]">toggle_on</span> <span class="hidden lg:inline">Activar</span>
             </button>
           }
-          <button type="button" title="Eliminar" *appTienePermiso="'PACIENTE_ELIMINAR'" (click)="eliminarPaciente(row)"
+          <button type="button" title="Eliminar" *appTienePermiso="'PACIENTE_ELIMINAR_'" (click)="eliminarPaciente(row)"
                   class="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 text-sm font-medium text-gray-700 transition-colors hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] sm:px-2 lg:px-2.5">
             <span class="material-icons text-[18px]">delete</span> <span class="hidden lg:inline">Eliminar</span>
           </button>

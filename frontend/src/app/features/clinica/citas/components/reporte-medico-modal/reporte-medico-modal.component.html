@@ -1,0 +1,174 @@
+<app-reporte-cita-marco
+  titulo="Reporte por médico"
+  icono="medical_services"
+  [subtitulo]="reporte()?.periodoTexto ?? ''"
+  [formato]="formato()"
+  (formatoChange)="formato.set($event)"
+  [generando]="generando()"
+  [puedeExportar]="puedeExportar()"
+  [error]="errorExportacion()"
+  (exportar)="exportar()"
+  (close)="cerrar()">
+
+  <app-filtro-rango-cita
+    [desde]="desde()"
+    [hasta]="hasta()"
+    [rango]="rango()"
+    (cambio)="aplicarRango($event)">
+
+    <div>
+      <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Médico</label>
+      <select
+        name="medico"
+        [ngModel]="idMedico()"
+        (ngModelChange)="idMedicoSel.set($event)"
+        class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
+        @for (medico of medicos(); track medico.idMedico) {
+          <option [ngValue]="medico.idMedico">{{ medico.medico }}</option>
+        }
+      </select>
+    </div>
+
+    <div>
+      <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Estado</label>
+      <select
+        name="estado"
+        [ngModel]="estado()"
+        (ngModelChange)="estado.set($event)"
+        class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
+        <option value="todos">Todos los estados</option>
+        @for (opcion of opcionesEstado; track opcion.valor) {
+          <option [ngValue]="opcion.valor">{{ opcion.texto }}</option>
+        }
+      </select>
+    </div>
+
+  </app-filtro-rango-cita>
+
+  @if (reporte(); as r) {
+
+    @if (r.conteo.total === 0) {
+      <div class="rounded-md border border-dashed border-gray-300 px-4 py-12 text-center">
+        <span class="material-icons text-[36px] text-gray-300">insert_chart_outlined</span>
+        <p class="mt-2 text-sm font-semibold text-gray-700">Este médico no tiene citas con los filtros seleccionados</p>
+        <p class="mt-1 text-xs text-gray-500">Amplía el rango de fechas o cambia el estado.</p>
+      </div>
+    } @else {
+
+      <app-tarjetas-reporte-cita [tarjetas]="tarjetas()" [columnas]="6"></app-tarjetas-reporte-cita>
+
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+        @for (serie of series; track serie.clave) {
+          <span class="inline-flex items-center gap-1.5 text-xs text-gray-600">
+            <span class="h-2.5 w-2.5" [style.background-color]="serie.color"></span>
+            {{ serie.texto }}
+          </span>
+        }
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+        <section class="rounded-md border border-gray-200 bg-white p-4">
+          <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Citas por estado</h3>
+          <app-grafico-barras-cita [filas]="filasEstado()"></app-grafico-barras-cita>
+        </section>
+
+        <section class="rounded-md border border-gray-200 bg-white p-4">
+          <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Citas por día de la semana</h3>
+          <app-grafico-barras-cita [filas]="filasDia()"></app-grafico-barras-cita>
+        </section>
+
+        <section class="rounded-md border border-gray-200 bg-white p-4 lg:col-span-2">
+          <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+            Evolución de las citas por {{ r.granularidad === 'dia' ? 'día' : 'mes' }}
+          </h3>
+          <app-grafico-columnas-cita [puntos]="r.porTiempo"></app-grafico-columnas-cita>
+        </section>
+
+      </div>
+
+      <section>
+        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Pacientes con más citas</h3>
+
+        <div class="overflow-x-auto rounded-md border border-gray-200">
+          <table class="w-full min-w-[520px] text-sm">
+            <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+            <tr>
+              <th class="px-3 py-2 text-left font-semibold">Paciente</th>
+              <th class="px-3 py-2 text-center font-semibold">Total</th>
+              <th class="px-3 py-2 text-center font-semibold">Atendidas</th>
+              <th class="px-3 py-2 text-center font-semibold">Canceladas</th>
+              <th class="px-3 py-2 text-center font-semibold">Última cita</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              @for (fila of pacientes(); track fila.idPaciente) {
+                <tr>
+                  <td class="px-3 py-2 font-medium text-gray-800">{{ fila.paciente }}</td>
+                  <td class="px-3 py-2 text-center font-bold text-gray-900">{{ fila.conteo.total }}</td>
+                  <td class="px-3 py-2 text-center text-gray-700">{{ fila.conteo.atendidas }}</td>
+                  <td class="px-3 py-2 text-center text-gray-700">{{ fila.conteo.canceladas }}</td>
+                  <td class="px-3 py-2 text-center text-gray-700">{{ fechaIsoTexto(fila.ultimaFecha) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+          Citas del periodo ({{ r.citas.length }})
+        </h3>
+
+        <div class="max-h-72 overflow-auto rounded-md border border-gray-200">
+          <table class="w-full min-w-[640px] text-sm">
+            <thead class="sticky top-0 bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+            <tr>
+              <th class="px-3 py-2 text-left font-semibold">Fecha</th>
+              <th class="px-3 py-2 text-left font-semibold">Horario</th>
+              <th class="px-3 py-2 text-left font-semibold">Paciente</th>
+              <th class="px-3 py-2 text-left font-semibold">Motivo</th>
+              <th class="px-3 py-2 text-left font-semibold">Estado</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              @for (cita of r.citas; track cita.id) {
+                <tr>
+                  <td class="whitespace-nowrap px-3 py-2 text-gray-700">{{ fechaIsoTexto(cita.fecha) }}</td>
+                  <td class="whitespace-nowrap px-3 py-2 text-gray-700">{{ cita.inicio }} - {{ cita.salida }}</td>
+                  <td class="px-3 py-2 font-medium text-gray-800">{{ cita.paciente }}</td>
+                  <td class="max-w-[260px] truncate px-3 py-2 text-gray-600" [attr.title]="cita.motivo">{{ cita.motivo }}</td>
+                  <td class="px-3 py-2">
+                    <span
+                      class="inline-flex border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                      [ngClass]="estadoInfo(cita.estado).clases">
+                      {{ estadoInfo(cita.estado).texto }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    }
+
+  } @else {
+    <div class="rounded-md border border-dashed border-gray-300 px-4 py-12 text-center">
+      <p class="text-sm font-semibold text-gray-700">No hay médicos con citas registradas</p>
+    </div>
+  }
+
+  <label opciones class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+    <input
+      type="checkbox"
+      class="h-4 w-4 accent-[#D9182A]"
+      [checked]="incluirDetalle()"
+      (change)="incluirDetalle.set(!incluirDetalle())"
+    />
+    Incluir listado de citas en el PDF
+  </label>
+
+</app-reporte-cita-marco>

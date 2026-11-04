@@ -16,7 +16,19 @@ export interface UsuarioListado {
   nombreCompleto: string;
   numeroDocumento: string;
   estado: number;
+  registroPresencial: boolean;
   roles: RolResumen[];
+}
+
+export interface PersonaBusqueda {
+  idPersona: number;
+  nombreCompleto: string;
+  tipoDocumento: string;
+  numeroDocumento: string;
+  genero: string | null;
+  esPaciente: boolean;
+  esEmpleado: boolean;
+  tieneCorreo: boolean;
 }
 
 export interface UsuarioFila extends UsuarioListado {
@@ -33,6 +45,7 @@ export interface UsuarioRoles {
 export interface PersonaUsuario {
   idPersona: number;
   nombreCompleto: string;
+  numeroDocumento?: string;
 }
 
 export interface UsuarioAltaDTO {
@@ -92,4 +105,23 @@ export interface DetallePersona {
   tituloRegistro: string;
   personales: DatoVista[];
   registro: DatoVista[];
+}
+
+export interface RolOpcion {
+  idRol: number;
+  nombre: string;
+  obligatorio: boolean;
+  recomendado: boolean;
+}
+
+export interface RolesAsignables {
+  idPersona: number;
+  nombreCompleto: string;
+  numeroDocumento: string;
+  esPaciente: boolean;
+  esEmpleado: boolean;
+  esMedico: boolean;
+  cargo: string | null;
+  roles: RolOpcion[];
+  avisos: string[];
 }

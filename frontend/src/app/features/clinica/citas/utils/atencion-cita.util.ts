@@ -8,6 +8,17 @@ function construirFecha(fecha: string, hora: string): Date {
   return new Date(anio, mes - 1, dia, horas, minutos);
 }
 
+export function enAtencion(cita: CitaFila): boolean {
+  return cita.estado === 1 && !!cita.inicioAtencion;
+}
+
+export function puedeAtenderCita(cita: CitaFila, ahora: Date): boolean {
+  return cita.estado === 1 && (enAtencion(cita) || ventanaCita(cita, ahora) === 'en_curso');
+}
+
+export function citaVencida(cita: CitaFila, ahora: Date): boolean {
+  return cita.estado === 1 && !enAtencion(cita) && ventanaCita(cita, ahora) === 'vencida';
+}
 export function inicioCita(cita: CitaFila): Date {
   return construirFecha(cita.fecha, cita.inicio);
 }
@@ -28,10 +39,3 @@ export function ventanaCita(cita: CitaFila, ahora: Date): VentanaCita {
   return 'en_curso';
 }
 
-export function puedeAtenderCita(cita: CitaFila, ahora: Date): boolean {
-  return cita.estado === 1 && ventanaCita(cita, ahora) === 'en_curso';
-}
-
-export function citaVencida(cita: CitaFila, ahora: Date): boolean {
-  return cita.estado === 1 && ventanaCita(cita, ahora) === 'vencida';
-}

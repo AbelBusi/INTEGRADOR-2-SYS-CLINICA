@@ -53,11 +53,19 @@ export interface AtencionClinica {
 }
 
 export interface DiagnosticoCrearDTO {
-  codigo: string;
   descripcion: string;
   tipoDiagnostico: number;
   observaciones: string;
 }
+
+export type DiagnosticoActualizarDTO = DiagnosticoCrearDTO;
+
+export interface DerivacionCrearDTO {
+  idEspecialidad: number;
+  motivo: string;
+  urgencia: number;
+}
+
 export type DerivacionActualizarDTO = DerivacionCrearDTO;
 export interface DerivacionCrearDTO {
   idEspecialidad: number;

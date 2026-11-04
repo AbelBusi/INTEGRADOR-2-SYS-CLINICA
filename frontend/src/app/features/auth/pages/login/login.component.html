@@ -159,6 +159,17 @@
 
           </form>
 
+          <div class="mt-5 border-t border-neutral-200 pt-4 text-center">
+            <p class="text-sm text-neutral-600">¿Es paciente y aún no tiene cuenta?</p>
+            <button
+              type="button"
+              (click)="abrirRegistro()"
+              class="mt-1 text-sm font-semibold text-[#D9182A] hover:underline"
+            >
+              Crear mi cuenta de paciente
+            </button>
+          </div>
+
         } @else if (vista() === 'perfil') {
           <app-seleccionar-perfil
             [usuario]="usuario()"
@@ -167,7 +178,9 @@
             (elegir)="elegirPerfil($event)"
             (volver)="volverAlLogin()"
           />
-        } @else {
+        } @else if (vista() === 'registro') {
+        <app-registro-paciente (volver)="vista.set('login')" />
+      } @else {
           <app-recuperar-clave (volver)="vista.set('login')" />
         }
 

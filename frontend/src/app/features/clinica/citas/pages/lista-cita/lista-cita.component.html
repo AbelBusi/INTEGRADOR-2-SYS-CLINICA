@@ -1,6 +1,6 @@
 <div class="space-y-6">
 
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_auto_auto_auto]">
 
     <div class="flex items-center gap-4 rounded-lg border border-gray-200 bg-white px-5 py-4">
       <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-[#58595B]">
@@ -108,6 +108,14 @@
 
     <button
       type="button"
+      (click)="reporteAbierto.set(true)"
+      class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md border border-[#58595B] bg-white px-4 text-sm font-semibold text-[#58595B] transition-colors hover:bg-[#58595B] hover:text-white xl:w-auto">
+      <span class="material-icons text-[20px]">bar_chart</span>
+      Reportes
+    </button>
+
+    <button
+      type="button"
       (click)="abrirNueva()"
       class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#D9182A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] xl:w-auto">
       <span class="material-icons text-[20px]">add</span>
@@ -177,9 +185,18 @@
     </span>
           @if (estaPendiente(row)) {
             <span class="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
-        Sin regularizar
-      </span>
+              Sin regularizar
+            </span>
           }
+
+          @if (enAtencion(row)) {
+            <span class="inline-flex items-center rounded-full border border-[#0d6b68] bg-[#0d6b68]/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0d6b68]">En atención</span>
+          }
+          @if (idsSinActividad().has(row.id)) {
+            <span class="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">Sin actividad</span>
+          }
+
+
         </div>
       }
 
@@ -232,7 +249,7 @@
 
               <button
                 type="button"
-                [title]="puedeCancelar(row) ? 'Cancelar cita' : motivoNoCancelable"
+                [title]="puedeCancelar(row) ? 'Cancelar cita' : motivoNoCancelable(row)"
                 (click)="cancelar(row)"
                 [disabled]="procesando() || !puedeCancelar(row)"
                 class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-gray-400 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50">
@@ -246,9 +263,10 @@
 
           <button
             type="button"
-            title="Eliminar"
+            *appTienePermiso="'CITA_ELIMINAR_ADMIN'"
+            [title]="puedeEliminar(row) ? 'Eliminar' : motivoNoEliminable"
             (click)="eliminar(row)"
-            [disabled]="procesando()"
+            [disabled]="procesando() || !puedeEliminar(row)"
             class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] disabled:cursor-not-allowed disabled:opacity-50">
             <span class="material-icons text-[18px]">delete</span>
             <span>Eliminar</span>
@@ -306,4 +324,12 @@
     (close)="citaReprogramar.set(null)"
     (guardado)="handleReprogramado($event)"
   ></app-cita-editar-modal>
+}
+
+@if (reporteAbierto()) {
+  <app-reportes-citas
+    [citas]="citas()"
+    [idsPendientes]="idsPendientes()"
+    (close)="reporteAbierto.set(false)"
+  ></app-reportes-citas>
 }

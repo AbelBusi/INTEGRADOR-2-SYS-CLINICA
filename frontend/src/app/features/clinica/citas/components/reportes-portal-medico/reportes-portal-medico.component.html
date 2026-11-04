@@ -1,0 +1,104 @@
+@switch (activo()) {
+
+  @case ('agenda') {
+    <app-reporte-agenda-medico-modal [citas]="citas" [idsPendientes]="idsPendientes" (close)="volver()"></app-reporte-agenda-medico-modal>
+  }
+
+  @case ('calendario') {
+    <app-calendario-medico-modal [citas]="citas" [idsPendientes]="idsPendientes" (close)="volver()"></app-calendario-medico-modal>
+  }
+
+  @case ('pendientes') {
+    <app-reporte-pendientes-modal [citas]="citas" [idsPendientes]="idsPendientes" (close)="volver()"></app-reporte-pendientes-modal>
+  }
+
+  @case ('productividad') {
+    <app-reporte-productividad-modal [citas]="citas" [idsPendientes]="idsPendientes" (close)="volver()"></app-reporte-productividad-modal>
+  }
+
+  @case ('actividad') {
+    <app-reporte-actividad-clinica-modal [citas]="citas" [idsPendientes]="idsPendientes" (close)="volver()"></app-reporte-actividad-clinica-modal>
+  }
+
+  @case ('pacientes') {
+    <app-reporte-paciente-modal [citas]="citas" [idsPendientes]="idsPendientes" (close)="volver()"></app-reporte-paciente-modal>
+  }
+
+  @case ('horario') {
+    <app-reporte-horario-modal [citas]="citas" [idsPendientes]="idsPendientes" (close)="volver()"></app-reporte-horario-modal>
+  }
+
+  @default {
+    <div
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      (click)="close.emit()">
+
+      <div
+        class="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-lg border border-gray-200 bg-white"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="reportes-portal-titulo"
+        (click)="$event.stopPropagation()">
+
+        <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+          <div class="flex min-w-0 items-center gap-3">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#58595B]">
+              <span class="material-icons text-[22px] text-white">analytics</span>
+            </div>
+            <div class="min-w-0">
+              <h2 id="reportes-portal-titulo" class="text-base font-bold text-gray-900">Mis reportes</h2>
+              <p class="truncate text-xs text-gray-500">
+                {{ citas.length }} {{ citas.length === 1 ? 'cita disponible' : 'citas disponibles' }}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            aria-label="Cerrar"
+            (click)="close.emit()"
+            class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-50 hover:text-[#58595B]">
+            <span class="material-icons text-[20px]">close</span>
+          </button>
+        </div>
+
+        <div class="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4">
+          @for (grupo of grupos; track grupo.titulo) {
+            <section>
+              <h3 class="mb-2 text-xs font-bold uppercase tracking-wide text-gray-500">{{ grupo.titulo }}</h3>
+
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                @for (reporte of grupo.items; track reporte.clave) {
+                  <button
+                    type="button"
+                    (click)="abrir(reporte.clave)"
+                    class="flex items-start gap-3 rounded-md border border-gray-200 bg-white px-4 py-3 text-left transition-colors hover:border-[#58595B] hover:bg-gray-50">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-gray-100">
+                      <span class="material-icons text-[22px] text-[#58595B]">{{ reporte.icono }}</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <p class="text-sm font-bold text-gray-900">{{ reporte.titulo }}</p>
+                      <p class="mt-0.5 text-xs leading-5 text-gray-500">{{ reporte.descripcion }}</p>
+                    </div>
+                    <span class="material-icons text-[20px] text-gray-400">chevron_right</span>
+                  </button>
+                }
+              </div>
+            </section>
+          }
+        </div>
+
+        <div class="flex justify-end border-t border-gray-200 bg-[#fafafa] px-5 py-3">
+          <button
+            type="button"
+            (click)="close.emit()"
+            class="inline-flex h-10 items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+            Cerrar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+}

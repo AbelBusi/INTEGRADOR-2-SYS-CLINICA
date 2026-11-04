@@ -33,10 +33,65 @@
   @if (expandido) {
     <div class="space-y-4 border-t border-neutral-200 px-4 py-4">
 
-      <div class="border-l-2 border-l-[#D9182A] bg-neutral-50 px-4 py-3">
-        <p class="text-xs font-bold uppercase tracking-wide text-neutral-600">Observaciones</p>
-        <p class="mt-1 text-sm leading-6 text-neutral-800">{{ detalle.diagnostico.observaciones }}</p>
-      </div>
+      @if (!soloLectura) {
+        <div class="flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            (click)="iniciarEdicion()"
+            class="inline-flex h-9 items-center gap-2 border border-[#58595B] bg-white px-3 text-sm font-bold text-[#58595B] hover:bg-[#58595B] hover:text-white">
+            <span class="material-icons text-[18px]">edit</span>
+            Editar diagnóstico
+          </button>
+          <button
+            type="button"
+            (click)="pedirConfirmacion()"
+            class="inline-flex h-9 items-center gap-2 border border-[#D9182A] bg-white px-3 text-sm font-bold text-[#D9182A] hover:bg-[#D9182A] hover:text-white">
+            <span class="material-icons text-[18px]">delete</span>
+            Eliminar
+          </button>
+        </div>
+      }
+
+      @if (confirmandoEliminar() && !soloLectura) {
+        <div class="flex flex-wrap items-center justify-between gap-3 border border-neutral-300 border-l-2 border-l-[#D9182A] bg-neutral-50 px-3 py-2">
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-neutral-800">¿Eliminar este diagnóstico?</p>
+            <p class="text-xs text-neutral-600">
+              También se eliminarán sus tratamientos, indicaciones, exámenes solicitados y derivaciones pendientes.
+              No se puede eliminar si tiene derivaciones con una cita ya programada.
+            </p>
+          </div>
+          <div class="flex gap-2">
+            <button
+              type="button"
+              (click)="cancelarConfirmacion()"
+              [disabled]="eliminando()"
+              class="inline-flex h-9 items-center border border-[#58595B] bg-white px-4 text-sm font-bold text-[#58595B] hover:bg-[#58595B] hover:text-white disabled:opacity-50">
+              Cancelar
+            </button>
+            <button
+              type="button"
+              (click)="eliminar()"
+              [disabled]="eliminando()"
+              class="inline-flex h-9 items-center gap-2 bg-[#D9182A] px-4 text-sm font-bold text-white hover:bg-[#b71423] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500">
+              <span class="material-icons text-[18px]">delete</span>
+              {{ eliminando() ? 'Eliminando...' : 'Sí, eliminar' }}
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (editando() && !soloLectura) {
+        <app-diagnostico-editar
+          [diagnostico]="detalle.diagnostico"
+          (editado)="alEditado()"
+          (cancelado)="cancelarEdicion()" />
+      } @else {
+        <div class="border-l-2 border-l-[#D9182A] bg-neutral-50 px-4 py-3">
+          <p class="text-xs font-bold uppercase tracking-wide text-neutral-600">Observaciones</p>
+          <p class="mt-1 text-sm leading-6 text-neutral-800">{{ detalle.diagnostico.observaciones }}</p>
+        </div>
+      }
 
       <div>
         <p class="mb-2 text-xs font-bold uppercase tracking-wide text-neutral-600">
@@ -67,7 +122,6 @@
 
     </div>
   }
-
   @switch (seccionAbierta()) {
 
     @case ('tratamientos') {

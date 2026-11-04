@@ -200,12 +200,11 @@
 
               <div class="space-y-1.5">
                 <label class="block text-xs font-semibold text-[#D9182A] uppercase tracking-wider">
-                  Correo <span class="normal-case font-medium text-neutral-400">(Requerido)</span>
+                  Correo <span class="normal-case font-medium text-neutral-400">(Opcional)</span>
                 </label>
                 <input
                   type="email"
                   name="correo"
-                  required
                   #correoInput="ngModel"
                   [(ngModel)]="pacienteForm.correo"
                   maxlength="100"

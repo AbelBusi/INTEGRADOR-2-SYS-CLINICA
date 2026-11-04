@@ -5,8 +5,6 @@ import { environment } from '../../../../../environments/environment';
 import { MensajeResponse } from '../interface/cita.interface';
 import {
   AtencionClinica,
-  Diagnostico,
-  DiagnosticoCrearDTO,
 } from '../interface/atencion-clinica.interface';
 
 @Injectable({
@@ -21,16 +19,6 @@ export class AtencionClinicaService {
   obtenerAtencion(idCita: number): Observable<MensajeResponse<AtencionClinica>> {
     return this.http.get<MensajeResponse<AtencionClinica>>(
       `${this.citasUrl}/${idCita}/atencion-clinica`,
-    );
-  }
-
-  crearDiagnostico(
-    idCita: number,
-    dto: DiagnosticoCrearDTO,
-  ): Observable<MensajeResponse<Diagnostico>> {
-    return this.http.post<MensajeResponse<Diagnostico>>(
-      `${this.citasUrl}/${idCita}/diagnosticos`,
-      dto,
     );
   }
 

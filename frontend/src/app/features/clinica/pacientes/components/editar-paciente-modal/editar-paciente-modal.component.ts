@@ -154,6 +154,7 @@ export class EditarPacienteModalComponent implements OnChanges {
       !f.numeroDocumento.trim() ||
       !f.nombre.trim() ||
       !f.apellidos.trim() ||
+      !f.correo.trim() ||
       !f.nacionalidad.trim() ||
       !f.codigoAsegurado.trim()
     ) {

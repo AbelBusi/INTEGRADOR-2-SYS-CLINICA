@@ -6,11 +6,17 @@ import { RecuperarClaveComponent } from '../recuperar-clave/recuperar-clave.comp
 import { SeleccionarPerfilComponent } from '../seleccionar-perfil/seleccionar-perfil.component';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Perfil } from '../../models/auth.models';
+import { RegistroPacienteComponent } from '../registro-paciente/registro-paciente.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, RecuperarClaveComponent, SeleccionarPerfilComponent],
+  imports: [
+    FormsModule,
+    RecuperarClaveComponent,
+    SeleccionarPerfilComponent,
+    RegistroPacienteComponent,
+  ],
   templateUrl: './login.component.html',
   styles: [],
 })
@@ -27,7 +33,7 @@ export class LoginComponent {
   error = signal<string | null>(null);
   serverError = signal<string | null>(null);
   recordarme = signal<boolean>(false);
-  vista = signal<'login' | 'recuperar' | 'perfil'>('login');
+  vista = signal<'login' | 'recuperar' | 'perfil' | 'registro'>('login');
 
   perfiles = signal<Perfil[]>([]);
 
@@ -62,6 +68,11 @@ export class LoginComponent {
 
   toggleShowPass(): void {
     this.showPass.update((value) => !value);
+  }
+
+  abrirRegistro(): void {
+    this.error.set(null);
+    this.vista.set('registro');
   }
 
   abrirRecuperacion(): void {

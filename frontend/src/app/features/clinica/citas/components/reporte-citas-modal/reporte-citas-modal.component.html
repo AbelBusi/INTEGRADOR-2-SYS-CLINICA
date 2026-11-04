@@ -1,0 +1,315 @@
+<div
+  class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+  (click)="cerrar()">
+
+  <div
+    class="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-lg border border-gray-200 bg-white"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="reporte-citas-titulo"
+    (click)="$event.stopPropagation()">
+
+    <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
+      <div class="flex min-w-0 items-center gap-3">
+        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#58595B]">
+          <span class="material-icons text-[22px] text-white">bar_chart</span>
+        </div>
+        <div class="min-w-0">
+          <h2 id="reporte-citas-titulo" class="text-base font-bold text-gray-900">Reporte de citas médicas</h2>
+          <p class="truncate text-xs text-gray-500">{{ reporte().periodoTexto }}</p>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        aria-label="Cerrar"
+        [disabled]="generando()"
+        (click)="cerrar()"
+        class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-50 hover:text-[#58595B] disabled:cursor-not-allowed disabled:opacity-40">
+        <span class="material-icons text-[20px]">close</span>
+      </button>
+    </div>
+
+    <div class="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-4">
+
+      <div class="space-y-3">
+        <div class="flex flex-wrap items-center gap-2">
+          @for (item of rangos; track item.clave) {
+            <button
+              type="button"
+              (click)="aplicarRango(item.clave)"
+              [ngClass]="
+                rango() === item.clave
+                  ? 'border-[#D9182A] bg-[#D9182A]/5 text-[#D9182A]'
+                  : 'border-gray-300 bg-white text-gray-700 hover:border-[#58595B] hover:bg-gray-50'
+              "
+              class="h-8 rounded-md border px-3 text-xs font-semibold transition-colors">
+              {{ item.texto }}
+            </button>
+          }
+        </div>
+
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
+
+          <div>
+            <label for="reporte-desde" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Desde</label>
+            <input
+              id="reporte-desde"
+              type="date"
+              name="desde"
+              [ngModel]="desde()"
+              (ngModelChange)="cambiarDesde($event)"
+              class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]"
+            />
+          </div>
+
+          <div>
+            <label for="reporte-hasta" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Hasta</label>
+            <input
+              id="reporte-hasta"
+              type="date"
+              name="hasta"
+              [ngModel]="hasta()"
+              (ngModelChange)="cambiarHasta($event)"
+              class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]"
+            />
+          </div>
+
+          <div>
+            <label for="reporte-medico" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Médico</label>
+            <select
+              id="reporte-medico"
+              name="medico"
+              [ngModel]="idMedico()"
+              (ngModelChange)="idMedico.set($event)"
+              class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
+              <option value="todos">Todos los médicos</option>
+              @for (medico of medicos(); track medico.idMedico) {
+                <option [ngValue]="medico.idMedico">{{ medico.medico }}</option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label for="reporte-estado" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-gray-500">Estado</label>
+            <select
+              id="reporte-estado"
+              name="estado"
+              [ngModel]="estado()"
+              (ngModelChange)="estado.set($event)"
+              class="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
+              <option value="todos">Todos los estados</option>
+              @for (opcion of opcionesEstado; track opcion.valor) {
+                <option [ngValue]="opcion.valor">{{ opcion.texto }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="flex items-end">
+            <button
+              type="button"
+              (click)="restablecer()"
+              class="h-10 w-full rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 lg:w-auto">
+              Restablecer
+            </button>
+          </div>
+
+        </div>
+
+        @if (rangoInvalido()) {
+          <div class="flex items-start gap-3 rounded-lg border border-[#D9182A]/30 bg-[#D9182A]/5 px-4 py-3" role="alert">
+            <span class="material-icons text-[20px] text-[#D9182A]">error_outline</span>
+            <p class="flex-1 text-sm font-semibold text-[#D9182A]">
+              La fecha inicial no puede ser posterior a la fecha final.
+            </p>
+          </div>
+        }
+      </div>
+
+      @if (!hayDatos()) {
+        <div class="rounded-md border border-dashed border-gray-300 px-4 py-12 text-center">
+          <span class="material-icons text-[36px] text-gray-300">insert_chart_outlined</span>
+          <p class="mt-2 text-sm font-semibold text-gray-700">No hay citas con los filtros seleccionados</p>
+          <p class="mt-1 text-xs text-gray-500">Amplía el rango de fechas o cambia el médico o el estado.</p>
+        </div>
+      } @else {
+
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          @for (tarjeta of tarjetas(); track tarjeta.clave) {
+            <div class="rounded-md border border-gray-200 bg-white px-4 py-3">
+              <div class="mb-2 h-1 w-8" [style.background-color]="tarjeta.color"></div>
+              <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">{{ tarjeta.texto }}</p>
+              <p class="mt-0.5 text-2xl font-bold text-gray-900">{{ tarjeta.valor }}</p>
+              <p class="text-xs text-gray-500">{{ tarjeta.detalle }}</p>
+            </div>
+          }
+        </div>
+
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+          @for (serie of series; track serie.clave) {
+            <span class="inline-flex items-center gap-1.5 text-xs text-gray-600">
+              <span class="h-2.5 w-2.5" [style.background-color]="serie.color"></span>
+              {{ serie.texto }}
+            </span>
+          }
+        </div>
+
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+          <section class="rounded-md border border-gray-200 bg-white p-4">
+            <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Citas por estado</h3>
+            <app-grafico-barras-cita [filas]="filasEstado()"></app-grafico-barras-cita>
+          </section>
+
+          <section class="rounded-md border border-gray-200 bg-white p-4">
+            <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Citas por día de la semana</h3>
+            <app-grafico-barras-cita [filas]="filasDiaSemana()"></app-grafico-barras-cita>
+          </section>
+
+          <section class="rounded-md border border-gray-200 bg-white p-4 lg:col-span-2">
+            <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Citas por médico</h3>
+            <app-grafico-barras-cita [filas]="filasMedico()"></app-grafico-barras-cita>
+          </section>
+
+          <section class="rounded-md border border-gray-200 bg-white p-4 lg:col-span-2">
+            <h3 class="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Evolución de las citas por {{ reporte().granularidad === 'dia' ? 'día' : 'mes' }}
+            </h3>
+            <app-grafico-columnas-cita [puntos]="reporte().porTiempo"></app-grafico-columnas-cita>
+          </section>
+
+        </div>
+
+        <section>
+          <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Detalle por médico</h3>
+
+          <div class="overflow-x-auto rounded-md border border-gray-200">
+            <table class="w-full min-w-[640px] text-sm">
+              <thead class="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+              <tr>
+                <th class="px-3 py-2 text-left font-semibold">Médico</th>
+                <th class="px-3 py-2 text-center font-semibold">Total</th>
+                <th class="px-3 py-2 text-center font-semibold">Programadas</th>
+                <th class="px-3 py-2 text-center font-semibold">Atendidas</th>
+                <th class="px-3 py-2 text-center font-semibold">Canceladas</th>
+                <th class="px-3 py-2 text-center font-semibold">Reprogramadas</th>
+                <th class="px-3 py-2 text-center font-semibold">% atención</th>
+              </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                @for (fila of reporte().porMedico; track fila.idMedico) {
+                  <tr>
+                    <td class="px-3 py-2 font-medium text-gray-800">{{ fila.medico }}</td>
+                    <td class="px-3 py-2 text-center font-bold text-gray-900">{{ fila.conteo.total }}</td>
+                    <td class="px-3 py-2 text-center text-gray-700">{{ fila.conteo.programadas }}</td>
+                    <td class="px-3 py-2 text-center text-gray-700">{{ fila.conteo.atendidas }}</td>
+                    <td class="px-3 py-2 text-center text-gray-700">{{ fila.conteo.canceladas }}</td>
+                    <td class="px-3 py-2 text-center text-gray-700">{{ fila.conteo.reprogramadas }}</td>
+                    <td class="px-3 py-2 text-center text-gray-700">{{ fila.tasaAtencion }}</td>
+                  </tr>
+                }
+              </tbody>
+              <tfoot class="border-t border-gray-300 bg-gray-50 font-bold text-gray-900">
+              <tr>
+                <td class="px-3 py-2">Total</td>
+                <td class="px-3 py-2 text-center">{{ reporte().conteo.total }}</td>
+                <td class="px-3 py-2 text-center">{{ reporte().conteo.programadas }}</td>
+                <td class="px-3 py-2 text-center">{{ reporte().conteo.atendidas }}</td>
+                <td class="px-3 py-2 text-center">{{ reporte().conteo.canceladas }}</td>
+                <td class="px-3 py-2 text-center">{{ reporte().conteo.reprogramadas }}</td>
+                <td class="px-3 py-2 text-center">{{ tasaGlobal() }}</td>
+              </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <p class="mt-1.5 text-xs text-gray-500">
+            % atención = citas atendidas sobre el total de citas del médico en el periodo.
+          </p>
+        </section>
+
+      }
+
+    </div>
+
+    <div class="flex flex-col gap-3 border-t border-gray-200 bg-[#fafafa] px-5 py-3 lg:flex-row lg:items-center">
+
+      <div class="flex flex-wrap items-center gap-x-5 gap-y-2 lg:mr-auto">
+
+        <div class="inline-flex gap-2">
+          @for (item of formatos; track item.valor) {
+            <button
+              type="button"
+              [disabled]="generando()"
+              (click)="formato.set(item.valor)"
+              [ngClass]="
+                formato() === item.valor
+                  ? 'border-[#D9182A] bg-[#D9182A]/5 text-[#D9182A]'
+                  : 'border-gray-300 bg-white text-gray-700 hover:border-[#58595B] hover:bg-gray-50'
+              "
+              class="inline-flex h-10 items-center justify-center gap-2 rounded-md border px-4 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60">
+              <span class="material-icons text-[20px]">{{ item.icono }}</span>
+              {{ item.texto }}
+            </button>
+          }
+        </div>
+
+        @if (formato() === 'pdf') {
+          <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              class="h-4 w-4 accent-[#D9182A]"
+              [checked]="incluirGraficos()"
+              (change)="incluirGraficos.set(!incluirGraficos())"
+            />
+            Incluir gráficos
+          </label>
+          <label class="flex cursor-pointer items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              class="h-4 w-4 accent-[#D9182A]"
+              [checked]="incluirDetalle()"
+              (change)="incluirDetalle.set(!incluirDetalle())"
+            />
+            Incluir listado de citas
+          </label>
+        } @else {
+          <p class="text-xs text-gray-500">
+            Una fila por cita, en UTF-8 y con «;» como separador, listo para abrir en Excel.
+          </p>
+        }
+
+      </div>
+
+      @if (errorExportacion(); as mensaje) {
+        <p class="text-xs font-semibold text-[#D9182A]" role="alert">{{ mensaje }}</p>
+      }
+
+      <div class="flex flex-col-reverse gap-3 sm:flex-row">
+        <button
+          type="button"
+          [disabled]="generando()"
+          (click)="cerrar()"
+          class="inline-flex h-10 items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60">
+          Cerrar
+        </button>
+
+        <button
+          type="button"
+          [disabled]="!puedeExportar()"
+          (click)="exportar()"
+          class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#D9182A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:cursor-not-allowed disabled:opacity-60">
+          @if (generando()) {
+            <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+            Generando...
+          } @else {
+            <span class="material-icons text-[20px]">download</span>
+            Generar reporte
+          }
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,32 @@
+@if (datos().length === 0) {
+  <p class="py-6 text-center text-sm text-gray-500">{{ etiquetaVacia }}</p>
+} @else {
+  <ul class="space-y-2">
+    @for (fila of datos(); track fila.clave) {
+      <li class="flex items-center gap-3">
+        <span
+          class="w-36 shrink-0 truncate text-xs font-medium text-gray-700"
+          [attr.title]="fila.etiqueta">
+          {{ fila.etiqueta }}
+        </span>
+
+        <div class="flex h-4 min-w-0 flex-1 bg-gray-100">
+          @for (segmento of fila.segmentos; track segmento.texto) {
+            <div
+              class="h-full"
+              [style.width.%]="ancho(segmento.valor)"
+              [style.background-color]="segmento.color"
+              [attr.title]="segmento.texto + ': ' + segmento.valor"></div>
+          }
+        </div>
+
+        <span class="w-24 shrink-0 text-right text-xs font-bold text-gray-800">
+          {{ fila.total }}
+          @if (fila.detalle) {
+            <span class="font-normal text-gray-500">{{ fila.detalle }}</span>
+          }
+        </span>
+      </li>
+    }
+  </ul>
+}

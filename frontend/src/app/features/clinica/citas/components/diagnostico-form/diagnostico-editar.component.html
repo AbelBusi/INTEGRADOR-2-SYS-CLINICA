@@ -1,0 +1,64 @@
+<form
+  [formGroup]="form"
+  (ngSubmit)="guardar()"
+  class="grid grid-cols-1 gap-4 border border-neutral-300 border-l-2 border-l-[#D9182A] bg-neutral-50 p-4 md:grid-cols-3">
+
+  <div>
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">Código</label>
+    <input
+      readonly
+      [value]="diagnostico.codigo"
+      class="h-11 w-full border border-neutral-300 bg-neutral-100 px-3 text-sm font-bold text-neutral-800 outline-none"
+    />
+  </div>
+
+  <div class="md:col-span-2">
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">Descripción</label>
+    <input
+      type="text"
+      formControlName="descripcion"
+      maxlength="300"
+      class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B]"
+    />
+  </div>
+
+  <div>
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">Tipo de diagnóstico</label>
+    <select
+      formControlName="tipoDiagnostico"
+      class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B]">
+      <option [ngValue]="null" disabled>Seleccione...</option>
+      @for (tipo of tipos; track tipo.valor) {
+        <option [ngValue]="tipo.valor">{{ tipo.texto }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="md:col-span-2">
+    <label class="mb-1 block text-sm font-semibold text-neutral-700">Observaciones</label>
+    <textarea
+      formControlName="observaciones"
+      rows="2"
+      maxlength="300"
+      class="w-full border border-neutral-400 bg-white px-3 py-2 text-sm text-neutral-900 outline-none focus:border-[#58595B]"></textarea>
+  </div>
+
+  <div class="flex justify-end gap-3 md:col-span-3">
+    <button
+      type="button"
+      (click)="cancelado.emit()"
+      [disabled]="guardando()"
+      class="inline-flex h-11 items-center gap-2 border border-[#58595B] bg-white px-5 text-sm font-bold text-[#58595B] hover:bg-[#58595B] hover:text-white disabled:cursor-not-allowed disabled:opacity-50">
+      <span class="material-icons text-[18px]">close</span>
+      Cancelar
+    </button>
+    <button
+      type="submit"
+      [disabled]="form.invalid || guardando()"
+      class="inline-flex h-11 items-center gap-2 bg-[#58595B] px-5 text-sm font-bold text-white hover:bg-[#404142] disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500">
+      <span class="material-icons text-[18px]">save</span>
+      {{ guardando() ? 'Guardando...' : 'Guardar cambios' }}
+    </button>
+  </div>
+
+</form>

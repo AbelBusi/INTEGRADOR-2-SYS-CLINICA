@@ -1,0 +1,225 @@
+<app-reporte-cita-marco
+  titulo="Mi calendario de atención"
+  icono="calendar_month"
+  [subtitulo]="medico() + ' · ' + titulo()"
+  [formato]="formato()"
+  (formatoChange)="formato.set($event)"
+  [generando]="generando()"
+  [puedeExportar]="puedeExportar()"
+  [error]="errorExportacion()"
+  (exportar)="exportar()"
+  (close)="cerrar()">
+
+  @if (errorHorario(); as mensaje) {
+    <div class="flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3" role="alert">
+      <span class="material-icons text-[20px] text-amber-700">info</span>
+      <p class="flex-1 text-sm font-semibold text-amber-800">{{ mensaje }}</p>
+    </div>
+  }
+
+  <app-tarjetas-reporte-cita [tarjetas]="tarjetas()"></app-tarjetas-reporte-cita>
+
+  <div class="overflow-hidden rounded-md border border-gray-200 bg-white">
+
+    <div class="flex flex-col gap-3 border-b border-gray-200 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          (click)="mover(-1)"
+          aria-label="Anterior"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+          <span class="material-icons text-[20px]">chevron_left</span>
+        </button>
+        <button
+          type="button"
+          (click)="mover(1)"
+          aria-label="Siguiente"
+          class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-gray-300 bg-white text-gray-600 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+          <span class="material-icons text-[20px]">chevron_right</span>
+        </button>
+        <button
+          type="button"
+          (click)="irAHoy()"
+          class="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+          Hoy
+        </button>
+        <h3 class="mx-1 text-base font-bold text-gray-900">{{ titulo() }}</h3>
+      </div>
+
+      <div class="flex overflow-hidden rounded-md border border-gray-300 bg-white lg:inline-flex">
+        <button
+          type="button"
+          (click)="cambiarVista('semana')"
+          class="h-9 flex-1 px-4 text-sm font-semibold transition-colors lg:flex-none"
+          [ngClass]="vista() === 'semana' ? 'bg-[#58595B] text-white' : 'text-gray-600 hover:bg-gray-50'">
+          Semana
+        </button>
+        <button
+          type="button"
+          (click)="cambiarVista('mes')"
+          class="h-9 flex-1 px-4 text-sm font-semibold transition-colors lg:flex-none"
+          [ngClass]="vista() === 'mes' ? 'bg-[#58595B] text-white' : 'text-gray-600 hover:bg-gray-50'">
+          Mes
+        </button>
+      </div>
+
+    </div>
+
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-b border-gray-100 bg-gray-50 px-4 py-2">
+      <span class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600">
+        <span class="h-2.5 w-4 border-l-2 border-[#0d6b68] bg-[#0d6b68]/10"></span>
+        Horario de atención
+      </span>
+      @for (serie of series; track serie.clave) {
+        <span class="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600">
+          <span class="h-2.5 w-2.5" [style.background-color]="serie.color"></span>
+          {{ serie.texto }}
+        </span>
+      }
+    </div>
+
+    @if (cargandoHorario()) {
+
+      <div class="flex items-center justify-center py-20">
+        <span class="h-7 w-7 animate-spin rounded-full border-4 border-gray-200 border-t-[#D9182A]"></span>
+      </div>
+
+    } @else if (vista() === 'mes') {
+
+      <div class="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
+        @for (dia of nombresDia; track dia.numero) {
+          <div class="px-1 py-2 text-center text-[10px] font-bold tracking-wider text-gray-500 sm:px-3 sm:text-left sm:text-[11px]">{{ dia.corto }}</div>
+        }
+      </div>
+
+      <div class="grid grid-cols-7">
+        @for (celda of diasMes(); track celda.iso) {
+          <div
+            role="button"
+            tabindex="0"
+            (click)="irASemana(celda.fecha)"
+            (keydown.enter)="irASemana(celda.fecha)"
+            class="min-h-[64px] cursor-pointer border-b border-r border-gray-100 p-1.5 transition-colors hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#58595B] sm:min-h-[96px] sm:p-2"
+            [ngClass]="celda.delMes ? 'bg-white' : 'bg-gray-50/70'">
+
+            <span
+              class="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold sm:h-7 sm:w-7 sm:text-sm"
+              [ngClass]="
+                celda.esHoy
+                  ? 'bg-[#D9182A] text-white'
+                  : celda.delMes
+                    ? 'text-gray-800'
+                    : 'text-gray-300'
+              ">
+              {{ celda.fecha.getDate() }}
+            </span>
+
+            @if (celda.delMes) {
+              @if (celda.tramos.length > 0) {
+                <div class="mt-1 hidden border-l-2 border-[#0d6b68] bg-[#0d6b68]/10 px-1.5 py-0.5 text-[11px] font-medium leading-4 text-gray-700 sm:block">
+                  {{ celda.tramos[0].entrada }} - {{ celda.tramos[celda.tramos.length - 1].salida }}
+                </div>
+              }
+
+              @if (celda.citas.length > 0) {
+                <span class="mt-1 inline-flex min-w-[1.25rem] items-center justify-center rounded-sm bg-[#58595B] px-1.5 text-[10px] font-bold text-white">
+                  {{ celda.citas.length }}
+                  <span class="ml-1 hidden sm:inline">{{ celda.citas.length === 1 ? 'cita' : 'citas' }}</span>
+                </span>
+              }
+            }
+
+          </div>
+        }
+      </div>
+
+    } @else {
+
+      <div class="overflow-auto overscroll-x-contain [scrollbar-width:thin]" style="height: clamp(380px, 56vh, 640px)">
+
+        <div [style.min-width.px]="anchoMinimo">
+
+          <div
+            class="sticky top-0 z-30 grid border-b border-gray-200 bg-white"
+            [style.grid-template-columns]="plantilla">
+
+            <div class="sticky left-0 z-30 border-r border-gray-200 bg-white"></div>
+
+            @for (columna of columnas(); track columna.resumen.iso) {
+              <div class="border-r border-gray-100 px-2 py-2 sm:px-3">
+                <span
+                  class="block text-[11px] font-bold tracking-wider"
+                  [ngClass]="columna.resumen.esHoy ? 'text-[#D9182A]' : 'text-gray-500'">
+                  {{ columna.dia.corto }}
+                </span>
+                <span
+                  class="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full text-lg font-bold"
+                  [ngClass]="columna.resumen.esHoy ? 'bg-[#D9182A] text-white' : 'text-gray-900'">
+                  {{ columna.resumen.fecha.getDate() }}
+                </span>
+              </div>
+            }
+
+          </div>
+
+          <div class="grid" [style.grid-template-columns]="plantilla">
+
+            <div class="sticky left-0 z-20 border-r border-gray-200 bg-white">
+              @for (hora of horas(); track hora) {
+                <div class="pr-2 pt-1 text-right text-[11px] font-medium text-gray-400" [style.height.px]="ALTURA">
+                  {{ etiquetaHora(hora) }}
+                </div>
+              }
+            </div>
+
+            @for (columna of columnas(); track columna.resumen.iso) {
+              <div class="relative border-r border-gray-100 bg-white" [style.height.px]="alturaTotal()">
+
+                @for (hora of horas(); track hora) {
+                  <div class="border-t border-gray-100" [style.height.px]="ALTURA"></div>
+                }
+
+                @for (bloque of columna.horarios; track bloque.id) {
+                  <div
+                    class="absolute inset-x-0 border-l-[3px] border-[#0d6b68] bg-[#0d6b68]/10"
+                    [style.top.px]="bloque.top"
+                    [style.height.px]="bloque.alto"
+                    [attr.title]="'Horario de atención: ' + bloque.texto">
+                    <span class="block px-1.5 pt-0.5 text-[10px] font-semibold leading-4 text-[#0a4f4d]">{{ bloque.texto }}</span>
+                  </div>
+                }
+
+                @for (bloque of columna.citas; track bloque.cita.id) {
+                  <div
+                    class="absolute overflow-hidden border border-l-[3px] border-gray-300 bg-white px-1.5 py-0.5"
+                    style="left: 6px; right: 6px"
+                    [style.top.px]="bloque.top"
+                    [style.height.px]="bloque.alto"
+                    [style.border-left-color]="bloque.color"
+                    [attr.title]="bloque.cita.inicio + ' - ' + bloque.cita.salida + ' · ' + bloque.cita.paciente">
+                    <p class="truncate text-[11px] font-semibold leading-4 text-gray-900">{{ bloque.cita.paciente }}</p>
+                    <p class="truncate text-[10px] leading-4 text-gray-500">{{ bloque.cita.inicio }} - {{ bloque.cita.salida }}</p>
+                  </div>
+                }
+
+                @if (columna.resumen.esHoy && lineaAhora() !== null) {
+                  <div class="pointer-events-none absolute left-0 right-0 z-10 h-px bg-[#D9182A]" [style.top.px]="lineaAhora()">
+                    <span class="absolute -left-1 -top-[3px] h-[7px] w-[7px] rounded-full bg-[#D9182A]"></span>
+                  </div>
+                }
+
+              </div>
+            }
+
+          </div>
+
+        </div>
+
+      </div>
+
+    }
+
+  </div>
+
+</app-reporte-cita-marco>
