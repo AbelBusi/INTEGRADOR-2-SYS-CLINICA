@@ -12,6 +12,7 @@ import com.salud.consultorio.model.entity.Paciente;
 import com.salud.consultorio.model.entity.Usuario;
 import com.salud.consultorio.model.enums.AccionHistorialCita;
 import com.salud.consultorio.model.enums.MotivoRegularizacionAdministrativa;
+import com.salud.consultorio.model.enums.OperacionCita;
 import com.salud.consultorio.model.enums.ResolucionRegularizacion;
 import com.salud.consultorio.repository.*;
 import com.salud.consultorio.service.ICitaMedicaServicio;
@@ -40,10 +41,12 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
     private static final int CITA_CANCELADA = 2;
     private static final int CITA_ATENDIDA = 3;
     private static final int CITA_REPROGRAMADA = 4;
+    private static final int CITA_ATENCION_NO_FINALIZADA = 5;
 
     private static final int ENTIDAD_ACTIVA = 1;
 
     private static final String ROL_MEDICO = "MEDICO";
+    private static final String ROL_PACIENTE = "PACIENTE";
 
     private static final Duration PLAZO_REGULARIZACION = Duration.ofHours(24);
 
@@ -55,6 +58,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
     private final IHistorialCitaServicio historialCitaServicio;
     private final UsuarioAutenticadoProvider usuarioAutenticadoProvider;
     private final IDiagnosticoRepositorio diagnosticoRepositorio;
+    private final ReservaOperacionCita reservaOperacion;
 
     @Value("${consultorio.atencion.umbral-inactividad-minutos:30}")
     private long umbralInactividadMinutos;
@@ -62,15 +66,18 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
     private static final String MSG_EN_ATENCION =
             "La cita tiene la atención iniciada: esta operación no está permitida.";
 
+    private static final String MSG_CON_DIAGNOSTICO =
+            "La cita ya tiene información clínica registrada: esta operación no está permitida.";
+
     private static final Duration LIMITE_CANCELACION = Duration.ofHours(2);
     private final Clock clock;
     @Transactional(readOnly = true)
     @Override
     public List<CitaMedicaRespuestaDTO> lista(Integer estado) {
 
-        if (estado != null && (estado < CITA_ELIMINADA || estado > CITA_REPROGRAMADA)) {
+        if (estado != null && (estado < CITA_ELIMINADA || estado > CITA_ATENCION_NO_FINALIZADA)) {
             throw new IllegalArgumentException(
-                    "El estado debe ser 0 (eliminada), 1 (programada), 2 (cancelada), 3 (atendida) o 4 (reprogramada)."
+                    "El estado debe ser 0 (eliminada), 1 (programada), 2 (cancelada), 3 (atendida), 4 (reprogramada) o 5 (atención no finalizada)."
             );
         }
 
@@ -93,7 +100,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
         CitaMedica cita = citaMedicaRepositorio.buscarPorIdBloqueado(id).orElse(null);
 
-        if (cita == null || cita.getEstado() != CITA_PROGRAMADA || enAtencion(cita)) {
+        if (cita == null || cita.getEstado() != CITA_PROGRAMADA) {
             return;
         }
 
@@ -101,10 +108,32 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
             return;
         }
 
+        boolean conDiagnostico = diagnosticoRepositorio.existsByCitaMedica_IdAndEstado(cita.getId(), ENTIDAD_ACTIVA);
+
         Map<String, Object> anteriores = new LinkedHashMap<>();
         anteriores.put("estado", cita.getEstado());
 
         Map<String, Object> nuevos = new LinkedHashMap<>();
+        nuevos.put("cierreAutomatico", true);
+
+        reservaOperacion.limpiar(cita);
+
+        if (conDiagnostico) {
+            nuevos.put("estado", CITA_ATENCION_NO_FINALIZADA);
+            cita.setEstado(CITA_ATENCION_NO_FINALIZADA);
+
+            historialCitaServicio.registrarSistema(
+                    cita,
+                    AccionHistorialCita.VENCIDA_SIN_FINALIZAR,
+                    anteriores,
+                    nuevos,
+                    "Atención no finalizada: venció el plazo de 24 horas con información clínica registrada. "
+                            + "Los datos clínicos se conservan."
+            );
+
+            return;
+        }
+
         nuevos.put("estado", CITA_CANCELADA);
         nuevos.put("cancelacionAutomatica", true);
 
@@ -128,7 +157,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
     private void validarPlazoRegularizacion(CitaMedica cita) {
         if (plazoRegularizacionVencido(cita, LocalDateTime.now(clock))) {
             throw new IllegalArgumentException(
-                    "Venció el plazo de 24 horas para regularizar esta cita; se cancelará automáticamente.");
+                    "Venció el plazo de 24 horas para regularizar esta cita; el sistema la cerrará automáticamente.");
         }
     }
 
@@ -199,7 +228,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = {OperacionBloqueadaException.class, AccessDeniedException.class})
     @Override
     public CitaMedicaRespuestaDTO actualizar(CitaMedicaActualizarDTO dto, Integer id) {
         return actualizarInterno(dto, id, null, null);
@@ -213,7 +242,8 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         CitaMedica cita = obtenerCitaBloqueada(id);
 
         validarCitaProgramada(cita, "editar");
-        validarSinAtencion(cita, "EDITAR");
+        validarSinInformacionClinica(cita, "EDITAR");
+        reservaOperacion.exigirLibre(cita, idUsuarioActual(), "EDITAR");
 
         if (motivoRegularizacion == null) {
             LocalDateTime inicioCita = LocalDateTime.of(cita.getFechaCita(), cita.getHoraInicio());
@@ -294,14 +324,15 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = {OperacionBloqueadaException.class, AccessDeniedException.class})
     @Override
     public void cancelar(Integer id, String observacion) {
 
         CitaMedica cita = obtenerCitaBloqueada(id);
 
         validarCitaProgramada(cita, "cancelar");
-        validarSinAtencion(cita, "CANCELAR");
+        validarSinInformacionClinica(cita, "CANCELAR");
+        reservaOperacion.exigirLibre(cita, idUsuarioActual(), "CANCELAR");
         validarVentanaCancelacion(cita);
 
         String detalle = normalizarObservacion(observacion);
@@ -319,6 +350,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
         validarPropiedadMedico(cita, medico);
         validarCitaProgramada(cita, "finalizar la atención de");
+        validarPlazoRegularizacion(cita);
 
         if (!enAtencion(cita)) {
             throw new IllegalArgumentException("Debe iniciar la atención antes de finalizarla.");
@@ -359,6 +391,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
         validarPropiedadMedico(cita, medico);
         validarCitaProgramada(cita, "iniciar la atención de");
+        reservaOperacion.exigirLibre(cita, idUsuarioActual(), "INICIAR_ATENCION");
 
         LocalDateTime ahora = LocalDateTime.now(clock);
 
@@ -384,22 +417,88 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
     }
 
+    @Transactional(noRollbackFor = {OperacionBloqueadaException.class, AccessDeniedException.class})
+    @Override
+    public void iniciarRegularizacion(Integer id, String observacion) {
+
+        Medico medico = obtenerMedicoAutenticado();
+        CitaMedica cita = obtenerCitaBloqueada(id);
+
+        validarPropiedadMedico(cita, medico);
+        validarCitaProgramada(cita, "regularizar");
+
+        if (!horarioFinalizado(cita, LocalDateTime.now(clock))) {
+            throw new IllegalArgumentException(
+                    "La cita aún no ha finalizado, por lo que no está pendiente de regularización.");
+        }
+
+        validarPlazoRegularizacion(cita);
+
+        if (normalizarObservacion(observacion) == null) {
+            throw new IllegalArgumentException("La justificación es obligatoria para regularizar una cita vencida.");
+        }
+
+        reservarConHistorial(cita, OperacionCita.REGULARIZACION_MEDICA, observacion);
+
+    }
+
+    @Transactional(noRollbackFor = {OperacionBloqueadaException.class, AccessDeniedException.class})
+    @Override
+    public void iniciarRegularizacionAdministrativa(Integer id, String observacion) {
+
+        validarUsuarioAdministrativo(usuarioAutenticadoProvider.obtener());
+
+        CitaMedica cita = obtenerCitaBloqueada(id);
+
+        validarCitaProgramada(cita, "regularizar");
+        validarSinInformacionClinica(cita, "INICIAR_REGULARIZACION_ADMINISTRATIVA");
+
+        if (!horarioFinalizado(cita, LocalDateTime.now(clock))) {
+            throw new IllegalArgumentException(
+                    "La cita aún no ha finalizado, por lo que no está pendiente de regularización.");
+        }
+
+        validarPlazoRegularizacion(cita);
+
+        if (normalizarObservacion(observacion) == null) {
+            throw new IllegalArgumentException("La justificación es obligatoria para regularizar una cita vencida.");
+        }
+
+        reservarConHistorial(cita, OperacionCita.REGULARIZACION_ADMINISTRATIVA, observacion);
+
+    }
+
+    @Transactional(noRollbackFor = OperacionBloqueadaException.class)
+    @Override
+    public void renovarOperacion(Integer id) {
+
+        CitaMedica cita = obtenerCitaBloqueada(id);
+
+        validarCitaProgramada(cita, "continuar la operación sobre");
+        reservaOperacion.renovar(cita, idUsuarioActual());
+
+    }
+
     @Transactional
+    @Override
+    public void liberarOperacion(Integer id) {
+        reservaOperacion.liberar(obtenerCitaBloqueada(id), idUsuarioActual());
+    }
+
+    @Transactional(noRollbackFor = {OperacionBloqueadaException.class, AccessDeniedException.class})
     @Override
     public CitaMedicaRespuestaDTO regularizarAdministrativo(Integer id, MotivoRegularizacionAdministrativa motivo,
                                                             String observacion, CitaMedicaActualizarDTO reprogramacion) {
 
         Usuario usuario = usuarioAutenticadoProvider.obtener();
 
-        if (usuarioRepositorio.tieneRolActivo(usuario.getId(), ROL_MEDICO)) {
-            throw new AccessDeniedException("Los médicos deben regularizar mediante el flujo clínico.");
-        }
+        validarUsuarioAdministrativo(usuario);
 
         CitaMedica cita = obtenerCitaBloqueada(id);
 
         validarCitaProgramada(cita, "regularizar");
-        validarSinAtencion(cita, "REGULARIZAR_ADMINISTRATIVO");
-
+        validarSinInformacionClinica(cita, "REGULARIZAR_ADMINISTRATIVO");
+        reservaOperacion.exigirLibre(cita, usuario.getId(), "REGULARIZAR_ADMINISTRATIVO");
 
         if (!horarioFinalizado(cita, LocalDateTime.now(clock))) {
             throw new IllegalArgumentException(
@@ -433,6 +532,8 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
             throw new IllegalArgumentException("La nueva fecha y horario deben ser posteriores al actual.");
         }
 
+        reservaOperacion.limpiar(cita);
+
         return reprogramada;
 
     }
@@ -465,6 +566,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         nuevos.put("motivoRegularizacion", motivo.name());
         nuevos.put("permiteReprogramar", motivo.permiteReprogramar());
 
+        reservaOperacion.limpiar(cita);
         cita.setEstado(CITA_CANCELADA);
 
         historialCitaServicio.registrar(cita, AccionHistorialCita.CANCELADA, anteriores, nuevos, justificacion);
@@ -501,6 +603,7 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         CitaMedica cita = obtenerCitaBloqueada(id);
         validarPropiedadMedico(cita, medico);
         validarCitaProgramada(cita, "regularizar");
+        reservaOperacion.exigirLibre(cita, idUsuarioActual(), "REGULARIZAR");
 
         if (!horarioFinalizado(cita, LocalDateTime.now(clock))) {
             throw new IllegalArgumentException(
@@ -532,13 +635,13 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
                         "No se puede registrar que el paciente no se presentó: la cita ya tiene información clínica.");
             }
             validarSinAtencion(cita, "REGULARIZAR_NO_ASISTIO");
-            aplicarResolucion(cita, CITA_CANCELADA, AccionHistorialCita.CANCELADA, justificacion, true);
+            aplicarResolucion(cita, CITA_CANCELADA, AccionHistorialCita.INASISTENCIA, justificacion, true);
         }
 
     }
 
 
-    @Transactional
+    @Transactional(noRollbackFor = {OperacionBloqueadaException.class, AccessDeniedException.class})
     @Override
     public void eliminarPorId(Integer id) {
 
@@ -548,11 +651,13 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
             throw new IllegalArgumentException("La cita médica ya se encuentra eliminada.");
         }
 
-        if (cita.getEstado() == CITA_ATENDIDA) {
-            bloquear(cita, "ELIMINAR", "No se puede eliminar una cita atendida: forma parte del historial clínico.");
+        if (cita.getEstado() == CITA_ATENDIDA || cita.getEstado() == CITA_ATENCION_NO_FINALIZADA) {
+            bloquear(cita, "ELIMINAR",
+                    "No se puede eliminar una cita con información clínica: forma parte del historial.");
         }
 
-        validarSinAtencion(cita, "ELIMINAR");
+        validarSinInformacionClinica(cita, "ELIMINAR");
+        reservaOperacion.exigirLibre(cita, idUsuarioActual(), "ELIMINAR");
 
         Integer estadoAnterior = cita.getEstado();
 
@@ -591,6 +696,42 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
     }
 
+    private Integer idUsuarioActual() {
+        return usuarioAutenticadoProvider.obtener().getId();
+    }
+
+    private void validarUsuarioAdministrativo(Usuario usuario) {
+
+        if (usuarioRepositorio.tieneRolActivo(usuario.getId(), ROL_MEDICO)) {
+            throw new AccessDeniedException("Los médicos deben regularizar mediante el flujo clínico.");
+        }
+
+        if (usuarioRepositorio.tieneRolActivo(usuario.getId(), ROL_PACIENTE)) {
+            throw new AccessDeniedException("Los pacientes no pueden regularizar citas.");
+        }
+
+    }
+
+    private void reservarConHistorial(CitaMedica cita, OperacionCita operacion, String justificacion) {
+
+        Integer idUsuario = idUsuarioActual();
+        boolean renovacion = reservaOperacion.esDe(cita, idUsuario);
+
+        reservaOperacion.reservar(cita, operacion, idUsuario, "INICIAR_" + operacion.name());
+
+        if (renovacion) {
+            return;
+        }
+
+        Map<String, Object> nuevos = new LinkedHashMap<>();
+        nuevos.put("operacion", operacion.name());
+        nuevos.put("estado", cita.getEstado());
+
+        historialCitaServicio.registrar(cita, AccionHistorialCita.INICIO_REGULARIZACION, null, nuevos,
+                normalizarObservacion(justificacion));
+
+    }
+
     private boolean enAtencion(CitaMedica cita) {
         return cita.getEstado() == CITA_PROGRAMADA && cita.getInicioAtencion() != null;
     }
@@ -599,6 +740,16 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         if (cita.getInicioAtencion() != null) {
             bloquear(cita, operacion, MSG_EN_ATENCION);
         }
+    }
+
+    private void validarSinInformacionClinica(CitaMedica cita, String operacion) {
+
+        validarSinAtencion(cita, operacion);
+
+        if (diagnosticoRepositorio.existsByCitaMedica_IdAndEstado(cita.getId(), ENTIDAD_ACTIVA)) {
+            bloquear(cita, operacion, MSG_CON_DIAGNOSTICO);
+        }
+
     }
 
     private void bloquear(CitaMedica cita, String operacion, String mensaje) {
@@ -671,9 +822,9 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
 
     private void validarEstadoConsulta(Integer estado) {
 
-        if (estado != null && (estado < CITA_PROGRAMADA || estado > CITA_REPROGRAMADA)) {
+        if (estado != null && (estado < CITA_PROGRAMADA || estado > CITA_ATENCION_NO_FINALIZADA)) {
             throw new IllegalArgumentException(
-                    "El estado debe ser 1 (programada), 2 (cancelada), 3 (atendida) o 4 (reprogramada)."
+                    "El estado debe ser 1 (programada), 2 (cancelada), 3 (atendida), 4 (reprogramada) o 5 (atención no finalizada)."
             );
         }
 
@@ -742,6 +893,8 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
                     "No se puede " + accion + " una cita médica que ya fue atendida.");
             case CITA_REPROGRAMADA -> throw new IllegalArgumentException(
                     "No se puede " + accion + " una cita médica que ya fue reprogramada.");
+            case CITA_ATENCION_NO_FINALIZADA -> throw new IllegalArgumentException(
+                    "No se puede " + accion + " una cita médica con la atención no finalizada por vencimiento.");
             default -> throw new IllegalArgumentException("La cita médica tiene un estado desconocido.");
         }
 
@@ -918,9 +1071,14 @@ public class CitaMedicaServicioImpl implements ICitaMedicaServicio {
         nuevos.put("estado", estadoNuevo);
 
         if (regularizacion) {
-            nuevos.put("resolucion", accion.name());
+            nuevos.put("resolucion", estadoNuevo == CITA_ATENDIDA ? "ATENDIDA" : "CANCELADA");
+
+            if (accion == AccionHistorialCita.INASISTENCIA) {
+                nuevos.put("inasistencia", true);
+            }
         }
 
+        reservaOperacion.limpiar(cita);
         cita.setEstado(estadoNuevo);
 
         historialCitaServicio.registrar(cita, accion, anteriores, nuevos, observacion);

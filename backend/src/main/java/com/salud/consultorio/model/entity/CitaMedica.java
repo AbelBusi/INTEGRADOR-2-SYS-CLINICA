@@ -1,5 +1,6 @@
 package com.salud.consultorio.model.entity;
 
+import com.salud.consultorio.model.enums.OperacionCita;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
@@ -57,6 +58,16 @@ public class CitaMedica {
 
     @Column(name = "ultima_actividad")
     private LocalDateTime ultimaActividad;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "operacion_en_curso", length = 30)
+    private OperacionCita operacionEnCurso;
+
+    @Column(name = "operacion_usuario")
+    private Integer operacionUsuario;
+
+    @Column(name = "operacion_expira")
+    private LocalDateTime operacionExpira;
 
     @Column(name = "estado", nullable = false)
     @Builder.Default
