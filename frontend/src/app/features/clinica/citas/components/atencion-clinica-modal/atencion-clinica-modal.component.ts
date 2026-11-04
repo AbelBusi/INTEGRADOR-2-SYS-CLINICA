@@ -1,4 +1,13 @@
-import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  inject,
+  signal,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -24,7 +33,9 @@ import { DocumentosClinicosModalComponent } from '../../../../../shared/document
   ],
   templateUrl: './atencion-clinica-modal.component.html',
 })
-export class AtencionClinicaModalComponent implements OnInit {
+export class AtencionClinicaModalComponent implements OnInit, OnDestroy {
+  private latido: ReturnType<typeof setInterval> | null = null;
+  private readonly INTERVALO_LATIDO_MS = 5 * 60 * 1000;
   @Input({ required: true }) cita!: CitaFila;
   @Input() permiteFinalizar = true;
   @Input() justificacionRegularizacion: string | null = null;
@@ -48,7 +59,11 @@ export class AtencionClinicaModalComponent implements OnInit {
   finalizando = signal(false);
 
   get soloLectura(): boolean {
-    return this.cita.estado === 3 || this.atendidaLocal();
+    return this.cita.estado === 3 || this.cita.estado === 5 || this.atendidaLocal();
+  }
+
+  get noFinalizada(): boolean {
+    return this.cita.estado === 5;
   }
 
   puedeImprimir(): boolean {
@@ -69,6 +84,34 @@ export class AtencionClinicaModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar(false, false);
+
+    if (this.esRegularizacion && !this.soloLectura) {
+      this.latido = setInterval(() => this.renovar(), this.INTERVALO_LATIDO_MS);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.detenerLatido();
+
+    if (this.esRegularizacion && !this.atendidaLocal()) {
+      this.citaService.liberarOperacion(this.cita.id).subscribe({ error: () => undefined });
+    }
+  }
+
+  private renovar(): void {
+    this.citaService.renovarOperacion(this.cita.id).subscribe({
+      error: (error) => {
+        this.detenerLatido();
+        this.error.set(error.error?.mensaje || 'La reserva de la regularización expiró.');
+      },
+    });
+  }
+
+  private detenerLatido(): void {
+    if (this.latido !== null) {
+      clearInterval(this.latido);
+      this.latido = null;
+    }
   }
 
   cargar(silencioso: boolean, expandirUltimo: boolean): void {
