@@ -6,6 +6,7 @@ import {
   EmpleadoDetalle,
   MensajeResponse,
   PacienteDetalle,
+  PersonaBusqueda,
   PersonaUsuario,
   RolesAsignables,
   RolResumen,
@@ -78,6 +79,13 @@ export class UsuarioService {
 
   listarPersonasSinUsuario(): Observable<MensajeResponse<PersonaUsuario[]>> {
     return this.http.get<MensajeResponse<PersonaUsuario[]>>(`${this.baseUrl}/personas-sin-usuario`);
+  }
+
+  buscarPersonas(busqueda: string): Observable<MensajeResponse<PersonaBusqueda[]>> {
+    const params = new HttpParams().set('busqueda', busqueda);
+    return this.http.get<MensajeResponse<PersonaBusqueda[]>>(`${this.baseUrl}/personas/buscar`, {
+      params,
+    });
   }
 
   obtenerRolesAsignables(idPersona: number): Observable<MensajeResponse<RolesAsignables>> {

@@ -44,9 +44,23 @@
 
   </div>
 
-  <app-crear-usuario-panel (usuarioCreado)="cargar(true)"></app-crear-usuario-panel>
+  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h2 class="text-lg font-bold text-gray-900">Usuarios</h2>
+      <p class="text-sm text-gray-500 mt-0.5">Gestiona las cuentas de acceso de pacientes y empleados.</p>
+    </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_auto] gap-3">
+    <button
+      type="button"
+      (click)="crearAbierto.set(true)"
+      class="h-10 inline-flex items-center justify-center gap-2 px-5 rounded-md bg-[#D9182A] hover:bg-[#B81424] text-white text-sm font-semibold transition-colors">
+      <span class="material-icons text-[20px]">person_add</span>
+      Crear usuario
+    </button>
+  </div>
+
+
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_minmax(0,0.7fr)_auto] gap-3">
 
     <div
       class="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-3 h-10 focus-within:border-[#58595B] focus-within:ring-1 focus-within:ring-[#58595B] transition-colors">
@@ -79,6 +93,16 @@
       <option value="todos">Todos los estados</option>
       <option value="activo">Activos</option>
       <option value="inactivo">Inactivos</option>
+    </select>
+
+    <select
+      name="filtroOrigen"
+      [ngModel]="filtroOrigen()"
+      (ngModelChange)="filtroOrigen.set($event)"
+      class="h-10 bg-white border border-gray-300 rounded-md px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B]">
+      <option value="todos">Todos los orígenes</option>
+      <option value="presencial">Recepción</option>
+      <option value="digital">Plataforma digital</option>
     </select>
 
     <button
@@ -147,6 +171,17 @@
             <span class="text-sm text-gray-400">—</span>
           }
         </div>
+
+      }
+
+      @if (field === 'registroPresencial') {
+
+        <span
+          class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide"
+          [ngClass]="row.registroPresencial ? 'bg-gray-100 text-gray-600' : 'bg-[#D9182A]/10 text-[#D9182A]'">
+          <span class="material-icons text-[14px]">{{ row.registroPresencial ? 'support_agent' : 'language' }}</span>
+          {{ row.registroPresencial ? 'Recepción' : 'Plataforma digital' }}
+        </span>
 
       }
 
@@ -262,4 +297,11 @@
     (close)="usuarioRol.set(null)"
     (rolCambiado)="handleRolesActualizados()"
   ></app-cambiar-rol-modal>
+}
+
+@if (crearAbierto()) {
+  <app-crear-usuario-modal
+    (close)="crearAbierto.set(false)"
+    (usuarioCreado)="cargar(true)"
+  ></app-crear-usuario-modal>
 }

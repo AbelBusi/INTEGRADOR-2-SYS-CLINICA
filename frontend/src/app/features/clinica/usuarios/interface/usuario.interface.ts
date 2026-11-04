@@ -16,7 +16,19 @@ export interface UsuarioListado {
   nombreCompleto: string;
   numeroDocumento: string;
   estado: number;
+  registroPresencial: boolean;
   roles: RolResumen[];
+}
+
+export interface PersonaBusqueda {
+  idPersona: number;
+  nombreCompleto: string;
+  tipoDocumento: string;
+  numeroDocumento: string;
+  genero: string | null;
+  esPaciente: boolean;
+  esEmpleado: boolean;
+  tieneCorreo: boolean;
 }
 
 export interface UsuarioFila extends UsuarioListado {

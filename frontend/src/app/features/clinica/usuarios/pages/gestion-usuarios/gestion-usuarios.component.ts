@@ -8,7 +8,7 @@ import { UsuarioService } from '../../services/usuario.service';
 import { normalizar } from '../../utils/formato.util';
 import { AuthService } from '../../../../auth/services/auth.service';
 import { ToastService } from '../../../../../core/services/toast.service';
-import { CrearUsuarioPanelComponent } from '../../components/crear-usuario-panel/crear-usuario-panel.component';
+import { CrearUsuarioModalComponent } from '../../components/crear-usuario-modal/crear-usuario-modal.component';
 import { VerUsuarioModalComponent } from '../../components/ver-usuario-modal/ver-usuario-modal.component';
 import { CambiarRolModalComponent } from '../../components/cambiar-rol-modal/cambiar-rol-modal.component';
 
@@ -18,6 +18,8 @@ import { TienePermisoDirective } from '../../../../../core/directives/tiene-perm
 
 type FiltroTipo = 'todos' | TipoUsuario;
 type FiltroEstado = 'todos' | 'activo' | 'inactivo';
+type FiltroOrigen = 'todos' | 'presencial' | 'digital';
+
 
 @Component({
   selector: 'app-gestion-usuarios',
@@ -26,7 +28,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     CommonModule,
     FormsModule,
     CustomTableComponent,
-    CrearUsuarioPanelComponent,
+    CrearUsuarioModalComponent,
     VerUsuarioModalComponent,
     CambiarRolModalComponent,
     TienePermisoDirective,
@@ -37,6 +39,9 @@ export class GestionUsuariosComponent implements OnInit {
   usuarios = signal<UsuarioFila[]>([]);
   cargando = signal(false);
   procesando = signal(false);
+
+  filtroOrigen = signal<FiltroOrigen>('todos');
+  crearAbierto = signal(false);
 
   busqueda = signal('');
   filtroTipo = signal<FiltroTipo>('todos');
@@ -53,6 +58,7 @@ export class GestionUsuariosComponent implements OnInit {
     { header: 'Documento', field: 'numeroDocumento', type: 'custom' },
     { header: 'Perfil', field: 'tipos', type: 'custom' },
     { header: 'Roles', field: 'roles', type: 'custom' },
+    { header: 'Origen', field: 'registroPresencial', type: 'custom' },
     { header: 'Usuario', field: 'usuario', type: 'custom' },
     { header: 'Estado', field: 'estado', type: 'custom' },
     { header: 'Acciones', field: 'id', type: 'custom' },
@@ -71,13 +77,15 @@ export class GestionUsuariosComponent implements OnInit {
     () =>
       this.busqueda().trim() !== '' ||
       this.filtroTipo() !== 'todos' ||
-      this.filtroEstado() !== 'todos',
+      this.filtroEstado() !== 'todos' ||
+    this.filtroOrigen() !== 'todos',
   );
 
   filas = computed(() => {
     const termino = normalizar(this.busqueda().trim());
     const tipo = this.filtroTipo();
     const estado = this.filtroEstado();
+    const origen = this.filtroOrigen();
 
     const lista = this.usuarios().filter((u) => {
       if (tipo !== 'todos' && !u.tipos.includes(tipo)) {
@@ -87,6 +95,13 @@ export class GestionUsuariosComponent implements OnInit {
         return false;
       }
       if (estado === 'inactivo' && u.estado !== 2) {
+        return false;
+      }
+
+      if (origen === 'presencial' && !u.registroPresencial) {
+        return false;
+      }
+      if (origen === 'digital' && u.registroPresencial) {
         return false;
       }
 
@@ -174,6 +189,7 @@ export class GestionUsuariosComponent implements OnInit {
     this.busqueda.set('');
     this.filtroTipo.set('todos');
     this.filtroEstado.set('todos');
+    this.filtroOrigen.set('todos');
   }
 
   handleSort(field: string): void {
