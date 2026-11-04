@@ -5,10 +5,12 @@ services:
     image: mariadb:12.3
     container_name: hospital-mariadb
     environment:
+      TZ: America/Lima
       MARIADB_DATABASE: SISHPTL
       MARIADB_USER: hospital_user
       MARIADB_PASSWORD: ${DB_PASSWORD}
       MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    command: --default-time-zone=-05:00
     volumes:
       - mariadb_data:/var/lib/mysql
     restart: unless-stopped
@@ -20,6 +22,8 @@ services:
     volumes:
       - uploads_data:/app/uploads
     environment:
+      TZ: America/Lima
+      JAVA_TOOL_OPTIONS: "-Duser.timezone=America/Lima"
       PORT: ${PORT}
       DB_DATASOURCE: ${DB_DATASOURCE}
       DB_USERNAME: ${DB_USERNAME}
