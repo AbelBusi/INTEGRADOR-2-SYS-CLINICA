@@ -266,8 +266,7 @@
             *appTienePermiso="'CITA_ELIMINAR_ADMIN'"
             [title]="puedeEliminar(row) ? 'Eliminar' : motivoNoEliminable"
             (click)="eliminar(row)"
-            [disabled]="procesando() || !puedeEliminar(row)"
-            class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] disabled:cursor-not-allowed disabled:opacity-50">
+            [disabled]="procesando() || !puedeEliminar(row)"            class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] disabled:cursor-not-allowed disabled:opacity-50">
             <span class="material-icons text-[18px]">delete</span>
             <span>Eliminar</span>
           </button>
@@ -321,7 +320,7 @@
   <app-cita-editar-modal
     [cita]="r.cita"
     [regularizacion]="{ motivo: r.motivo, observacion: r.observacion }"
-    (close)="citaReprogramar.set(null)"
+    (close)="cerrarReprogramacion()"
     (guardado)="handleReprogramado($event)"
   ></app-cita-editar-modal>
 }

@@ -132,6 +132,11 @@ export const ESTADOS_CITA: Record<number, InfoEstadoCita> = {
     clases: 'bg-white text-[#D9182A] border-[#D9182A] rounded-sm',
     punto: 'bg-[#D9182A]',
   },
+  5: {
+    texto: 'Atención no finalizada',
+    clases: 'bg-amber-50 text-amber-700 border-amber-300 rounded-sm',
+    punto: 'bg-amber-500',
+  },
 };
 
 
@@ -140,6 +145,7 @@ export const OPCIONES_ESTADO = [
   { valor: 2, texto: 'Canceladas' },
   { valor: 3, texto: 'Atendidas' },
   { valor: 4, texto: 'Reprogramadas' },
+  { valor: 5, texto: 'No finalizadas' },
 ];
 
 export const DURACIONES = [15, 20, 30, 45, 60];
@@ -157,7 +163,10 @@ export type AccionHistorial =
   | 'ELIMINADA'
   | 'INICIADA'
   | 'CLINICA_MODIFICADA'
-  | 'INTENTO_BLOQUEADO';
+  | 'INTENTO_BLOQUEADO'
+  | 'INICIO_REGULARIZACION'
+  | 'INASISTENCIA'
+  | 'VENCIDA_SIN_FINALIZAR';
 
 export interface HistorialCita {
   id: number;
@@ -186,8 +195,23 @@ export const ACCIONES_HISTORIAL: Record<AccionHistorial, InfoAccionHistorial> = 
   ATENDIDA: { texto: 'Atención médica registrada', icono: 'task_alt', punto: 'bg-[#0d6b68]' },
   ELIMINADA: { texto: 'Cita eliminada', icono: 'delete', punto: 'bg-neutral-400' },
   INICIADA: { texto: 'Atención iniciada', icono: 'play_circle', punto: 'bg-[#0d6b68]' },
-  CLINICA_MODIFICADA: { texto: 'Registro clínico posterior', icono: 'assignment', punto: 'bg-amber-500', },
+  CLINICA_MODIFICADA: {
+    texto: 'Registro clínico posterior',
+    icono: 'assignment',
+    punto: 'bg-amber-500',
+  },
   INTENTO_BLOQUEADO: { texto: 'Operación bloqueada', icono: 'block', punto: 'bg-[#D9182A]' },
+  INICIO_REGULARIZACION: {
+    texto: 'Regularización iniciada',
+    icono: 'fact_check',
+    punto: 'bg-amber-500',
+  },
+  INASISTENCIA: { texto: 'Inasistencia registrada', icono: 'person_off', punto: 'bg-[#D9182A]' },
+  VENCIDA_SIN_FINALIZAR: {
+    texto: 'Atención no finalizada por vencimiento',
+    icono: 'warning',
+    punto: 'bg-amber-500',
+  },
 };
 
 export type MotivoRegularizacionAdministrativa =

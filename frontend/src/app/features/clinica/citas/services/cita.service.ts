@@ -180,6 +180,27 @@ export class CitaService {
     );
   }
 
+  iniciarRegularizacion(id: number, observacion: string): Observable<MensajeResponse<null>> {
+    return this.http.patch<MensajeResponse<null>>(`${this.baseUrl}/${id}/iniciar-regularizacion`, {
+      observacion: observacion.trim(),
+    });
+  }
+
+  iniciarRegularizacionAdministrativa(id: number, observacion: string): Observable<MensajeResponse<null>> {
+    return this.http.patch<MensajeResponse<null>>(
+      `${this.baseUrl}/${id}/iniciar-regularizacion-administrativa`,
+      { observacion: observacion.trim() },
+    );
+  }
+
+  renovarOperacion(id: number): Observable<MensajeResponse<null>> {
+    return this.http.patch<MensajeResponse<null>>(`${this.baseUrl}/${id}/renovar-operacion`, null);
+  }
+
+  liberarOperacion(id: number): Observable<MensajeResponse<null>> {
+    return this.http.patch<MensajeResponse<null>>(`${this.baseUrl}/${id}/liberar-operacion`, null);
+  }
+
   regularizarAdministrativo(
     id: number,
     motivo: MotivoRegularizacionAdministrativa,

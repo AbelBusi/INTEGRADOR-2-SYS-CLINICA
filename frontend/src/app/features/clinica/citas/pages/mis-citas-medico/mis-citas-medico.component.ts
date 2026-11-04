@@ -99,8 +99,16 @@ export class MisCitasMedicoComponent implements OnInit, OnDestroy {
     }
 
     if (datos.resolucion === 'ATENDIDA') {
-      this.citaRegularizar.set(null);
-      this.citaAtencionClinica.set({ cita, justificacion: datos.observacion });
+      this.procesando.set(true);
+
+      this.citaService.iniciarRegularizacion(cita.id, datos.observacion).subscribe({
+        next: () => {
+          this.procesando.set(false);
+          this.citaRegularizar.set(null);
+          this.citaAtencionClinica.set({ cita, justificacion: datos.observacion });
+        },
+        error: (error) => this.alFallar(error, 'No se pudo iniciar la regularización'),
+      });
       return;
     }
 
@@ -115,6 +123,7 @@ export class MisCitasMedicoComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error(error);
+        this.alFallar(error,'...');
         this.toastService.error(error.error?.mensaje || 'No se pudo regularizar la cita');
         this.procesando.set(false);
       },
@@ -266,6 +275,17 @@ export class MisCitasMedicoComponent implements OnInit, OnDestroy {
     });
   }
 
+  private alFallar(error: any, mensaje: string): void {
+    console.error(error);
+    this.toastService.error(error.error?.mensaje || mensaje);
+    this.procesando.set(false);
+
+    if (error.status === 409) {
+      this.citaRegularizar.set(null);
+      this.cargar(true);
+    }
+  }
+
   alFinalizarAtencion(): void {
     this.cargar(true);
   }
@@ -308,6 +328,7 @@ export class MisCitasMedicoComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error(error);
+        this.alFallar(error, '...');
         this.toastService.error(error.error?.mensaje || 'Hubo un error al cancelar la cita');
         this.procesando.set(false);
       },

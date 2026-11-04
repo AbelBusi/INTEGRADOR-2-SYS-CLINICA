@@ -52,10 +52,11 @@
 
       @if (soloLectura) {
         <div class="flex items-start gap-3 border-l-2 border-l-[#58595B] bg-neutral-50 px-4 py-3">
-          <span class="material-icons text-[20px] text-[#58595B]">task_alt</span>
+          <span class="material-icons text-[20px] text-[#58595B]">{{ noFinalizada ? 'warning' : 'task_alt' }}</span>
           <p class="text-sm leading-5 text-neutral-700">
-            Esta cita ya fue atendida. La información es solo de consulta; las observaciones generales
-            están en el historial de la cita.
+            {{ noFinalizada
+            ? 'La atención no fue finalizada dentro del plazo de 24 horas. La información clínica registrada se conserva solo para consulta.'
+            : 'Esta cita ya fue atendida. La información es solo de consulta; las observaciones generales están en el historial de la cita.' }}
           </p>
         </div>
       }

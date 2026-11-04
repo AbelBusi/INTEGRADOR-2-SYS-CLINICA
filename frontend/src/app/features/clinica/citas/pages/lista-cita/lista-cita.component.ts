@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -37,8 +37,10 @@ import { TienePermisoDirective } from '../../../../../core/directives/tiene-perm
   ],
   templateUrl: './lista-cita.component.html',
 })
-export class ListaCitaComponent implements OnInit {
+export class ListaCitaComponent implements OnInit, OnDestroy {
   readonly hoyISO = aISO(new Date());
+  private latido: ReturnType<typeof setInterval> | null = null;
+
   readonly opcionesEstado = OPCIONES_ESTADO;
 
   citas = signal<CitaFila[]>([]);
@@ -47,7 +49,7 @@ export class ListaCitaComponent implements OnInit {
 
   idsSinActividad = signal<Set<number>>(new Set());
   readonly motivoNoEliminable =
-    'No se puede eliminar: la cita tiene atención iniciada o ya fue atendida.';
+    'No se puede eliminar: la cita tiene atención iniciada o información clínica.';
 
   busqueda = signal('');
   filtroEstado = signal<number | 'todos'>('todos');
@@ -74,6 +76,7 @@ export class ListaCitaComponent implements OnInit {
   enAtencion(cita: CitaFila): boolean {
     return enAtencionCita(cita);
   }
+
   motivoNoCancelable(cita: CitaFila): string {
     return motivoNoCancelableCita(cita);
   }
@@ -83,7 +86,47 @@ export class ListaCitaComponent implements OnInit {
   }
 
   puedeEliminar(cita: CitaFila): boolean {
-    return cita.estado !== 3 && !cita.inicioAtencion;
+    return cita.estado !== 3 && cita.estado !== 5 && !cita.inicioAtencion;
+  }
+
+  ngOnDestroy(): void {
+    this.detenerLatido();
+  }
+
+  private alFallar(error: any, mensaje: string): void {
+    console.error(error);
+    this.toastService.error(error.error?.mensaje || mensaje);
+    this.procesando.set(false);
+
+    if (error.status === 409) {
+      this.citaRegularizar.set(null);
+      this.cargar(true);
+    }
+  }
+
+  private iniciarLatido(idCita: number): void {
+    this.detenerLatido();
+
+    this.latido = setInterval(
+      () => {
+        this.citaService.renovarOperacion(idCita).subscribe({
+          error: (error) => {
+            this.detenerLatido();
+            this.citaReprogramar.set(null);
+            this.toastService.error(error.error?.mensaje || 'La reserva de la cita expiró.');
+            this.cargar(true);
+          },
+        });
+      },
+      5 * 60 * 1000,
+    );
+  }
+
+  private detenerLatido(): void {
+    if (this.latido !== null) {
+      clearInterval(this.latido);
+      this.latido = null;
+    }
   }
 
   citaReprogramar = signal<{
@@ -120,12 +163,6 @@ export class ListaCitaComponent implements OnInit {
     }
   }
 
-  handleReprogramado(cita: Cita): void {
-    this.citaReprogramar.set(null);
-    this.cargar(true);
-    this.citaVer.set(normalizarCita(cita));
-  }
-
   confirmarRegularizacion(datos: {
     motivo: MotivoRegularizacionAdministrativa;
     observacion: string;
@@ -139,8 +176,17 @@ export class ListaCitaComponent implements OnInit {
     const opcion = OPCIONES_REGULARIZACION_ADMINISTRATIVA.find((o) => o.valor === datos.motivo);
 
     if (opcion?.permiteReprogramar) {
-      this.citaRegularizar.set(null);
-      this.citaReprogramar.set({ cita, motivo: datos.motivo, observacion: datos.observacion });
+      this.procesando.set(true);
+
+      this.citaService.iniciarRegularizacionAdministrativa(cita.id, datos.observacion).subscribe({
+        next: () => {
+          this.procesando.set(false);
+          this.citaRegularizar.set(null);
+          this.citaReprogramar.set({ cita, motivo: datos.motivo, observacion: datos.observacion });
+          this.iniciarLatido(cita.id);
+        },
+        error: (error) => this.alFallar(error, 'No se pudo iniciar la regularización'),
+      });
       return;
     }
 
@@ -153,11 +199,7 @@ export class ListaCitaComponent implements OnInit {
         this.citaRegularizar.set(null);
         this.cargar(true);
       },
-      error: (error) => {
-        console.error(error);
-        this.toastService.error(error.error?.mensaje || 'No se pudo regularizar la cita');
-        this.procesando.set(false);
-      },
+      error: (error) => this.alFallar(error, 'No se pudo regularizar la cita'),
     });
   }
 
@@ -232,6 +274,26 @@ export class ListaCitaComponent implements OnInit {
     this.cargar(false);
   }
 
+  cerrarReprogramacion(): void {
+    const reprogramacion = this.citaReprogramar();
+
+    this.detenerLatido();
+    this.citaReprogramar.set(null);
+
+    if (reprogramacion) {
+      this.citaService
+        .liberarOperacion(reprogramacion.cita.id)
+        .subscribe({ error: () => undefined });
+    }
+  }
+
+  handleReprogramado(cita: Cita): void {
+    this.detenerLatido();
+    this.citaReprogramar.set(null);
+    this.cargar(true);
+    this.citaVer.set(normalizarCita(cita));
+  }
+
   cargar(silencioso: boolean): void {
     if (!silencioso) {
       this.cargando.set(true);
@@ -241,7 +303,7 @@ export class ListaCitaComponent implements OnInit {
       next: (response) => {
         this.citas.set((response.object || []).map(normalizarCita));
         this.cargarPendientes();
-        this.cargarPendientes();
+        this.cargarSinActividad();
         this.cargando.set(false);
       },
       error: (error) => {
@@ -319,11 +381,7 @@ export class ListaCitaComponent implements OnInit {
             this.procesando.set(false);
             this.cargar(true);
           },
-          error: (error) => {
-            console.error(error);
-            this.toastService.error(error.error?.mensaje || 'Hubo un error al cancelar la cita');
-            this.procesando.set(false);
-          },
+          error: (error) => this.alFallar(error, 'Hubo un error al cancelar la cita'),
         });
       });
   }
@@ -351,11 +409,7 @@ export class ListaCitaComponent implements OnInit {
             this.procesando.set(false);
             this.cargar(true);
           },
-          error: (error) => {
-            console.error(error);
-            this.toastService.error(error.error?.mensaje || 'Hubo un error al eliminar la cita');
-            this.procesando.set(false);
-          },
+          error: (error) => this.alFallar(error, 'Hubo un error al eliminar la cita'),
         });
       });
   }
