@@ -46,6 +46,10 @@ export class CrearPacienteModalComponent implements OnInit {
   nacionalidades = NACIONALIDADES;
   simulacionSeguro = !environment.production;
 
+  bloqueoNombre = false;
+  bloqueoFecha = false;
+  bloqueoDireccion = false;
+
   cargandoCatalogos = false;
   guardando = false;
   consultandoReniec = false;
@@ -58,6 +62,10 @@ export class CrearPacienteModalComponent implements OnInit {
     private readonly toastService: ToastService,
     private readonly cdr: ChangeDetectorRef,
   ) {}
+
+  get datosReniecCargados(): boolean {
+    return this.bloqueoNombre;
+  }
 
   ngOnInit(): void {
     this.cargandoCatalogos = true;
@@ -120,6 +128,9 @@ export class CrearPacienteModalComponent implements OnInit {
   }
 
   onTipoDocumentoChange(): void {
+    if (this.datosReniecCargados) {
+      this.desbloquearReniec();
+    }
     const longitud = this.longitudDocumento;
     if (longitud !== null) {
       this.pacienteForm.numeroDocumento = this.pacienteForm.numeroDocumento.slice(0, longitud);
@@ -142,6 +153,18 @@ export class CrearPacienteModalComponent implements OnInit {
         if (datos) {
           this.pacienteForm.nombre = datos.nombre;
           this.pacienteForm.apellidos = datos.apellidos;
+          this.bloqueoNombre = !!(datos.nombre && datos.apellidos);
+
+          if (datos.fechaNacimiento) {
+            this.pacienteForm.fechaNacimiento = datos.fechaNacimiento;
+            this.bloqueoFecha = true;
+          }
+
+          if (datos.direccion) {
+            this.pacienteForm.direccion = datos.direccion;
+            this.bloqueoDireccion = true;
+          }
+
           this.toastService.success('Datos de RENIEC cargados correctamente.');
         } else {
           this.toastService.warning('No se encontraron datos para el DNI ingresado.');
@@ -157,6 +180,15 @@ export class CrearPacienteModalComponent implements OnInit {
     });
   }
 
+  desbloquearReniec(): void {
+    this.pacienteForm.numeroDocumento = '';
+    this.pacienteForm.nombre = '';
+    this.pacienteForm.apellidos = '';
+    if (this.bloqueoFecha) this.pacienteForm.fechaNacimiento = '' as any;
+    if (this.bloqueoDireccion) this.pacienteForm.direccion = '';
+    this.bloqueoNombre = this.bloqueoFecha = this.bloqueoDireccion = false;
+    this.cdr.detectChanges();
+  }
   async consultarSeguro(): Promise<void> {
     if (!this.puedeConsultarSeguro) {
       this.toastService.warning('Ingrese primero un DNI válido de 8 dígitos.');
@@ -206,6 +238,7 @@ export class CrearPacienteModalComponent implements OnInit {
 
   handleClose(): void {
     this.pacienteForm = formularioVacio();
+    this.bloqueoNombre = this.bloqueoFecha = this.bloqueoDireccion = false;
     this.onClose.emit();
     this.cdr.detectChanges();
   }
