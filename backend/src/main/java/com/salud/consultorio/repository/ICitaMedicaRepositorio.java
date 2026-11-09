@@ -4,10 +4,7 @@ import com.salud.consultorio.dto.citaMedica.CitaMedicaRespuestaDTO;
 import com.salud.consultorio.model.entity.CitaMedica;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.QueryHint;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.jpa.repository.QueryHints;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -18,7 +15,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ICitaMedicaRepositorio extends JpaRepository<CitaMedica, Integer> {
+public interface ICitaMedicaRepositorio extends JpaRepository<CitaMedica, Integer>,
+        JpaSpecificationExecutor<CitaMedica> {
 
     @Query("""
             SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END
