@@ -1,24 +1,33 @@
 import { Component, OnInit, computed, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
 
 import { aISO, formatearFechaCorta, normalizar } from '../../../horarios/utils/calendario.util';
 import { Cita, CitaFila, OPCIONES_ESTADO, infoEstado } from '../../interface/cita.interface';
 import { normalizarCita } from '../../utils/disponibilidad.util';
 import { CitaService } from '../../services/cita.service';
+import { CitaFiltroService } from '../../services/cita-filtro.service';
+import { CitaFiltros, PaginaCitas } from '../../interface/cita-filtro.interface';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { VerDetalleCitaModalComponent } from '../../components/ver-detalle-cita-modal/ver-detalle-cita-modal.component';
 import { CitaCrearModalComponent } from '../../components/cita-crear-modal/cita-crear-modal.component';
 import { CitaEditarModalComponent } from '../../components/cita-editar-modal/cita-editar-modal.component';
+import { CitasFiltrosModalComponent } from '../../components/citas-filtros-modal/citas-filtros-modal.component';
 import { CustomTableComponent } from '../../../../../shared/components/custom-table/custom-table.component';
 import { TableColumn } from '../../../../../shared/components/custom-table/table-column.interface';
 import { HistorialCitaModalComponent } from '../../components/historial-cita-modal/historial-cita-modal.component';
 import { RegularizarCitaAdministrativoModalComponent } from '../../components/regularizar-cita-administrativo-modal/regularizar-cita-administrativo-modal.component';
-import { MotivoRegularizacionAdministrativa, OPCIONES_REGULARIZACION_ADMINISTRATIVA } from '../../interface/cita.interface';
+import {
+  MotivoRegularizacionAdministrativa,
+  OPCIONES_REGULARIZACION_ADMINISTRATIVA,
+} from '../../interface/cita.interface';
 import { ReportesCitasComponent } from '../../components/reportes-citas/reportes-citas.component';
 import { enAtencion as enAtencionCita } from '../../utils/atencion-cita.util';
 import { puedeCancelarCita, motivoNoCancelableCita } from '../../utils/ventana-cita.util';
 import { TienePermisoDirective } from '../../../../../core/directives/tiene-permiso.directive';
+
+type PaginaFiltrada = Omit<PaginaCitas, 'contenido'> & { contenido: CitaFila[] };
 
 @Component({
   selector: 'app-lista-cita',
@@ -34,6 +43,7 @@ import { TienePermisoDirective } from '../../../../../core/directives/tiene-perm
     HistorialCitaModalComponent,
     RegularizarCitaAdministrativoModalComponent,
     ReportesCitasComponent,
+    CitasFiltrosModalComponent,
   ],
   templateUrl: './lista-cita.component.html',
 })
@@ -65,6 +75,19 @@ export class ListaCitaComponent implements OnInit, OnDestroy {
     () => this.citas().filter((c) => this.idsPendientes().has(c.id)).length,
   );
 
+  // ---- Filtros avanzados (servicio independiente) ----
+  modalFiltrosAbierto = signal(false);
+  filtrosAvanzados = signal<CitaFiltros>({});
+  paginaFiltrada = signal<PaginaFiltrada | null>(null);
+  cargandoFiltros = signal(false);
+  readonly tamanioPagina = 10;
+  private subFiltros: Subscription | null = null;
+
+  cantidadFiltrosAvanzados = computed(() =>
+    this.filtroService.contarActivos(this.filtrosAvanzados()),
+  );
+  modoAvanzado = computed(() => this.cantidadFiltrosAvanzados() > 0);
+
   modalAccionesAbierto = signal<boolean>(false);
   citaSeleccionada = signal<any | null>(null);
 
@@ -91,6 +114,7 @@ export class ListaCitaComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.detenerLatido();
+    this.subFiltros?.unsubscribe();
   }
 
   private alFallar(error: any, mensaje: string): void {
@@ -235,7 +259,8 @@ export class ListaCitaComponent implements OnInit, OnDestroy {
       this.busqueda().trim() !== '' ||
       this.filtroEstado() !== 'todos' ||
       this.filtroFecha() !== '' ||
-      this.soloPendientes(),
+      this.soloPendientes() ||
+      this.modoAvanzado(),
   );
 
   filas = computed(() => {
@@ -243,21 +268,24 @@ export class ListaCitaComponent implements OnInit, OnDestroy {
     const estado = this.filtroEstado();
     const fecha = this.filtroFecha();
 
-    const lista = this.citas().filter((c) => {
-      if (estado !== 'todos' && c.estado !== estado) {
-        return false;
-      }
-      if (fecha && c.fecha !== fecha) {
-        return false;
-      }
-      if (this.soloPendientes() && !this.idsPendientes().has(c.id)) {
-        return false;
-      }
-      if (termino && !normalizar(`${c.paciente} ${c.medico} ${c.motivo}`).includes(termino)) {
-        return false;
-      }
-      return true;
-    });
+    // Con filtros avanzados la fuente es la página del servidor; sin ellos, el listado original.
+    const lista = this.modoAvanzado()
+      ? (this.paginaFiltrada()?.contenido ?? [])
+      : this.citas().filter((c) => {
+          if (estado !== 'todos' && c.estado !== estado) {
+            return false;
+          }
+          if (fecha && c.fecha !== fecha) {
+            return false;
+          }
+          if (this.soloPendientes() && !this.idsPendientes().has(c.id)) {
+            return false;
+          }
+          if (termino && !normalizar(`${c.paciente} ${c.medico} ${c.motivo}`).includes(termino)) {
+            return false;
+          }
+          return true;
+        });
 
     const clave = (c: CitaFila): string => `${c.fecha} ${c.inicio}`;
     const ascendente = [...lista].sort((a, b) => clave(a).localeCompare(clave(b)));
@@ -268,6 +296,7 @@ export class ListaCitaComponent implements OnInit, OnDestroy {
   constructor(
     private readonly citaService: CitaService,
     private readonly toastService: ToastService,
+    private readonly filtroService: CitaFiltroService,
   ) {}
 
   ngOnInit(): void {
@@ -305,6 +334,11 @@ export class ListaCitaComponent implements OnInit, OnDestroy {
         this.cargarPendientes();
         this.cargarSinActividad();
         this.cargando.set(false);
+
+        // Si hay filtros avanzados activos, refresca también la página filtrada
+        if (this.modoAvanzado()) {
+          this.consultarFiltrados(this.paginaFiltrada()?.pagina ?? 0, true);
+        }
       },
       error: (error) => {
         console.error('Error al cargar citas desde la API:', error);
@@ -331,6 +365,70 @@ export class ListaCitaComponent implements OnInit, OnDestroy {
     this.filtroEstado.set('todos');
     this.filtroFecha.set('');
     this.soloPendientes.set(false);
+    this.limpiarFiltrosAvanzados();
+  }
+
+  // ---- Filtros avanzados ----
+
+  abrirFiltros(): void {
+    this.modalFiltrosAbierto.set(true);
+  }
+
+  aplicarFiltrosAvanzados(filtros: CitaFiltros): void {
+    this.filtrosAvanzados.set(filtros);
+    this.modalFiltrosAbierto.set(false);
+
+    if (this.cantidadFiltrosAvanzados() === 0) {
+      this.subFiltros?.unsubscribe();
+      this.paginaFiltrada.set(null);
+      return;
+    }
+
+    // Al cambiar los criterios se vuelve a la primera página
+    this.consultarFiltrados(0, false);
+  }
+
+  limpiarFiltrosAvanzados(): void {
+    this.subFiltros?.unsubscribe();
+    this.filtrosAvanzados.set({});
+    this.paginaFiltrada.set(null);
+    this.cargandoFiltros.set(false);
+    this.modalFiltrosAbierto.set(false);
+  }
+
+  consultarFiltrados(pagina: number, silencioso: boolean): void {
+    // Cancela la solicitud anterior para evitar duplicadas o respuestas tardías
+    this.subFiltros?.unsubscribe();
+
+    if (!silencioso) {
+      this.cargandoFiltros.set(true);
+    }
+
+    this.subFiltros = this.filtroService
+      .buscar(this.filtrosAvanzados(), pagina, this.tamanioPagina)
+      .subscribe({
+        next: (response) => {
+          const p = response.object;
+          this.paginaFiltrada.set({
+            ...p,
+            contenido: (p.contenido || []).map(normalizarCita),
+          });
+          this.cargandoFiltros.set(false);
+        },
+        error: (error) => {
+          console.error('Error al aplicar filtros:', error);
+          this.toastService.error(error.error?.mensaje || 'No se pudieron aplicar los filtros.');
+          this.cargandoFiltros.set(false);
+        },
+      });
+  }
+
+  irAPagina(pagina: number): void {
+    const p = this.paginaFiltrada();
+    if (!p || pagina < 0 || pagina >= p.totalPaginas) {
+      return;
+    }
+    this.consultarFiltrados(pagina, false);
   }
 
   handleSort(field: string): void {

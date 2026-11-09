@@ -42,6 +42,9 @@ export class CrearEmpleadoModalComponent implements OnInit {
   nacionalidades = NACIONALIDADES;
   fechaMaxima = fechaMaximaNacimiento();
   imagen: File | null = null;
+  bloqueoNombre = false;
+  bloqueoFecha = false;
+  bloqueoDireccion = false;
   previewUrl: string | null = null;
   cargandoCatalogos = false;
   guardando = false;
@@ -51,6 +54,10 @@ export class CrearEmpleadoModalComponent implements OnInit {
   private readonly toastService = inject(ToastService);
   private readonly reniecService = inject(ReniecService);
   private readonly cdr = inject(ChangeDetectorRef);
+
+  get datosReniecCargados(): boolean {
+    return this.bloqueoNombre;
+  }
 
   ngOnInit(): void {
     this.cargandoCatalogos = true;
@@ -111,6 +118,9 @@ export class CrearEmpleadoModalComponent implements OnInit {
   }
 
   onTipoDocumentoChange(): void {
+    if (this.datosReniecCargados) {
+      this.desbloquearReniec();
+    }
     const longitud = this.longitudDocumento;
     if (longitud !== null) {
       this.empleadoForm.numeroDocumento = this.empleadoForm.numeroDocumento.slice(0, longitud);
@@ -132,6 +142,22 @@ export class CrearEmpleadoModalComponent implements OnInit {
         if (persona) {
           this.empleadoForm.nombre = persona.nombre;
           this.empleadoForm.apellidos = persona.apellidos;
+          this.bloqueoNombre = !!(persona.nombre && persona.apellidos);
+
+          if (persona.fechaNacimiento) {
+            this.empleadoForm.fechaNacimiento = persona.fechaNacimiento;
+            this.bloqueoFecha = true;
+
+            if (persona.fechaNacimiento > this.fechaMaxima) {
+              this.toastService.warning('El DNI consultado corresponde a un menor de 18 años.');
+            }
+          }
+
+          if (persona.direccion) {
+            this.empleadoForm.direccion = persona.direccion;
+            this.bloqueoDireccion = true;
+          }
+
           this.toastService.success('Datos obtenidos de RENIEC correctamente.');
         } else {
           this.toastService.warning('No se encontraron datos para el DNI ingresado.');
@@ -145,6 +171,16 @@ export class CrearEmpleadoModalComponent implements OnInit {
         this.cdr.detectChanges();
       },
     });
+  }
+
+  desbloquearReniec(): void {
+    this.empleadoForm.numeroDocumento = '';
+    this.empleadoForm.nombre = '';
+    this.empleadoForm.apellidos = '';
+    if (this.bloqueoFecha) this.empleadoForm.fechaNacimiento = '' as any;
+    if (this.bloqueoDireccion) this.empleadoForm.direccion = '';
+    this.bloqueoNombre = this.bloqueoFecha = this.bloqueoDireccion = false;
+    this.cdr.detectChanges();
   }
 
   onFileSelected(event: Event): void {
@@ -185,6 +221,7 @@ export class CrearEmpleadoModalComponent implements OnInit {
 
   handleClose(): void {
     this.empleadoForm = formularioVacio();
+    this.bloqueoNombre = this.bloqueoFecha = this.bloqueoDireccion = false;
     this.imagen = null;
     this.previewUrl = null;
     this.consultandoDni = false;
