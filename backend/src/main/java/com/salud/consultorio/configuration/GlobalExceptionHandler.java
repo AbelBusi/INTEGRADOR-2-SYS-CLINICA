@@ -3,11 +3,13 @@ package com.salud.consultorio.configuration;
 import com.salud.consultorio.auth.exception.CorreoEnvioException;
 import com.salud.consultorio.auth.exception.OperacionBloqueadaException;
 import com.salud.consultorio.auth.exception.UsuarioInactivoException;
+import com.salud.consultorio.model.payload.MensajeResponse;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
@@ -121,6 +123,15 @@ public class GlobalExceptionHandler {
         respuesta.put("mensaje", "La cita está siendo modificada por otro usuario. Inténtalo nuevamente.");
         respuesta.put("object", null);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(respuesta);
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<MensajeResponse> conflictoConcurrencia(ObjectOptimisticLockingFailureException ex) {
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("La historia clínica fue modificada por otro usuario. Recarga la información e inténtalo de nuevo.")
+                .build(), HttpStatus.CONFLICT);
+
     }
 
 }
