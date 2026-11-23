@@ -1,0 +1,168 @@
+<app-hc-modal-shell
+  titulo="Historia clínica"
+  [subtitulo]="subtitulo()"
+  icono="folder_shared"
+  ancho="max-w-5xl"
+  (cerrar)="alCerrar()">
+
+  @if (cargando()) {
+
+    <div class="flex items-center justify-center gap-3 px-6 py-20 text-sm text-gray-500">
+      <span class="h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-[#58595B]"></span>
+      Cargando historia clínica...
+    </div>
+
+  } @else if (error(); as mensaje) {
+
+    <div class="p-6">
+      <div class="flex items-start gap-3 rounded-lg border border-[#D9182A]/30 bg-[#D9182A]/5 px-4 py-3">
+        <span class="material-icons text-[20px] text-[#D9182A]">error_outline</span>
+        <p class="flex-1 text-sm font-semibold text-[#D9182A]">{{ mensaje }}</p>
+        <button
+          type="button"
+          (click)="cargarHistoria(false)"
+          class="rounded-md border border-gray-300 bg-white px-3 py-1 text-xs font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+          Reintentar
+        </button>
+      </div>
+    </div>
+
+  } @else if (sinHistoria()) {
+
+    <div class="flex flex-col items-center px-6 py-14 text-center">
+      <div class="flex h-12 w-12 items-center justify-center rounded-md bg-gray-100">
+        <span class="material-icons text-[26px] text-[#58595B]">folder_off</span>
+      </div>
+
+      <h4 class="mt-4 text-base font-bold text-gray-900">
+        {{ miHistoria ? 'Aún no tienes una historia clínica' : 'El paciente aún no tiene historia clínica' }}
+      </h4>
+
+      <p class="mt-1 max-w-md text-sm text-gray-500">
+        @if (miHistoria) {
+          Tu historia clínica será creada por el personal médico durante tu atención.
+        } @else {
+          Cada paciente tiene una única historia clínica. Un médico con relación asistencial puede crearla.
+        }
+      </p>
+
+      @if (!miHistoria) {
+        <button
+          type="button"
+          (click)="datosFormAbierto.set(true)"
+          class="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#D9182A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#B81424]">
+          <span class="material-icons text-[20px]">note_add</span>
+          Crear historia clínica
+        </button>
+      }
+    </div>
+
+  } @else if (historia(); as hc) {
+
+    <nav class="flex gap-1 overflow-x-auto border-b border-gray-200 bg-white px-4">
+      @for (p of pestanas; track p.id) {
+        <button
+          type="button"
+          (click)="pestana.set(p.id)"
+          class="-mb-px inline-flex shrink-0 items-center gap-2 border-b-2 px-3 py-3 text-sm font-semibold transition-colors"
+          [ngClass]="
+            pestana() === p.id
+              ? 'border-[#D9182A] text-[#D9182A]'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
+          ">
+          <span class="material-icons text-[18px]">{{ p.icono }}</span>
+          {{ p.texto }}
+          @if (contador(p.id) !== null) {
+            <span class="rounded-full border border-gray-200 bg-gray-100 px-2 py-0.5 text-[10px] font-bold text-gray-600">
+              {{ contador(p.id) }}
+            </span>
+          }
+        </button>
+      }
+    </nav>
+
+    <div class="p-6">
+      @switch (pestana()) {
+
+        @case ('datos') {
+          <app-hc-datos-generales
+            [historia]="hc"
+            [soloLectura]="miHistoria"
+            (editar)="datosFormAbierto.set(true)"
+          ></app-hc-datos-generales>
+        }
+
+        @case ('personales') {
+          <app-hc-antecedentes-personales
+            [idHistoria]="hc.id"
+            [items]="hc.antecedentesPersonales"
+            [soloLectura]="miHistoria"
+            (cambio)="alCambiar()"
+          ></app-hc-antecedentes-personales>
+        }
+
+        @case ('familiares') {
+          <app-hc-antecedentes-familiares
+            [idHistoria]="hc.id"
+            [items]="hc.antecedentesFamiliares"
+            [soloLectura]="miHistoria"
+            (cambio)="alCambiar()"
+          ></app-hc-antecedentes-familiares>
+        }
+
+        @case ('alergias') {
+          <app-hc-alergias
+            [idHistoria]="hc.id"
+            [items]="hc.alergias"
+            [soloLectura]="miHistoria"
+            (cambio)="alCambiar()"
+          ></app-hc-alergias>
+        }
+
+        @case ('atenciones') {
+          <app-hc-atenciones
+            [atenciones]="atenciones()"
+            [cargando]="cargandoAtenciones()"
+            [error]="errorAtenciones()"
+            (reintentar)="cargarAtenciones()"
+          ></app-hc-atenciones>
+        }
+
+      }
+    </div>
+
+  }
+
+  <div hc-footer class="flex shrink-0 flex-col-reverse justify-end gap-3 border-t border-gray-200 bg-white px-6 py-3 sm:flex-row">
+    <button
+      type="button"
+      (click)="alCerrar()"
+      class="h-10 rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+      Cerrar
+    </button>
+
+    @if (historia()) {
+      <button
+        type="button"
+        (click)="generarPdf()"
+        [disabled]="generandoPdf() || cargandoAtenciones()"
+        [attr.title]="cargandoAtenciones() ? 'Esperando las atenciones médicas...' : 'Generar PDF de la historia clínica'"
+        class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#D9182A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:opacity-50">
+        <span class="material-icons text-[20px]">picture_as_pdf</span>
+        {{ generandoPdf() ? 'Generando...' : 'Generar PDF' }}
+      </button>
+    }
+  </div>
+
+</app-hc-modal-shell>
+
+@if (datosFormAbierto()) {
+  <app-hc-datos-generales-form-modal
+    [historia]="historia()"
+    [idPaciente]="idPaciente"
+    [nombrePaciente]="nombrePaciente"
+    (cerrar)="datosFormAbierto.set(false)"
+    (guardada)="alGuardarDatos($event)"
+    (conflicto)="alConflicto()"
+  ></app-hc-datos-generales-form-modal>
+}

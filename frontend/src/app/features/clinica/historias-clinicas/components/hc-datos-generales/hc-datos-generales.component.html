@@ -1,0 +1,130 @@
+<div class="space-y-5">
+
+  @if (pendientes.length > 0) {
+    <div class="flex flex-wrap items-center gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
+      <span class="material-icons text-[20px] text-amber-700">pending_actions</span>
+      <p class="flex-1 text-sm font-semibold text-amber-800">
+        Información clínica pendiente: {{ pendientes.join(' y ') }}.
+      </p>
+      @if (!soloLectura) {
+        <button
+          type="button"
+          (click)="editar.emit()"
+          class="rounded-md border border-amber-600 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800 transition-colors hover:bg-amber-600 hover:text-white">
+          Completar ahora
+        </button>
+      }
+    </div>
+  }
+
+  <section class="rounded-lg border border-gray-200 bg-white">
+    <div class="flex items-center justify-between border-b border-gray-200 px-5 py-3">
+      <h4 class="text-xs font-bold uppercase tracking-wide text-[#58595B]">Datos del paciente</h4>
+      <span class="text-[11px] text-gray-500">Tomados del registro de pacientes</span>
+    </div>
+
+    <dl class="grid grid-cols-1 gap-x-6 gap-y-4 px-5 py-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div>
+        <dt class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">N° de historia clínica</dt>
+        <dd class="mt-0.5 text-sm font-bold text-gray-900">{{ historia.numeroHistoria }}</dd>
+      </div>
+
+      <div>
+        <dt class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">DNI / Documento</dt>
+        <dd class="mt-0.5 text-sm font-medium text-gray-800">{{ historia.paciente.numeroDocumento }}</dd>
+      </div>
+
+      <div class="sm:col-span-2 lg:col-span-1">
+        <dt class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Nombres y apellidos</dt>
+        <dd class="mt-0.5 text-sm font-medium text-gray-800">{{ historia.paciente.nombreCompleto }}</dd>
+      </div>
+
+      <div>
+        <dt class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Fecha de nacimiento</dt>
+        <dd class="mt-0.5 text-sm font-medium text-gray-800">
+          @if (fechaNacimiento) {
+            {{ fechaNacimiento }}<span class="text-gray-500"> · {{ edad }}</span>
+          } @else {
+            <ng-container *ngTemplateOutlet="noRegistrado"></ng-container>
+          }
+        </dd>
+      </div>
+
+      <div>
+        <dt class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Sexo</dt>
+        <dd class="mt-0.5 text-sm font-medium text-gray-800">
+          @if (sexo) {
+            {{ sexo }}
+          } @else {
+            <ng-container *ngTemplateOutlet="noRegistrado"></ng-container>
+          }
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="rounded-lg border border-gray-200 bg-white">
+    <div class="flex items-center justify-between border-b border-gray-200 px-5 py-3">
+      <h4 class="text-xs font-bold uppercase tracking-wide text-[#58595B]">Información clínica general</h4>
+
+      @if (!soloLectura) {
+        <button
+          type="button"
+          (click)="editar.emit()"
+          class="inline-flex h-9 items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+          <span class="material-icons text-[18px]">edit</span>
+          Editar
+        </button>
+      }
+    </div>
+
+    <dl class="grid grid-cols-1 gap-x-6 gap-y-4 px-5 py-4 sm:grid-cols-2">
+      <div>
+        <dt class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Grupo sanguíneo</dt>
+        <dd class="mt-0.5 text-sm font-medium text-gray-800">
+          @if (historia.grupoSanguineo) {
+            {{ historia.grupoSanguineo }}
+          } @else {
+            <ng-container *ngTemplateOutlet="noRegistrado"></ng-container>
+          }
+        </dd>
+      </div>
+
+      <div>
+        <dt class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Factor Rh</dt>
+        <dd class="mt-0.5 text-sm font-medium text-gray-800">
+          @if (rh) {
+            {{ rh }}
+          } @else {
+            <ng-container *ngTemplateOutlet="noRegistrado"></ng-container>
+          }
+        </dd>
+      </div>
+
+      <div class="sm:col-span-2">
+        <dt class="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Observaciones generales</dt>
+        <dd class="mt-0.5 whitespace-pre-line text-sm text-gray-800">
+          @if (historia.observaciones) {
+            {{ historia.observaciones }}
+          } @else {
+            <ng-container *ngTemplateOutlet="noRegistrado"></ng-container>
+          }
+        </dd>
+      </div>
+    </dl>
+
+    <div class="flex flex-wrap gap-x-6 gap-y-1 border-t border-gray-200 px-5 py-3 text-[11px] text-gray-500">
+      <span>Creada: {{ creada }}</span>
+      @if (actualizada) {
+        <span>Última actualización: {{ actualizada }}</span>
+      }
+    </div>
+  </section>
+
+</div>
+
+<ng-template #noRegistrado>
+  <span class="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-700">
+    No registrado
+  </span>
+</ng-template>

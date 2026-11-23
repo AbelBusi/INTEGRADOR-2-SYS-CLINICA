@@ -1,0 +1,92 @@
+<app-hc-modal-shell
+  [titulo]="esCreacion ? 'Crear historia clínica' : 'Información clínica general'"
+  [subtitulo]="subtitulo"
+  [icono]="esCreacion ? 'note_add' : 'edit'"
+  [elevado]="true"
+  ancho="max-w-lg"
+  (cerrar)="cerrar.emit()">
+
+  <form #f="ngForm" (ngSubmit)="onSubmit()" class="space-y-4 p-6">
+
+    @if (esCreacion) {
+      <p class="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+        El número de historia se genera automáticamente. Puedes guardar sin completar los demás
+        campos y registrarlos después.
+      </p>
+    } @else {
+      <p class="rounded border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+        Si dejas el grupo sanguíneo o el factor Rh sin seleccionar, se conserva el valor actual.
+      </p>
+    }
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+
+      <div class="space-y-1.5">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">
+          Grupo sanguíneo
+        </label>
+        <select
+          name="grupoSanguineo"
+          [(ngModel)]="form.grupoSanguineo"
+          class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]">
+          <option [ngValue]="null">{{ esCreacion ? 'Sin registrar' : 'Sin cambio' }}</option>
+          @for (g of grupos; track g.valor) {
+            <option [ngValue]="g.valor">{{ g.texto }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="space-y-1.5">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">
+          Factor Rh
+        </label>
+        <select
+          name="factorRh"
+          [(ngModel)]="form.factorRh"
+          class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]">
+          <option [ngValue]="null">{{ esCreacion ? 'Sin registrar' : 'Sin cambio' }}</option>
+          @for (r of factores; track r.valor) {
+            <option [ngValue]="r.valor">{{ r.texto }}</option>
+          }
+        </select>
+      </div>
+
+    </div>
+
+    <div class="space-y-1.5">
+      <div class="flex items-center justify-between">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">
+          Observaciones generales <span class="font-normal normal-case text-neutral-400">(opcional)</span>
+        </label>
+        <span class="text-[11px] font-medium text-neutral-400" [class.text-[#D9182A]]="form.observaciones.length >= 500">
+          {{ form.observaciones.length }}/500
+        </span>
+      </div>
+      <textarea
+        name="observaciones"
+        [(ngModel)]="form.observaciones"
+        maxlength="500"
+        placeholder="Información general relevante del paciente..."
+        class="h-28 w-full resize-none rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"></textarea>
+      @if (!esCreacion) {
+        <p class="text-[11px] text-neutral-500">Si vacías este campo y guardas, las observaciones se eliminan.</p>
+      }
+    </div>
+
+    <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
+      <button
+        type="button"
+        (click)="cerrar.emit()"
+        class="flex-1 rounded border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900">
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        [disabled]="guardando"
+        class="flex-1 rounded bg-[#D9182A] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:opacity-50">
+        {{ guardando ? 'Guardando...' : esCreacion ? 'Crear historia clínica' : 'Guardar cambios' }}
+      </button>
+    </div>
+
+  </form>
+</app-hc-modal-shell>

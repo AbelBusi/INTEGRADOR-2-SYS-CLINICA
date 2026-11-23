@@ -1,0 +1,36 @@
+<div class="space-y-6">
+
+  <div>
+    <h1 class="text-xl font-bold text-gray-900">Mi historia clínica</h1>
+    <p class="mt-0.5 text-sm text-gray-500">
+      Consulta tus antecedentes, alergias y atenciones médicas, y descarga tu historia en PDF.
+    </p>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-4 rounded-lg border border-gray-200 bg-white px-5 py-4">
+    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-[#58595B]">
+      <span class="material-icons text-[22px] text-white">folder_shared</span>
+    </div>
+
+    <div class="min-w-0 flex-1">
+      <p class="text-sm font-semibold text-gray-800">Historia clínica personal</p>
+      <p class="text-xs text-gray-500">La información clínica es registrada por el personal médico.</p>
+    </div>
+
+    <button
+      type="button"
+      (click)="abierto.set(true)"
+      class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#D9182A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#B81424]">
+      <span class="material-icons text-[20px]">folder_open</span>
+      Ver mi historia clínica
+    </button>
+  </div>
+
+</div>
+
+@if (abierto()) {
+  <app-ver-historia-clinica-modal
+    [miHistoria]="true"
+    (cerrar)="abierto.set(false)"
+  ></app-ver-historia-clinica-modal>
+}

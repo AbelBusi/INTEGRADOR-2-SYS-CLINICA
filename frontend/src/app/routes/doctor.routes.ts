@@ -16,6 +16,14 @@ export const DOCTOR_ROUTES: Routes = [
             (m) => m.MisCitasMedicoComponent,
           ),
       },
+      {
+        canActivate: [permisoGuard],
+        path: 'historias-clinicas',
+        loadComponent: () =>
+          import('../features/clinica/historias-clinicas/pages/lista-historias/lista-historias.component').then(
+            (m) => m.ListaHistoriasComponent,
+          ),
+      },
     ],
   },
 ];

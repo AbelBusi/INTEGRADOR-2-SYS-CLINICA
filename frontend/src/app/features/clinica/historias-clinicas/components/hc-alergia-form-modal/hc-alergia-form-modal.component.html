@@ -1,0 +1,104 @@
+<app-hc-modal-shell
+  [titulo]="esEdicion ? 'Editar alergia' : 'Registrar alergia'"
+  [icono]="esEdicion ? 'edit' : 'add'"
+  [elevado]="true"
+  ancho="max-w-lg"
+  (cerrar)="cerrar.emit()">
+
+  <form #f="ngForm" (ngSubmit)="onSubmit()" class="space-y-4 p-6">
+
+    <div class="space-y-1.5">
+      <div class="flex items-center justify-between">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Sustancia o alérgeno</label>
+        <span class="text-[11px] font-medium text-neutral-400" [class.text-[#D9182A]]="form.sustancia.length >= 100">
+          {{ form.sustancia.length }}/100
+        </span>
+      </div>
+      <input
+        type="text"
+        name="sustancia"
+        [(ngModel)]="form.sustancia"
+        #sustInput="ngModel"
+        maxlength="100"
+        required
+        placeholder="Ej. Penicilina"
+        class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"
+        [class.border-[#D9182A]]="sustInput.invalid && (sustInput.dirty || sustInput.touched)"
+      />
+      @if (sustInput.invalid && (sustInput.dirty || sustInput.touched)) {
+        <div class="text-xs font-medium text-[#D9182A]">La sustancia es obligatoria.</div>
+      }
+    </div>
+
+    <div class="space-y-1.5">
+      <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Tipo de alergia</label>
+      <select
+        name="tipoAlergia"
+        [(ngModel)]="form.tipoAlergia"
+        #tipoInput="ngModel"
+        required
+        class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"
+        [class.border-[#D9182A]]="tipoInput.invalid && (tipoInput.dirty || tipoInput.touched)">
+        <option [ngValue]="null">Seleccionar...</option>
+        @for (tipo of tipos; track tipo.valor) {
+          <option [ngValue]="tipo.valor">{{ tipo.texto }}</option>
+        }
+      </select>
+      @if (tipoInput.invalid && (tipoInput.dirty || tipoInput.touched)) {
+        <div class="text-xs font-medium text-[#D9182A]">El tipo de alergia es obligatorio.</div>
+      }
+    </div>
+
+    <div class="space-y-1.5">
+      <div class="flex items-center justify-between">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">
+          Reacción presentada <span class="font-normal normal-case text-neutral-400">(opcional)</span>
+        </label>
+        <span class="text-[11px] font-medium text-neutral-400" [class.text-[#D9182A]]="form.reaccion.length >= 200">
+          {{ form.reaccion.length }}/200
+        </span>
+      </div>
+      <input
+        type="text"
+        name="reaccion"
+        [(ngModel)]="form.reaccion"
+        maxlength="200"
+        placeholder="Ej. Urticaria, dificultad respiratoria"
+        class="w-full rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"
+      />
+    </div>
+
+    <div class="space-y-1.5">
+      <div class="flex items-center justify-between">
+        <label class="block text-xs font-semibold uppercase tracking-wider text-[#D9182A]">
+          Observación <span class="font-normal normal-case text-neutral-400">(opcional)</span>
+        </label>
+        <span class="text-[11px] font-medium text-neutral-400" [class.text-[#D9182A]]="form.observacion.length >= 300">
+          {{ form.observacion.length }}/300
+        </span>
+      </div>
+      <textarea
+        name="observacion"
+        [(ngModel)]="form.observacion"
+        maxlength="300"
+        placeholder="Detalles adicionales..."
+        class="h-24 w-full resize-none rounded border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-800 placeholder-neutral-400 outline-none transition-colors hover:border-[#58595B] focus:border-[#58595B]"></textarea>
+    </div>
+
+    <div class="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
+      <button
+        type="button"
+        (click)="cerrar.emit()"
+        class="flex-1 rounded border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900">
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        [disabled]="!f.form.valid || guardando"
+        class="flex-1 rounded bg-[#D9182A] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:opacity-50">
+        {{ guardando ? 'Guardando...' : esEdicion ? 'Guardar cambios' : 'Guardar alergia' }}
+      </button>
+    </div>
+
+  </form>
+</app-hc-modal-shell>

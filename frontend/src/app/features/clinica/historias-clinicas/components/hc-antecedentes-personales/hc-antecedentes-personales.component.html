@@ -1,0 +1,82 @@
+<div class="space-y-4">
+
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h4 class="text-xs font-bold uppercase tracking-wide text-[#58595B]">Antecedentes personales</h4>
+      <p class="mt-0.5 text-xs text-gray-500">
+        Enfermedades previas y crónicas, antecedentes quirúrgicos, hospitalizaciones y otros.
+      </p>
+    </div>
+
+    @if (!soloLectura) {
+      <button
+        type="button"
+        (click)="abrirCrear()"
+        class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#D9182A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#B81424]">
+        <span class="material-icons text-[20px]">add</span>
+        Agregar antecedente
+      </button>
+    }
+  </div>
+
+  @if (items.length === 0) {
+    <app-hc-seccion-vacia
+      titulo="Aún no se han registrado antecedentes personales"
+      detalle="Esta sección está pendiente de completar por el médico."
+      icono="history_edu"
+    ></app-hc-seccion-vacia>
+  } @else {
+    <app-custom-table [data]="items" [columns]="columns" [loading]="procesando()">
+
+      <ng-template #customColumn let-row let-field="field">
+
+        @if (field === 'tipo') {
+          <span class="inline-flex items-center rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-gray-600">
+            {{ tipoTexto(row) }}
+          </span>
+        }
+
+        @if (field === 'anio') {
+          <span class="text-sm text-gray-700">{{ row.anio ?? '-' }}</span>
+        }
+
+        @if (field === 'observacion') {
+          <span class="text-sm text-gray-600">{{ row.observacion || '-' }}</span>
+        }
+
+        @if (field === 'id') {
+          <div class="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              (click)="abrirEditar(row)"
+              class="inline-flex h-9 items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+              <span class="material-icons text-[18px]">edit</span>
+              Editar
+            </button>
+
+            <button
+              type="button"
+              (click)="eliminar(row)"
+              [disabled]="procesando()"
+              class="inline-flex h-9 items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] disabled:opacity-50">
+              <span class="material-icons text-[18px]">delete</span>
+              Eliminar
+            </button>
+          </div>
+        }
+
+      </ng-template>
+
+    </app-custom-table>
+  }
+
+</div>
+
+@if (formAbierto()) {
+  <app-hc-antecedente-personal-form-modal
+    [idHistoria]="idHistoria"
+    [registro]="registroEditar()"
+    (cerrar)="formAbierto.set(false)"
+    (guardado)="alGuardar()"
+  ></app-hc-antecedente-personal-form-modal>
+}

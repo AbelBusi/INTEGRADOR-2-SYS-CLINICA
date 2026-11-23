@@ -219,6 +219,12 @@
             <span class="material-icons text-[18px]">history</span>
             <span>Ver historial</span>
           </button>
+          <button type="button" title="Ver historia clínica"
+                  (click)="citaHistoriaClinica.set(row)"
+                  class="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 transition-colors hover:border-[#0d6b68] hover:bg-[#0d6b68]/10 hover:text-[#0d6b68]">
+            <span class="material-icons text-[18px]">folder_shared</span>
+            <span>Historia clínica</span>
+          </button>
 
           @if (row.estado === 3 || row.estado ===5) {
             <button
@@ -305,4 +311,12 @@
     [idsPendientes]="idsPendientes()"
     (close)="reportesAbierto.set(false)"
   ></app-reportes-portal-medico>
+}
+
+@if (citaHistoriaClinica(); as cita) {
+  <app-ver-historia-clinica-modal
+    [idPaciente]="cita.idPaciente"
+    [nombrePaciente]="cita.paciente"
+    (cerrar)="citaHistoriaClinica.set(null)"
+  ></app-ver-historia-clinica-modal>
 }

@@ -18,6 +18,9 @@ import { TableColumn } from '../../../../../shared/components/custom-table/table
 import { citaVencida, puedeAtenderCita, enAtencion as enAtencionCita, } from '../../utils/atencion-cita.util';
 import { puedeCancelarCita, motivoNoCancelableCita } from '../../utils/ventana-cita.util';
 import { ReportesPortalMedicoComponent } from '../../components/reportes-portal-medico/reportes-portal-medico.component';
+import {
+  VerHistoriaClinicaModalComponent
+} from '../../../historias-clinicas/components/ver-historia-clinica-modal/ver-historia-clinica-modal.component';
 
 @Component({
   selector: 'app-mis-citas-medico',
@@ -31,6 +34,7 @@ import { ReportesPortalMedicoComponent } from '../../components/reportes-portal-
     AtencionClinicaModalComponent,
     ReportesPortalMedicoComponent,
     RegularizarCitaModalComponent,
+    VerHistoriaClinicaModalComponent,
   ],
   templateUrl: './mis-citas-medico.component.html',
 })
@@ -48,6 +52,7 @@ export class MisCitasMedicoComponent implements OnInit, OnDestroy {
   filtroFecha = signal('');
   sortField = signal('');
   idsSinActividad = signal<Set<number>>(new Set());
+  citaHistoriaClinica = signal<CitaFila | null>(null);
 
   enAtencion(cita: CitaFila): boolean {
     return enAtencionCita(cita);
@@ -123,7 +128,7 @@ export class MisCitasMedicoComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error(error);
-        this.alFallar(error,'...');
+        this.alFallar(error, '...');
         this.toastService.error(error.error?.mensaje || 'No se pudo regularizar la cita');
         this.procesando.set(false);
       },
