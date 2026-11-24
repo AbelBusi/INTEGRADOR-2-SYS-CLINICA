@@ -52,17 +52,16 @@ public class HistoriaClinicaAccesoServicioImpl implements IHistoriaClinicaAcceso
 
     }
 
+    /**
+     * La historia clínica es un expediente permanente: cualquier médico activo puede consultarla y
+     * actualizarla, sin importar si tiene una cita programada, activa o reciente con el paciente.
+     * El parámetro se conserva para no alterar a los llamadores existentes.
+     */
     @Transactional(readOnly = true)
     @Override
     public Medico medicoAutorizadoPara(Integer idPaciente) {
 
-        Medico medico = medicoAutenticado();
-
-        if (!historiaClinicaRepositorio.existeRelacionAsistencial(medico.getId(), idPaciente)) {
-            throw new AccessDeniedException("No tiene una relación asistencial autorizada con este paciente.");
-        }
-
-        return medico;
+        return medicoAutenticado();
 
     }
 
@@ -74,7 +73,7 @@ public class HistoriaClinicaAccesoServicioImpl implements IHistoriaClinicaAcceso
                 () -> new EntityNotFoundException("No existe la historia clínica")
         );
 
-        medicoAutorizadoPara(historia.getPaciente().getId());
+        medicoAutenticado();
 
         if (historia.getEstado() != ACTIVO) {
             throw new IllegalArgumentException("La historia clínica no se encuentra activa.");
@@ -84,6 +83,7 @@ public class HistoriaClinicaAccesoServicioImpl implements IHistoriaClinicaAcceso
 
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Medico medicoAutenticado() {
 

@@ -14,12 +14,14 @@ import com.salud.consultorio.service.IHistoriaClinicaServicio;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -103,6 +105,12 @@ public class HistoriaClinicaServicioImpl implements IHistoriaClinicaServicio {
 
         HistoriaClinica historia = accesoServicio.historiaParaEscritura(idHistoria);
 
+        // Control de concurrencia: si otro médico guardó después de que este usuario cargó la historia,
+        // la versión que envía ya no coincide y se rechaza en vez de sobrescribir su cambio.
+        if (!Objects.equals(dto.version(), historia.getVersion())) {
+            throw new ObjectOptimisticLockingFailureException(HistoriaClinica.class, historia.getId());
+        }
+
         Map<String, Object> anteriores = new LinkedHashMap<>();
         Map<String, Object> nuevos = new LinkedHashMap<>();
 
@@ -131,6 +139,8 @@ public class HistoriaClinicaServicioImpl implements IHistoriaClinicaServicio {
             return toDto(historia);
         }
 
+        // saveAndFlush no existe en este repositorio (extiende Repository): el flush ocurre al confirmar
+        // la transacción y ahí Hibernate vuelve a validar @Version contra la base de datos.
         historiaClinicaRepositorio.save(historia);
 
         auditoriaServicio.registrar(historia, EntidadAuditoriaHC.HISTORIA_CLINICA, historia.getId(),
@@ -143,6 +153,9 @@ public class HistoriaClinicaServicioImpl implements IHistoriaClinicaServicio {
     @Transactional(readOnly = true)
     @Override
     public List<HistoriaClinicaResumenDTO> listar() {
+
+        // Antes no validaba nada: cualquier usuario autenticado podía listar nombres, DNI y grupo sanguíneo.
+        accesoServicio.medicoAutenticado();
 
         return historiaClinicaRepositorio.listarHistoriasClinicas();
     }
@@ -176,7 +189,8 @@ public class HistoriaClinicaServicioImpl implements IHistoriaClinicaServicio {
                 h.getFechaActualizacion(),
                 antecedentePersonalRepositorio.listaActivas(h.getId()).stream().map(mapper::toDto).toList(),
                 antecedenteFamiliarRepositorio.listaActivas(h.getId()).stream().map(mapper::toDto).toList(),
-                alergiaRepositorio.listaActivas(h.getId()).stream().map(mapper::toDto).toList()
+                alergiaRepositorio.listaActivas(h.getId()).stream().map(mapper::toDto).toList(),
+                h.getVersion()
         );
 
     }
