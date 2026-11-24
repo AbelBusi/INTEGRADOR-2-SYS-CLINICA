@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
-
 import { CitaFila } from '../../../../features/clinica/citas/interface/cita.interface';
 import { ANCHOS_TICKET, FORMATOS_DOCUMENTO } from '../../constants/documento-clinico.constants';
 import {
@@ -26,13 +25,14 @@ import { DocumentoClinicoService } from '../../services/documento-clinico.servic
 import { evaluarDisponibilidad } from '../../utils/contenido-documento.util';
 import { fechaTexto } from '../../utils/documento-clinico.util';
 import { abrirEnPestana, descargarArchivo, imprimirArchivo } from '../../utils/pdf-salida.util';
+import { DescansoMedicoModalComponent } from '../descanso-medico-modal/descanso-medico-modal.component';
 
 type AccionDocumento = 'vista' | 'descarga' | 'impresion';
 
 @Component({
   selector: 'app-documentos-clinicos-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DescansoMedicoModalComponent, DescansoMedicoModalComponent],
   templateUrl: './documentos-clinicos-modal.component.html',
 })
 export class DocumentosClinicosModalComponent implements OnInit, OnDestroy {
@@ -45,6 +45,7 @@ export class DocumentosClinicosModalComponent implements OnInit, OnDestroy {
   readonly formatos = FORMATOS_DOCUMENTO;
   readonly anchosTicket = ANCHOS_TICKET;
 
+  mostrarDescanso = signal(false);
   contexto = signal<ContextoClinico | null>(null);
   cargando = signal(true);
   errorCarga = signal<string | null>(null);

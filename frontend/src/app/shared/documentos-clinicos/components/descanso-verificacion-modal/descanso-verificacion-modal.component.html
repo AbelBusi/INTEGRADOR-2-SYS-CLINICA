@@ -1,0 +1,79 @@
+<div
+  class="fixed inset-0 z-[90] flex items-center justify-center bg-black/40 p-4"
+  (click)="cerrar()">
+
+  <div
+    class="w-full max-w-sm overflow-hidden rounded-lg border border-gray-200 bg-white"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="verificacion-titulo"
+    (click)="$event.stopPropagation()">
+
+    <div class="flex items-center gap-3 border-b border-gray-200 px-5 py-4">
+      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-[#58595B]">
+        <span class="material-icons text-[22px] text-white">verified_user</span>
+      </div>
+      <div class="min-w-0">
+        <h3 id="verificacion-titulo" class="text-base font-bold text-gray-900">Verificación del médico</h3>
+        <p class="text-xs text-gray-500">Confirma la emisión del descanso médico</p>
+      </div>
+    </div>
+
+    <div class="space-y-3 px-5 py-4">
+      <p class="text-sm leading-5 text-gray-700">
+        Ingresa el código de verificación de seis dígitos. Una vez generado, el descanso médico no se puede
+        modificar ni emitir de nuevo para esta atención.
+      </p>
+
+      <div>
+        <label for="codigoVerificacion" class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+          Código de verificación
+        </label>
+        <input
+          #campo
+          id="codigoVerificacion"
+          type="text"
+          inputmode="numeric"
+          autocomplete="one-time-code"
+          maxlength="6"
+          placeholder="000000"
+          [disabled]="procesando"
+          [ngModel]="codigo()"
+          (ngModelChange)="alEscribir($event)"
+          (keydown.enter)="enviar()"
+          class="mt-1.5 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-center text-lg font-semibold tracking-[0.5em] text-gray-800 outline-none placeholder-gray-300 hover:border-[#58595B] focus:border-[#58595B] disabled:opacity-60"
+          [class.border-[#D9182A]]="error"
+        />
+      </div>
+
+      @if (error) {
+        <div class="flex items-start gap-2 rounded-md border border-[#D9182A]/30 bg-[#D9182A]/5 px-3 py-2" role="alert">
+          <span class="material-icons text-[18px] text-[#D9182A]">error_outline</span>
+          <p class="flex-1 text-sm font-semibold text-[#D9182A]">{{ error }}</p>
+        </div>
+      }
+    </div>
+
+    <div class="flex flex-col-reverse gap-3 border-t border-gray-200 bg-[#fafafa] px-5 py-3 sm:flex-row sm:justify-end">
+      <button
+        type="button"
+        [disabled]="procesando"
+        (click)="cerrar()"
+        class="inline-flex h-10 items-center justify-center rounded-md border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60">
+        Cancelar
+      </button>
+      <button
+        type="button"
+        [disabled]="!completo || procesando"
+        (click)="enviar()"
+        class="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-[#D9182A] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#B81424] disabled:cursor-not-allowed disabled:opacity-60">
+        @if (procesando) {
+          <span class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"></span>
+          Generando...
+        } @else {
+          Confirmar y generar
+        }
+      </button>
+    </div>
+  </div>
+</div>
