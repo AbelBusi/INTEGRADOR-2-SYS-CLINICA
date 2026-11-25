@@ -1,0 +1,38 @@
+<app-hc-panel-seccion
+  anclaId="hc-familiares"
+  titulo="Antecedentes familiares"
+  descripcion="Enfermedades hereditarias y antecedentes relevantes de tu familia."
+  icono="family_restroom"
+  [contador]="items.length">
+
+  @if (items.length === 0) {
+    <app-hc-seccion-vacia
+      titulo="Aún no hay antecedentes familiares registrados"
+      detalle="Tu médico los registrará durante tu atención."
+      icono="family_restroom"
+    ></app-hc-seccion-vacia>
+  } @else {
+    <div class="space-y-5">
+      @for (grupo of grupos; track grupo.valor) {
+        <div>
+          <h3 class="text-[11px] font-bold uppercase tracking-wide text-gray-500">{{ grupo.texto }}</h3>
+
+          <ul class="mt-1 divide-y divide-gray-100">
+            @for (item of grupo.items; track item.id) {
+              <li class="flex gap-4 py-2.5">
+                <span class="w-20 shrink-0 text-sm text-gray-500">{{ parentesco(item) }}</span>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-semibold text-gray-800">{{ item.descripcion }}</p>
+                  @if (item.observacion) {
+                    <p class="mt-0.5 text-xs text-gray-500">{{ item.observacion }}</p>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </div>
+  }
+
+</app-hc-panel-seccion>

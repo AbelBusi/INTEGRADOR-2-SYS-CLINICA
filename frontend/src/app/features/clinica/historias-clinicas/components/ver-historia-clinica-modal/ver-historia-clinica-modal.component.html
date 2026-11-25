@@ -60,7 +60,7 @@
   } @else if (historia(); as hc) {
 
     <nav class="flex gap-1 overflow-x-auto border-b border-gray-200 bg-white px-4">
-      @for (p of pestanas; track p.id) {
+      @for (p of pestanasVisibles(); track p.id) {
         <button
           type="button"
           (click)="pestana.set(p.id)"
@@ -126,6 +126,14 @@
             [error]="errorAtenciones()"
             (reintentar)="cargarAtenciones()"
           ></app-hc-atenciones>
+        }
+
+        @case ('auditoria') {
+          <div class="mb-4">
+            <h3 class="text-sm font-bold text-gray-900">Auditoría de la historia clínica</h3>
+            <p class="text-xs text-gray-500">Quién modificó la historia, qué cambió y cuándo.</p>
+          </div>
+          <app-hc-auditoria [historia]="hc"></app-hc-auditoria>
         }
 
       }

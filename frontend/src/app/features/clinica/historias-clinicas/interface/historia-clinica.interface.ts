@@ -190,3 +190,23 @@ export interface AtencionHistoria {
   motivo: string | null;
   diagnosticos: DiagnosticoAtencion[];
 }
+
+/* ------------------------------ Auditoría (solo lectura) ------------------------------ */
+
+export type EntidadAuditoriaHC =
+  'HISTORIA_CLINICA' | 'ANTECEDENTE_PERSONAL' | 'ANTECEDENTE_FAMILIAR' | 'ALERGIA';
+
+export type OperacionAuditoriaHC = 'CREACION' | 'MODIFICACION' | 'ELIMINACION';
+
+export interface AuditoriaHistoria {
+  id: number;
+  entidad: EntidadAuditoriaHC;
+  idRegistro: number;
+  operacion: OperacionAuditoriaHC;
+  /** Nombre completo de quien realizó el cambio. */
+  usuario: string;
+  fechaEvento: string;
+  /** En una modificación solo vienen los campos que cambiaron. */
+  datosAnteriores: Record<string, unknown> | null;
+  datosNuevos: Record<string, unknown> | null;
+}

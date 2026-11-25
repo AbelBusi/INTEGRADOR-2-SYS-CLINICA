@@ -39,6 +39,7 @@ export const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = 
   '/dashboard/doctores/nuevo': { title: 'Nuevo doctor', subtitle: 'Alta de especialista' },
   '/dashboard/especialidades': { title: 'Especialidades', subtitle: 'Áreas médicas disponibles' },
   '/dashboard/historias-clinicas': { title: 'Historias Clinicas', subtitle: 'Áreas de historias clinicas' },
+  '/dashboard/mi-historias-clinicas': { title: 'Mis Historias Clinicas', subtitle: 'Áreas de historias clinicas' },
   '/dashboard/roles': { title: 'Roles', subtitle: 'Roles disponibles' },
   '/dashboard/usuarios': { title: 'Usuarios', subtitle: 'Usuarios disponibles' },
   '/dashboard/horarios': { title: 'Horarios', subtitle: 'Horarios disponibles' },
@@ -154,6 +155,13 @@ export const MENU_BASE: NavItem[] = [
     permisos: ['CITA_PACIENTE_VER'],
     icon: 'local_hospital',
     sub: [{ label: 'Mis citas', route: '/dashboard/pacientes-misCitas' }],
+  },
+  {
+    grupo: 'ATENCION MEDICA',
+    label: 'Mi Historia Clinica',
+    roles: ['PACIENTE'],
+    icon: 'local_hospital',
+    sub: [{ label: 'Mi historia clinica', route: '/dashboard/mi-historias-clinicas' }],
   },
   {
     grupo: 'ATENCION MEDICA',

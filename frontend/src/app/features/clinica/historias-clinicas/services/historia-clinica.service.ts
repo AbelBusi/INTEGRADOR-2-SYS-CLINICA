@@ -5,6 +5,7 @@ import { environment } from '../../../../../environments/environment';
 
 import {
   AtencionHistoria,
+  AuditoriaHistoria,
   HistoriaClinica,
   HistoriaClinicaActualizar,
   HistoriaClinicaCrear,
@@ -64,6 +65,26 @@ export class HistoriaClinicaService {
     const params = new HttpParams().set('pagina', pagina).set('tamanio', tamanio);
     return this.http.get<MensajeResponses<Pagina<AtencionHistoria>>>(
       `${this.baseUrl}/mi-historia/atenciones`,
+      { params },
+    );
+  }
+
+  auditoriaPorHistoria(
+    idHistoria: number,
+    pagina = 0,
+    tamanio = 15,
+  ): Observable<MensajeResponses<Pagina<AuditoriaHistoria>>> {
+    const params = new HttpParams().set('pagina', pagina).set('tamanio', tamanio);
+    return this.http.get<MensajeResponses<Pagina<AuditoriaHistoria>>>(
+      `${this.baseUrl}/${idHistoria}/auditoria`,
+      { params },
+    );
+  }
+
+  miAuditoria(pagina = 0, tamanio = 15): Observable<MensajeResponses<Pagina<AuditoriaHistoria>>> {
+    const params = new HttpParams().set('pagina', pagina).set('tamanio', tamanio);
+    return this.http.get<MensajeResponses<Pagina<AuditoriaHistoria>>>(
+      `${this.baseUrl}/mi-historia/auditoria`,
       { params },
     );
   }

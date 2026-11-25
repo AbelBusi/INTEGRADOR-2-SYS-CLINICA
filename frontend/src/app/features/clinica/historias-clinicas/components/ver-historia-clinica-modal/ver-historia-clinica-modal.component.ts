@@ -9,12 +9,13 @@ import { descargarHistoriaClinicaPdf } from '../../utils/historia-clinica-pdf.ut
 import { HcAlergiasComponent } from '../hc-alergias/hc-alergias.component';
 import { HcAntecedentesFamiliaresComponent } from '../hc-antecedentes-familiares/hc-antecedentes-familiares.component';
 import { HcAntecedentesPersonalesComponent } from '../hc-antecedentes-personales/hc-antecedentes-personales.component';
+import { HcAuditoriaComponent } from '../hc-auditoria/hc-auditoria.component';
 import { HcAtencionesComponent } from '../hc-atenciones/hc-atenciones.component';
 import { HcDatosGeneralesFormModalComponent } from '../hc-datos-generales-form-modal/hc-datos-generales-form-modal.component';
 import { HcDatosGeneralesComponent } from '../hc-datos-generales/hc-datos-generales.component';
 import { HcModalShellComponent } from '../hc-modal-shell/hc-modal-shell.component';
 
-type Pestana = 'datos' | 'personales' | 'familiares' | 'alergias' | 'atenciones';
+type Pestana = 'datos' | 'personales' | 'familiares' | 'alergias' | 'atenciones' | 'auditoria';
 
 /**
  * Modal de consulta de la historia clínica. Se reutiliza desde:
@@ -35,6 +36,7 @@ type Pestana = 'datos' | 'personales' | 'familiares' | 'alergias' | 'atenciones'
     HcAntecedentesFamiliaresComponent,
     HcAlergiasComponent,
     HcAtencionesComponent,
+    HcAuditoriaComponent,
   ],
   templateUrl: './ver-historia-clinica-modal.component.html',
 })
@@ -50,13 +52,20 @@ export class VerHistoriaClinicaModalComponent implements OnInit {
   /** Se emite al cerrar si hubo alguna creación o modificación, para refrescar listados. */
   @Output() historiaCambiada = new EventEmitter<void>();
 
+
   readonly pestanas: { id: Pestana; texto: string; icono: string }[] = [
     { id: 'datos', texto: 'Datos generales', icono: 'badge' },
     { id: 'personales', texto: 'Antecedentes personales', icono: 'history_edu' },
     { id: 'familiares', texto: 'Antecedentes familiares', icono: 'family_restroom' },
     { id: 'alergias', texto: 'Alergias', icono: 'warning_amber' },
     { id: 'atenciones', texto: 'Atenciones médicas', icono: 'medical_services' },
+    { id: 'auditoria', texto: 'Auditoría', icono: 'history' },
   ];
+
+  /** La auditoría se consulta solo desde el lado del médico; el paciente la ve en su panel. */
+  pestanasVisibles(): { id: Pestana; texto: string; icono: string }[] {
+    return this.miHistoria ? this.pestanas.filter((p) => p.id !== 'auditoria') : this.pestanas;
+  }
 
   pestana = signal<Pestana>('datos');
   historia = signal<HistoriaClinica | null>(null);

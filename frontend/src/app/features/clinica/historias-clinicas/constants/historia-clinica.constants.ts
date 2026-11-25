@@ -74,3 +74,18 @@ export const URGENCIA_DERIVACION: Record<number, string> = {
 };
 
 export const INSTITUCION_NOMBRE = 'Centro de Salud Especializado José Olaya Balandra';
+
+/* ------------------------------ Títulos de grupo del panel del paciente ------------------------------ */
+
+export const GRUPOS_ANTECEDENTE_PERSONAL: OpcionLista<TipoAntecedentePersonal>[] = [
+  { valor: 'ENFERMEDAD_PREVIA', texto: 'Enfermedades previas' },
+  { valor: 'ENFERMEDAD_CRONICA', texto: 'Enfermedades crónicas' },
+  { valor: 'QUIRURGICO', texto: 'Antecedentes quirúrgicos' },
+  { valor: 'HOSPITALIZACION', texto: 'Hospitalizaciones' },
+  { valor: 'OTRO', texto: 'Otros antecedentes' },
+];
+
+export const GRUPOS_ANTECEDENTE_FAMILIAR: OpcionLista<TipoAntecedenteFamiliar>[] = [
+  { valor: 'ENFERMEDAD_HEREDITARIA', texto: 'Enfermedades hereditarias' },
+  { valor: 'ANTECEDENTE_RELEVANTE', texto: 'Antecedentes familiares relevantes' },
+];

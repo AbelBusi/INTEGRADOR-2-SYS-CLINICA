@@ -1,0 +1,39 @@
+<app-hc-panel-seccion
+  anclaId="hc-alergias"
+  titulo="Alergias"
+  descripcion="Sustancias a las que eres alérgico y cómo reaccionas."
+  icono="warning_amber"
+  [contador]="items.length">
+
+  @if (items.length === 0) {
+    <app-hc-seccion-vacia
+      titulo="Aún no hay alergias registradas"
+      detalle="Tu médico las registrará durante tu atención."
+      icono="warning_amber"
+    ></app-hc-seccion-vacia>
+  } @else {
+    <ul class="divide-y divide-gray-100">
+      @for (item of items; track item.id) {
+        <li class="py-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <p class="text-sm font-bold text-gray-900">{{ item.sustancia }}</p>
+            <span class="inline-flex items-center rounded-full border border-[#D9182A]/20 bg-[#D9182A]/10 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-[#D9182A]">
+              {{ tipo(item) }}
+            </span>
+          </div>
+
+          @if (item.reaccion) {
+            <p class="mt-1 text-sm text-gray-700">
+              <span class="font-semibold text-gray-800">Reacción: </span>{{ item.reaccion }}
+            </p>
+          }
+
+          @if (item.observacion) {
+            <p class="mt-0.5 text-xs text-gray-500">{{ item.observacion }}</p>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+</app-hc-panel-seccion>

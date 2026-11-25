@@ -1,0 +1,26 @@
+<section [attr.id]="anclaId" class="scroll-mt-4 rounded-lg border border-gray-200 bg-white">
+
+  <div class="flex items-center gap-3 border-b border-gray-200 px-5 py-3">
+    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gray-100">
+      <span class="material-icons text-[19px] text-[#58595B]">{{ icono }}</span>
+    </div>
+
+    <div class="min-w-0 flex-1">
+      <h2 class="text-sm font-bold text-gray-900">{{ titulo }}</h2>
+      @if (descripcion) {
+        <p class="text-xs text-gray-500">{{ descripcion }}</p>
+      }
+    </div>
+
+    @if (contador !== null) {
+      <span class="rounded-full border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-[11px] font-bold text-gray-600">
+        {{ contador }}
+      </span>
+    }
+  </div>
+
+  <div class="px-5 py-4">
+    <ng-content></ng-content>
+  </div>
+
+</section>
