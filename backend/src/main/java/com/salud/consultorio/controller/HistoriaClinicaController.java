@@ -3,6 +3,7 @@ package com.salud.consultorio.controller;
 import com.salud.consultorio.dto.historiaClinica.*;
 import com.salud.consultorio.model.payload.MensajeResponse;
 import com.salud.consultorio.service.IAtencionHistoriaServicio;
+import com.salud.consultorio.service.IAuditoriaHistoriaClinicaServicio;
 import com.salud.consultorio.service.IHistoriaClinicaServicio;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,6 +24,7 @@ public class HistoriaClinicaController {
 
     private final IHistoriaClinicaServicio historiaClinicaServicio;
     private final IAtencionHistoriaServicio atencionHistoriaServicio;
+    private final IAuditoriaHistoriaClinicaServicio auditoriaServicio;
 
     @Operation(summary = "Consultar la historia clínica de un paciente",
             description = "Solo médicos con relación asistencial (cita programada o atendida) con el paciente.")
@@ -138,6 +140,43 @@ public class HistoriaClinicaController {
         return new ResponseEntity<>(MensajeResponse.builder()
                 .mensaje("Historias clinicas")
                 .object(historiaClinicaServicio.listar()).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(summary = "Mi auditoría",
+            description = "El paciente autenticado consulta el registro de cambios de su propia historia clínica.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Registro de cambios obtenido (puede ser vacío)"),
+            @ApiResponse(responseCode = "403", description = "El usuario no es un paciente activo"),
+            @ApiResponse(responseCode = "404", description = "Aún no tiene historia clínica")
+    })
+    @GetMapping("/mi-historia/auditoria")
+    public ResponseEntity<MensajeResponse> miAuditoria(
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "15") int tamanio) {
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Mi auditoria de historia clinica")
+                .object(auditoriaServicio.listarMias(pagina, tamanio)).build(), HttpStatus.OK);
+
+    }
+
+    @Operation(summary = "Auditoría de una historia clínica",
+            description = "Registro de cambios (quién, cuándo, qué y valores anterior y nuevo). Solo médicos.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Registro de cambios obtenido (puede ser vacío)"),
+            @ApiResponse(responseCode = "403", description = "El usuario no es un médico activo"),
+            @ApiResponse(responseCode = "404", description = "Historia clínica no encontrada")
+    })
+    @GetMapping("/{idHistoria}/auditoria")
+    public ResponseEntity<MensajeResponse> auditoria(
+            @PathVariable Integer idHistoria,
+            @RequestParam(defaultValue = "0") int pagina,
+            @RequestParam(defaultValue = "15") int tamanio) {
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Auditoria de historia clinica")
+                .object(auditoriaServicio.listarPorHistoria(idHistoria, pagina, tamanio)).build(), HttpStatus.OK);
 
     }
 
