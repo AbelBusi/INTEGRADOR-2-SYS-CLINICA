@@ -1,0 +1,160 @@
+<div class="relative z-50">
+
+  <div class="fixed inset-0 bg-neutral-900/50"></div>
+
+  <div class="fixed inset-0 overflow-y-auto">
+    <div class="flex min-h-full items-center justify-center p-4">
+
+      <div class="w-full max-w-6xl overflow-hidden rounded border border-neutral-300 bg-white">
+
+        <div class="flex justify-between items-center px-6 py-4 bg-[#58595B]">
+          <h3 class="text-base font-bold text-white flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded bg-[#D9182A] flex items-center justify-center">
+              <span class="material-icons text-white text-[18px]">description</span>
+            </div>
+            Descanso médico {{ descanso.numero }}
+          </h3>
+          <button (click)="close.emit()"
+                  class="p-1 rounded hover:bg-neutral-700 text-neutral-300 hover:text-white transition-colors">
+            <span class="material-icons text-[20px]">close</span>
+          </button>
+        </div>
+
+        <div class="flex h-1">
+          <div class="w-1/2 bg-[#58595B]"></div>
+          <div class="w-1/2 bg-[#D9182A]"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-[24rem_minmax(0,1fr)] max-h-[78vh] overflow-y-auto lg:overflow-hidden">
+
+          <div class="space-y-4 border-b border-neutral-200 p-5 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+
+            <div class="flex items-center gap-4 rounded border border-neutral-200 bg-neutral-50 px-4 py-3">
+              <app-sello-firma
+                [hash]="descanso.hashContenido"
+                [size]="72"
+                [cancelado]="descanso.estado === 'CANCELADO'"
+              ></app-sello-firma>
+              <div class="min-w-0">
+                <p class="text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Firma electrónica interna</p>
+                <p class="mt-1 font-mono text-xs font-bold tracking-wider text-neutral-800">
+                  {{ hashCorto(descanso.hashContenido) }}
+                </p>
+                <p class="mt-1 text-[11px] leading-4 text-neutral-500">
+                  Firma interna del establecimiento.
+                </p>
+              </div>
+            </div>
+
+            @if (descanso.estado === 'CANCELADO' && descanso.cancelacion; as cancelacion) {
+              <div class="border-l-2 border-l-[#D9182A] bg-[#D9182A]/5 px-4 py-3">
+                <p class="text-xs font-bold uppercase tracking-wide text-[#D9182A]">Documento cancelado</p>
+                <p class="mt-1 text-sm text-neutral-800">{{ cancelacion.motivo }}</p>
+                <p class="mt-1 text-xs text-neutral-500">
+                  {{ cancelacion.canceladoPor }} · {{ formatearFechaHora(cancelacion.fechaCancelacion) }}
+                </p>
+              </div>
+            }
+
+            <dl class="divide-y divide-neutral-100 rounded border border-neutral-200 text-sm">
+              <div class="px-3 py-2">
+                <dt class="text-xs text-neutral-500">Paciente</dt>
+                <dd class="font-semibold text-neutral-800">{{ descanso.datos.pacienteNombre }}</dd>
+                <dd class="text-xs text-neutral-500">{{ descanso.datos.pacienteDocumento }}</dd>
+              </div>
+              <div class="px-3 py-2">
+                <dt class="text-xs text-neutral-500">Emitido por</dt>
+                <dd class="font-semibold text-neutral-800">{{ descanso.datos.medicoNombre }}</dd>
+                <dd class="text-xs text-neutral-500">
+                  {{ descanso.datos.especialidad }}
+                  @if (descanso.datos.numeroColegiatura) { · Col. {{ descanso.datos.numeroColegiatura }} }
+                </dd>
+              </div>
+              <div class="px-3 py-2">
+                <dt class="text-xs text-neutral-500">Periodo</dt>
+                <dd class="text-neutral-800">
+                  {{ formatearFecha(descanso.fechaInicio) }} al {{ formatearFecha(descanso.fechaFin) }}
+                  · {{ textoDias(descanso.dias) }}
+                </dd>
+              </div>
+              <div class="px-3 py-2">
+                <dt class="text-xs text-neutral-500">Fecha y hora de emisión</dt>
+                <dd class="text-neutral-800">{{ formatearFechaHora(descanso.fechaEmision) }}</dd>
+              </div>
+              <div class="px-3 py-2">
+                <dt class="text-xs text-neutral-500">Justificación médica</dt>
+                <dd class="whitespace-pre-line text-neutral-800">{{ descanso.justificacion }}</dd>
+              </div>
+              <div class="px-3 py-2">
+                <dt class="text-xs text-neutral-500">Confirmación electrónica</dt>
+                <dd class="text-neutral-800">
+                  {{ etiquetaMetodo(descanso.metodoConfirmacion) }} · {{ formatearFechaHora(descanso.fechaConfirmacion) }}
+                </dd>
+              </div>
+              <div class="px-3 py-2">
+                <dt class="text-xs text-neutral-500">Identificador del documento</dt>
+                <dd class="break-all font-mono text-xs text-neutral-700">{{ descanso.codigoDocumento }}</dd>
+              </div>
+              <div class="px-3 py-2">
+                <dt class="text-xs text-neutral-500">Huella SHA-256</dt>
+                <dd class="break-all font-mono text-xs text-neutral-700">{{ descanso.hashContenido }}</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="flex min-h-[460px] flex-col gap-3 bg-neutral-50 p-5">
+            <div class="relative min-h-[420px] flex-1 overflow-hidden rounded border border-neutral-200 bg-white">
+              @if (vistaUrl(); as url) {
+                <iframe [src]="url" title="Descanso médico en PDF" class="absolute inset-0 h-full w-full bg-white"></iframe>
+              }
+
+              @if (generandoPdf()) {
+                <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/90">
+                  <span class="h-6 w-6 animate-spin rounded-full border-2 border-neutral-300 border-t-[#D9182A]"></span>
+                  <p class="text-sm text-neutral-600">Generando documento...</p>
+                </div>
+              }
+            </div>
+
+            @if (errorPdf(); as mensaje) {
+              <div class="flex items-start gap-2 rounded border border-[#D9182A]/30 bg-[#D9182A]/5 px-3 py-2" role="alert">
+                <span class="material-icons text-[18px] text-[#D9182A]">error_outline</span>
+                <p class="flex-1 text-sm font-semibold text-[#D9182A]">{{ mensaje }}</p>
+                <button type="button" (click)="generarPdf()" class="text-xs font-semibold text-[#58595B] hover:text-[#D9182A]">
+                  Reintentar
+                </button>
+              </div>
+            }
+
+            @if (archivo()) {
+              <p class="text-xs text-neutral-500">
+                ¿No se visualiza el PDF?
+                <button type="button" (click)="abrirEnNuevaPestana()" class="font-semibold text-[#58595B] hover:text-[#D9182A]">
+                  Abrirlo en una pestaña nueva
+                </button>
+              </p>
+            }
+          </div>
+        </div>
+
+        <div class="flex flex-col-reverse gap-3 border-t border-neutral-200 bg-neutral-50 px-6 py-3 sm:flex-row sm:justify-end">
+          <button
+            type="button"
+            (click)="close.emit()"
+            class="px-4 py-2 text-sm font-medium text-neutral-600 bg-white hover:bg-neutral-100 hover:text-neutral-900 rounded border border-neutral-300 transition-colors">
+            Cerrar
+          </button>
+          <button
+            type="button"
+            [disabled]="!archivo() || generandoPdf()"
+            (click)="descargar()"
+            class="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-semibold text-[#58595B] bg-white hover:bg-[#58595B] hover:text-white rounded border border-[#58595B] transition-colors disabled:opacity-50">
+            <span class="material-icons text-[18px]">download</span>
+            Descargar PDF
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

@@ -52,3 +52,38 @@ export function etiquetaMetodo(metodo: string): string {
 export function mensajeError(error: any, porDefecto: string): string {
   return error?.error?.mensaje || error?.error?.message || porDefecto;
 }
+
+/** 'A3F9C2E1…' -> 'A3F9C2E1 · 7B04D8E2' (primeros y últimos 8 caracteres). */
+export function hashCorto(hash: string | null | undefined): string {
+  if (!hash) {
+    return '—';
+  }
+
+  return `${hash.substring(0, 8)} · ${hash.substring(hash.length - 8)}`.toUpperCase();
+}
+
+/** '2026-11-04T12:42:10' -> '04 nov 2026 · 12:42 a. m.' */
+export function formatearFechaEvento(iso: string | null | undefined): string {
+  if (!iso) {
+    return '—';
+  }
+
+  const fecha = new Date(iso);
+
+  if (Number.isNaN(fecha.getTime())) {
+    return '—';
+  }
+
+  const dia = new Intl.DateTimeFormat('es-PE', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(fecha);
+  const hora = new Intl.DateTimeFormat('es-PE', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  }).format(fecha);
+
+  return `${dia} · ${hora}`;
+}

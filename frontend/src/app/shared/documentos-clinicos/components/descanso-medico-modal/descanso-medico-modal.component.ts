@@ -12,6 +12,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
+import { SelloFirmaComponent } from '../sello-firma/sello-firma.component';
 
 import { ToastService } from '../../../../core/services/toast.service';
 import { CitaFila } from '../../../../features/clinica/citas/interface/cita.interface';
@@ -29,6 +30,7 @@ import {
   formatearFecha,
   formatearFechaHora,
   hoyIso,
+  hashCorto,
   mensajeError,
   textoDias,
 } from '../../utils/descanso-medico.util';
@@ -38,7 +40,7 @@ import { DescansoVerificacionModalComponent } from '../descanso-verificacion-mod
 @Component({
   selector: 'app-descanso-medico-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, DescansoVerificacionModalComponent],
+  imports: [CommonModule, FormsModule, DescansoVerificacionModalComponent, SelloFirmaComponent],
   templateUrl: './descanso-medico-modal.component.html',
 })
 export class DescansoMedicoModalComponent implements OnInit, OnDestroy {
@@ -53,7 +55,7 @@ export class DescansoMedicoModalComponent implements OnInit, OnDestroy {
   readonly hoy = hoyIso();
   readonly establecimiento = ESTABLECIMIENTO.nombre;
   readonly logoUrl = ESTABLECIMIENTO.logoUrl;
-
+  readonly hashCorto = hashCorto;
   readonly formatearFecha = formatearFecha;
   readonly formatearFechaHora = formatearFechaHora;
   readonly textoDias = textoDias;

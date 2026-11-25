@@ -1,0 +1,180 @@
+<div class="relative z-50">
+
+  <div class="fixed inset-0 bg-neutral-900/50"></div>
+
+  <div class="fixed inset-0 overflow-y-auto">
+    <div class="flex min-h-full items-center justify-center p-4">
+
+      <div class="w-full max-w-2xl overflow-hidden rounded border border-neutral-300 bg-white">
+
+        <div class="flex justify-between items-center px-6 py-4 bg-[#58595B]">
+          <h3 class="text-base font-bold text-white flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded bg-[#D9182A] flex items-center justify-center">
+              <span class="material-icons text-white text-[18px]">history</span>
+            </div>
+            Historial del descanso médico
+          </h3>
+          <button (click)="close.emit()"
+                  class="p-1 rounded hover:bg-neutral-700 text-neutral-300 hover:text-white transition-colors">
+            <span class="material-icons text-[20px]">close</span>
+          </button>
+        </div>
+
+        <div class="flex h-1">
+          <div class="w-1/2 bg-[#58595B]"></div>
+          <div class="w-1/2 bg-[#D9182A]"></div>
+        </div>
+
+        <div class="max-h-[72vh] space-y-5 overflow-y-auto p-6">
+
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Datos actuales del descanso</p>
+
+            <div class="mt-2 rounded border border-neutral-200 bg-neutral-50 p-4">
+              <div class="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+                <div>
+                  <p class="text-[10px] font-bold uppercase tracking-wide text-neutral-500">Paciente</p>
+                  <p class="text-sm font-semibold text-neutral-800">{{ actual().datos.pacienteNombre }}</p>
+                </div>
+                <div>
+                  <p class="text-[10px] font-bold uppercase tracking-wide text-neutral-500">Médico emisor</p>
+                  <p class="text-sm font-semibold text-neutral-800">{{ actual().datos.medicoNombre }}</p>
+                </div>
+                <div>
+                  <p class="text-[10px] font-bold uppercase tracking-wide text-neutral-500">Periodo</p>
+                  <p class="text-sm text-neutral-800">
+                    {{ formatearFecha(actual().fechaInicio) }} al {{ formatearFecha(actual().fechaFin) }}
+                    · {{ textoDias(actual().dias) }}
+                  </p>
+                </div>
+                <div>
+                  <p class="text-[10px] font-bold uppercase tracking-wide text-neutral-500">Estado actual</p>
+                  <span
+                    class="mt-1 inline-flex items-center gap-1.5 rounded border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide"
+                    [ngClass]="
+                      actual().estado === 'VIGENTE'
+                        ? 'border-[#0d6b68] text-[#0d6b68] bg-white'
+                        : 'border-[#D9182A] text-[#D9182A] bg-white'
+                    ">
+                    <span class="h-1.5 w-1.5 rounded-full" [ngClass]="actual().estado === 'VIGENTE' ? 'bg-[#0d6b68]' : 'bg-[#D9182A]'"></span>
+                    {{ actual().estado === 'VIGENTE' ? 'Vigente' : 'Cancelado' }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="mt-4 flex items-center gap-3 border-t border-neutral-200 pt-3">
+                <app-sello-firma
+                  [hash]="actual().hashContenido"
+                  [size]="52"
+                  [cancelado]="actual().estado === 'CANCELADO'"
+                ></app-sello-firma>
+                <div class="min-w-0">
+                  <p class="text-[10px] font-bold uppercase tracking-wide text-neutral-500">
+                    {{ actual().numero }} · Huella SHA-256
+                  </p>
+                  <p class="break-all font-mono text-[11px] text-neutral-700">{{ actual().hashContenido }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-wider text-[#D9182A]">Línea de tiempo</p>
+
+            @if (cargando()) {
+              <div class="flex flex-col items-center justify-center gap-3 py-10">
+                <span class="h-6 w-6 animate-spin rounded-full border-2 border-neutral-300 border-t-[#D9182A]"></span>
+                <p class="text-sm text-neutral-500">Cargando historial...</p>
+              </div>
+            } @else if (error(); as mensaje) {
+              <div class="mt-3 flex items-start gap-3 rounded border border-[#D9182A]/30 bg-[#D9182A]/5 px-4 py-3" role="alert">
+                <span class="material-icons text-[20px] text-[#D9182A]">error_outline</span>
+                <p class="flex-1 text-sm font-semibold text-[#D9182A]">{{ mensaje }}</p>
+                <button type="button" (click)="cargar()"
+                        class="shrink-0 rounded border border-neutral-300 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:border-[#58595B]">
+                  Reintentar
+                </button>
+              </div>
+            } @else if (eventos().length === 0) {
+              <p class="mt-3 rounded border border-dashed border-neutral-300 px-4 py-8 text-center text-sm text-neutral-500">
+                Este descanso aún no tiene eventos registrados.
+              </p>
+            } @else {
+
+              <div class="relative mt-4 space-y-4">
+                <div class="absolute bottom-6 left-6 top-6 w-px bg-neutral-300"></div>
+
+                @for (evento of eventos(); track evento.id) {
+                  <div class="relative flex gap-4">
+
+                    <div
+                      class="relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
+                      [ngClass]="meta(evento).fondo">
+                      <span class="material-icons text-[24px] text-white">{{ meta(evento).icono }}</span>
+                    </div>
+
+                    <div class="min-w-0 flex-1 rounded border border-neutral-200 bg-white px-4 py-3">
+
+                      <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+                        <p class="text-sm font-bold text-neutral-900">{{ meta(evento).titulo }}</p>
+                        <p class="text-xs font-semibold text-neutral-500">{{ formatearFechaEvento(evento.fechaEvento) }}</p>
+                      </div>
+
+                      <p class="mt-0.5 text-xs text-neutral-600">
+                        Por <span class="font-bold text-neutral-800">{{ evento.realizadoPor }}</span>
+                      </p>
+
+                      <p class="mt-2 text-sm leading-5 text-neutral-700">{{ descripcion(evento) }}</p>
+
+                      @if (evento.resultado === 'CANCELADO' && evento.observacion) {
+                        <div class="mt-3 border-l-2 border-l-[#58595B] bg-neutral-50 px-3 py-2">
+                          <p class="text-[10px] font-bold uppercase tracking-wide text-neutral-500">Motivo</p>
+                          <p class="text-xs leading-5 text-neutral-700">{{ evento.observacion }}</p>
+                        </div>
+                      }
+
+                      @if (evento.resultado === 'EMITIDO') {
+                        <div class="mt-3 divide-y divide-neutral-200 rounded border border-neutral-200 text-xs">
+                          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2">
+                            <span class="w-28 shrink-0 font-bold uppercase tracking-wide text-neutral-500">Justificación</span>
+                            <span class="min-w-0 flex-1 whitespace-pre-line text-neutral-800">{{ evento.justificacion }}</span>
+                          </div>
+                          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2">
+                            <span class="w-28 shrink-0 font-bold uppercase tracking-wide text-neutral-500">Documento</span>
+                            <span class="min-w-0 flex-1 break-all font-mono text-neutral-800">{{ evento.codigoDocumento }}</span>
+                          </div>
+                          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2">
+                            <span class="w-28 shrink-0 font-bold uppercase tracking-wide text-neutral-500">Huella SHA-256</span>
+                            <span class="min-w-0 flex-1 break-all font-mono text-neutral-800">{{ evento.hashContenido }}</span>
+                          </div>
+                          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2">
+                            <span class="w-28 shrink-0 font-bold uppercase tracking-wide text-neutral-500">IP de origen</span>
+                            <span class="font-mono text-neutral-800">{{ evento.ipOrigen || '—' }}</span>
+                          </div>
+                        </div>
+                      } @else {
+                        <p class="mt-2 text-[11px] text-neutral-500">
+                          IP de origen: <span class="font-mono text-neutral-700">{{ evento.ipOrigen || '—' }}</span>
+                        </p>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="flex justify-end border-t border-neutral-200 bg-neutral-50 px-6 py-3">
+          <button
+            type="button"
+            (click)="close.emit()"
+            class="px-5 py-2 text-sm font-medium text-neutral-600 bg-white hover:bg-neutral-100 hover:text-neutral-900 rounded border border-neutral-300 transition-colors">
+            Cerrar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

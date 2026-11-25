@@ -24,6 +24,14 @@ export const DOCTOR_ROUTES: Routes = [
             (m) => m.ListaHistoriasComponent,
           ),
       },
+      {
+        canActivate: [permisoGuard],
+        path: 'descansos-medicos',
+        loadComponent: () =>
+          import('../features/clinica/descansos-medicos/pages/lista-descansos-medicos/lista-descansos-medicos.component').then(
+            (m) => m.ListaDescansosMedicosComponent,
+          ),
+      },
     ],
   },
 ];

@@ -20,6 +20,12 @@ import { FormsModule } from '@angular/forms';
 export class DescansoVerificacionModalComponent implements AfterViewInit {
   @Input() procesando = false;
   @Input() error: string | null = null;
+  @Input() subtitulo = 'Confirma la emisión del descanso médico';
+  @Input() descripcion =
+    'Ingresa el código de verificación de seis dígitos. Una vez generado, el descanso médico no se puede modificar ni emitir de nuevo para esta atención.';
+  @Input() textoConfirmar = 'Confirmar y generar';
+  @Input() textoProcesando = 'Generando...';
+
   @Output() confirmar = new EventEmitter<string>();
   @Output() cancelar = new EventEmitter<void>();
 

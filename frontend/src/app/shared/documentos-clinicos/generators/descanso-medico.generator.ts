@@ -1,4 +1,5 @@
-import { jsPDF, GState } from 'jspdf';
+import type { jsPDF } from 'jspdf';
+
 import { ESTABLECIMIENTO } from '../constants/documento-clinico.constants';
 import { DescansoMedico } from '../interface/descanso-medico.interface';
 import { ImagenPdf } from '../interface/documento-clinico.interface';
@@ -18,24 +19,26 @@ const ANCHO_VALOR = ANCHO_CONTENIDO - 52;
 
 const GRIS: [number, number, number] = [88, 89, 91];
 const ROJO: [number, number, number] = [217, 24, 42];
+const VERDE: [number, number, number] = [13, 107, 104];
 const TEXTO: [number, number, number] = [38, 38, 38];
 
-export function generarPdfDescansoMedico(descanso: DescansoMedico, logo: ImagenPdf | null): Blob {
-  const doc = new jsPDF({
-    unit: 'mm',
-    format: 'a4',
-    orientation: 'portrait',
-    compress: true,
-  });
+export async function generarPdfDescansoMedico(
+  descanso: DescansoMedico,
+  logo: ImagenPdf | null,
+): Promise<Blob> {
+  const { jsPDF: JsPdf } = await import('jspdf');
+  const doc = new JsPdf({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
+  const cancelado = descanso.estado === 'CANCELADO';
+
   doc.setProperties({
-    title: `Descanso médico ${descanso.numero}`,
+    title: `Descanso médico ${descanso.numero}${cancelado ? ' (cancelado)' : ''}`,
     subject: descanso.numero,
     author: ESTABLECIMIENTO.nombre,
   });
 
   dibujarMarcaAgua(doc);
 
-  let y = dibujarEncabezado(doc, descanso, logo);
+  let y = dibujarEncabezado(doc, descanso, logo, cancelado);
   const d = descanso.datos;
 
   y = seccion(doc, 'Datos del paciente', y);
@@ -70,44 +73,146 @@ export function generarPdfDescansoMedico(descanso: DescansoMedico, logo: ImagenP
     y += 5;
   }
 
-  y = asegurarEspacio(doc, y + 3, 70);
-  y = seccion(doc, 'Emisión y firma electrónica interna', y);
-  y = fila(doc, 'Fecha y hora de emisión', formatearFechaHora(descanso.fechaEmision), y);
-  y = fila(doc, 'Emitido por', emisor(descanso), y);
-  y = fila(doc, 'Identificador', descanso.codigoDocumento, y);
-  y = fila(
-    doc,
-    'Confirmación electrónica',
-    `${etiquetaMetodo(descanso.metodoConfirmacion)} · ${formatearFechaHora(descanso.fechaConfirmacion)}`,
-    y,
+  // ---- Firma electrónica con sello ----
+  y = asegurarEspacio(doc, y + 3, 78);
+  y = seccion(doc, 'Firma electrónica interna', y);
+
+  dibujarSello(doc, MARGEN + 14, y + 13, descanso.hashContenido, cancelado);
+
+  const x0 = MARGEN + 34;
+  const colegiatura = d.numeroColegiatura ? ` · Col. ${d.numeroColegiatura}` : '';
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...GRIS);
+  doc.text('Firmado electrónicamente por', x0, y + 2);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(...TEXTO);
+  doc.text(d.medicoNombre, x0, y + 8);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.text(`${d.especialidad}${colegiatura}`, x0, y + 13);
+
+  doc.setTextColor(...GRIS);
+  doc.setFontSize(8.5);
+  doc.text(`Emitido: ${formatearFechaHora(descanso.fechaEmision)}`, x0, y + 18);
+  doc.text(
+    `Confirmación: ${etiquetaMetodo(descanso.metodoConfirmacion)} · ${formatearFechaHora(descanso.fechaConfirmacion)}`,
+    x0,
+    y + 22.5,
   );
+
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(8);
+  doc.text(`ID ${descanso.codigoDocumento}`, x0, y + 27.5);
+
+  y += 33;
   y = filaMono(doc, `Firma (${descanso.algoritmoFirma})`, descanso.firma, y);
   y = filaMono(doc, 'Huella SHA-256', descanso.hashContenido, y);
 
-  pieDePagina(doc);
+  // ---- Cancelación ----
+  if (cancelado && descanso.cancelacion) {
+    y = asegurarEspacio(doc, y + 3, 40);
+    y = seccion(doc, 'Cancelación del documento', y);
+    y = fila(doc, 'Fecha y hora', formatearFechaHora(descanso.cancelacion.fechaCancelacion), y);
+    y = fila(doc, 'Cancelado por', descanso.cancelacion.canceladoPor, y);
+    y = fila(doc, 'Motivo', descanso.cancelacion.motivo, y);
+  }
+
+  pieDePagina(doc, cancelado);
 
   return doc.output('blob');
 }
 
-function emisor(d: DescansoMedico): string {
-  const colegiatura = d.datos.numeroColegiatura ? ` · CMP/Col. ${d.datos.numeroColegiatura}` : '';
-  return `${d.datos.medicoNombre}${colegiatura}`;
+/** Sello gráfico: anillo de 64 marcas derivadas de la huella + escudo con check (o X si está cancelado). */
+function dibujarSello(doc: jsPDF, cx: number, cy: number, hash: string, cancelado: boolean): void {
+  const color = cancelado ? ROJO : VERDE;
+  const radio = 13;
+  const total = 64;
+  const exterior = radio - 1.2;
+
+  doc.setLineCap('round');
+
+  doc.setDrawColor(...GRIS);
+  doc.setLineWidth(0.5);
+  doc.circle(cx, cy, radio, 'S');
+
+  doc.setDrawColor(...color);
+  doc.setLineWidth(0.28);
+
+  for (let i = 0; i < total; i++) {
+    const nibble = parseInt((hash || '').charAt(i) || '0', 16);
+    const valor = Number.isNaN(nibble) ? 0 : nibble;
+    const largo = 0.8 + (valor / 15) * 1.6;
+    const angulo = (i / total) * 2 * Math.PI - Math.PI / 2;
+    const cos = Math.cos(angulo);
+    const sen = Math.sin(angulo);
+
+    doc.line(
+      cx + (exterior - largo) * cos,
+      cy + (exterior - largo) * sen,
+      cx + exterior * cos,
+      cy + exterior * sen,
+    );
+  }
+
+  doc.setDrawColor(...ROJO);
+  doc.setLineWidth(0.3);
+  doc.circle(cx, cy, 8.4, 'S');
+
+  doc.setDrawColor(...color);
+  doc.setLineWidth(1);
+
+  if (cancelado) {
+    doc.line(cx - 2.8, cy - 4.2, cx + 2.8, cy + 1.4);
+    doc.line(cx + 2.8, cy - 4.2, cx - 2.8, cy + 1.4);
+  } else {
+    doc.line(cx - 3.6, cy - 1, cx - 1.2, cy + 1.6);
+    doc.line(cx - 1.2, cy + 1.6, cx + 3.8, cy - 3.8);
+  }
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(4);
+  doc.setTextColor(...GRIS);
+  doc.text(cancelado ? 'CANCELADO' : 'FIRMADO', cx, cy + 5.6, { align: 'center' });
+}
+
+function aplicarOpacidad(doc: jsPDF, opacidad: number): void {
+  const Fabrica = (doc as unknown as { GState: new (parametros: { opacity: number }) => object })
+    .GState;
+
+  doc.setGState(new Fabrica({ opacity: opacidad }) as Parameters<jsPDF['setGState']>[0]);
 }
 
 function dibujarMarcaAgua(doc: jsPDF): void {
   doc.saveGraphicsState();
-  doc.setGState(new GState({ opacity: 0.08 }));
+  aplicarOpacidad(doc, 0.08);
   doc.setTextColor(...GRIS);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(46);
-  doc.text('JOSÉ OLAYA BALANDRA', ANCHO_PAGINA / 2, ALTO_PAGINA / 2, {
-    align: 'center',
-    angle: 45,
-  });
+  doc.text('JOSÉ OLAYA BALANDRA', ANCHO_PAGINA / 2, ALTO_PAGINA / 2, { align: 'center', angle: 45 });
   doc.restoreGraphicsState();
 }
 
-function dibujarEncabezado(doc: jsPDF, descanso: DescansoMedico, logo: ImagenPdf | null): number {
+function dibujarSelloCancelado(doc: jsPDF): void {
+  doc.saveGraphicsState();
+  aplicarOpacidad(doc, 0.14);
+  doc.setTextColor(...ROJO);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(64);
+  doc.text('CANCELADO', ANCHO_PAGINA / 2, ALTO_PAGINA / 2 - 20, { align: 'center', angle: 25 });
+  doc.restoreGraphicsState();
+}
+
+function dibujarEncabezado(
+  doc: jsPDF,
+  descanso: DescansoMedico,
+  logo: ImagenPdf | null,
+  cancelado: boolean,
+): number {
   const alturaLogo = 16;
   let xTexto = MARGEN;
 
@@ -121,10 +226,7 @@ function dibujarEncabezado(doc: jsPDF, descanso: DescansoMedico, logo: ImagenPdf
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(...TEXTO);
-  const nombre = doc.splitTextToSize(
-    ESTABLECIMIENTO.nombre,
-    ANCHO_PAGINA - MARGEN - xTexto,
-  ) as string[];
+  const nombre = doc.splitTextToSize(ESTABLECIMIENTO.nombre, ANCHO_PAGINA - MARGEN - xTexto) as string[];
   doc.text(nombre, xTexto, MARGEN + 2);
 
   let y = MARGEN + 16;
@@ -145,6 +247,14 @@ function dibujarEncabezado(doc: jsPDF, descanso: DescansoMedico, logo: ImagenPdf
   doc.setFontSize(10);
   doc.setTextColor(...GRIS);
   doc.text(`N.º ${descanso.numero}`, ANCHO_PAGINA / 2, y, { align: 'center' });
+
+  if (cancelado) {
+    y += 5;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(...ROJO);
+    doc.text('DOCUMENTO CANCELADO', ANCHO_PAGINA / 2, y, { align: 'center' });
+  }
 
   return y + 9;
 }
@@ -179,7 +289,6 @@ function fila(doc: jsPDF, etiqueta: string, valor: string, y: number): number {
   return y + lineas.length * 5 + 1;
 }
 
-/** Para firma y huella: texto hexadecimal en tipografía monoespaciada, partido en líneas fijas. */
 function filaMono(doc: jsPDF, etiqueta: string, valor: string, y: number): number {
   const lineas = valor.match(/.{1,32}/g) ?? [valor];
   y = asegurarEspacio(doc, y, lineas.length * 4 + 2);
@@ -208,22 +317,25 @@ function asegurarEspacio(doc: jsPDF, y: number, necesario: number): number {
   return MARGEN;
 }
 
-function pieDePagina(doc: jsPDF): void {
+function pieDePagina(doc: jsPDF, cancelado: boolean): void {
   const total = doc.getNumberOfPages();
 
   for (let pagina = 1; pagina <= total; pagina++) {
     doc.setPage(pagina);
+
+    if (cancelado) {
+      dibujarSelloCancelado(doc);
+    }
+
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(...GRIS);
     doc.text(
-      'Documento emitido con firma electrónica interna del establecimiento. No constituye firma digital certificada.',
+      'Documento emitido con firma electrónica interna del establecimiento.',
       ANCHO_PAGINA / 2,
       ALTO_PAGINA - 12,
       { align: 'center' },
     );
-    doc.text(`Página ${pagina} de ${total}`, ANCHO_PAGINA / 2, ALTO_PAGINA - 8, {
-      align: 'center',
-    });
+    doc.text(`Página ${pagina} de ${total}`, ANCHO_PAGINA / 2, ALTO_PAGINA - 8, { align: 'center' });
   }
 }

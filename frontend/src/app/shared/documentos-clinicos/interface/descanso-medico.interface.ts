@@ -1,3 +1,5 @@
+export type EstadoDescanso = 'VIGENTE' | 'CANCELADO';
+
 export interface DescansoMedicoDatosBase {
   pacienteNombre: string;
   pacienteDocumento: string;
@@ -7,8 +9,16 @@ export interface DescansoMedicoDatosBase {
   fechaAtencion: string;
 }
 
+export interface CancelacionDescanso {
+  fechaCancelacion: string;
+  motivo: string;
+  canceladoPor: string;
+}
+
 export interface DescansoMedico {
   id: number;
+  idCita: number;
+  estado: EstadoDescanso;
   numero: string;
   codigoDocumento: string;
   datos: DescansoMedicoDatosBase;
@@ -23,6 +33,7 @@ export interface DescansoMedico {
   algoritmoFirma: string;
   firma: string;
   hashContenido: string;
+  cancelacion: CancelacionDescanso | null;
 }
 
 export interface DescansoMedicoContexto {
@@ -39,6 +50,33 @@ export interface DescansoMedicoCrear {
   dias: number;
   justificacion: string;
   codigoVerificacion: string;
+}
+
+export interface DescansoMedicoCancelar {
+  motivo: string;
+  codigoVerificacion: string;
+}
+
+export type ResultadoAuditoria = 'EMITIDO' | 'CODIGO_INVALIDO' | 'CANCELADO';
+
+export interface EventoAuditoriaDescanso {
+  id: number;
+  resultado: ResultadoAuditoria;
+  fechaEvento: string;
+  realizadoPor: string;
+  ipOrigen: string | null;
+  codigoDocumento: string | null;
+  hashContenido: string | null;
+  fechaInicio: string | null;
+  fechaFin: string | null;
+  dias: number | null;
+  justificacion: string | null;
+  observacion: string | null;
+}
+
+export interface DescansoMedicoHistorial {
+  descanso: DescansoMedico;
+  eventos: EventoAuditoriaDescanso[];
 }
 
 export interface ErroresDescanso {

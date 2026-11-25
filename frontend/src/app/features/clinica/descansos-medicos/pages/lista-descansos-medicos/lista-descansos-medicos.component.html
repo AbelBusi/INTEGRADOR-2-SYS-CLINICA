@@ -1,0 +1,210 @@
+<div class="space-y-6">
+
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+    <div class="bg-white border border-gray-200 rounded-lg px-5 py-4 flex items-center gap-4">
+      <div class="w-11 h-11 rounded-md bg-[#58595B] flex items-center justify-center shrink-0">
+        <span class="material-icons text-white text-[22px]">description</span>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Documentos emitidos</p>
+        <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ totalDocumentos }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-lg px-5 py-4 flex items-center gap-4">
+      <div class="w-11 h-11 rounded-md bg-[#0d6b68] flex items-center justify-center shrink-0">
+        <span class="material-icons text-white text-[22px]">verified</span>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Vigentes</p>
+        <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ totalVigentes }}</p>
+      </div>
+    </div>
+
+    <div class="bg-white border border-gray-200 rounded-lg px-5 py-4 flex items-center gap-4">
+      <div class="w-11 h-11 rounded-md bg-[#D9182A] flex items-center justify-center shrink-0">
+        <span class="material-icons text-white text-[22px]">event_busy</span>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Cancelados</p>
+        <p class="text-2xl font-bold text-gray-900 mt-0.5">{{ totalCancelados }}</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+
+    <div
+      class="flex items-center gap-2 bg-white border border-gray-300 rounded-md px-3 h-10 w-full md:w-96 focus-within:border-[#58595B] focus-within:ring-1 focus-within:ring-[#58595B] transition-colors">
+      <span class="material-icons text-gray-400 text-[20px]">search</span>
+      <input
+        type="text"
+        name="search"
+        [(ngModel)]="search"
+        placeholder="Buscar por número, paciente, documento o huella..."
+        class="bg-transparent text-sm text-gray-700 placeholder-gray-400 outline-none w-full"
+      />
+    </div>
+
+    <select
+      name="filtroEstado"
+      [(ngModel)]="filtroEstado"
+      class="h-10 bg-white border border-gray-300 rounded-md px-3 text-sm text-gray-700 outline-none focus:border-[#58595B] focus:ring-1 focus:ring-[#58595B] w-full sm:w-44">
+      <option value="todos">Todos</option>
+      <option value="vigente">Vigentes</option>
+      <option value="cancelado">Cancelados</option>
+    </select>
+
+    <button
+      type="button"
+      [disabled]="cargando"
+      (click)="cargar()"
+      class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 h-10 rounded-md border border-gray-300 bg-white hover:border-[#58595B] hover:bg-gray-50 text-gray-700 text-sm font-semibold transition-colors disabled:opacity-60">
+      <span class="material-icons text-[20px]">refresh</span>
+      Actualizar
+    </button>
+
+  </div>
+
+  <app-custom-table
+    [data]="documentosFiltrados"
+    [columns]="columns"
+    [loading]="cargando"
+    [sortField]="sortField"
+    (sort)="handleSort($event)"
+  >
+
+    <ng-template #customColumn let-row let-field="field">
+
+      @if (field === 'numero') {
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-md bg-gray-100 flex items-center justify-center shrink-0">
+            <span class="material-icons text-[#58595B] text-[19px]">description</span>
+          </div>
+          <div class="min-w-0">
+            <p class="font-mono text-sm font-bold tracking-wide text-gray-800">{{ row.numero }}</p>
+            <p class="text-[11px] text-gray-500">Descanso médico</p>
+          </div>
+        </div>
+      }
+
+      @if (field === 'datos') {
+        <div class="min-w-0">
+          <p class="font-semibold text-gray-800">{{ row.datos.pacienteNombre }}</p>
+          <p class="text-xs text-gray-500">{{ row.datos.pacienteDocumento }}</p>
+        </div>
+      }
+
+      @if (field === 'fechaInicio') {
+        <div>
+          <p class="text-sm text-gray-800">
+            {{ formatearFecha(row.fechaInicio) }} → {{ formatearFecha(row.fechaFin) }}
+          </p>
+          <p class="text-xs text-gray-500">{{ textoDias(row.dias) }}</p>
+        </div>
+      }
+
+      @if (field === 'fechaEmision') {
+        <span class="text-sm text-gray-700">{{ formatearFechaHora(row.fechaEmision) }}</span>
+      }
+
+      @if (field === 'hashContenido') {
+        <div class="flex items-center gap-3">
+          <app-sello-firma
+            [hash]="row.hashContenido"
+            [size]="40"
+            [cancelado]="row.estado === 'CANCELADO'"
+          ></app-sello-firma>
+
+          <div class="min-w-0">
+            <p class="font-mono text-[11px] font-semibold tracking-wider text-gray-800">
+              {{ hashCorto(row.hashContenido) }}
+            </p>
+            <button
+              type="button"
+              (click)="copiarHuella(row.hashContenido); $event.stopPropagation()"
+              class="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-[#58595B] hover:text-[#D9182A] transition-colors">
+              <span class="material-icons text-[14px]">content_copy</span>
+              Copiar huella SHA-256
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (field === 'estado') {
+        <span
+          [ngClass]="
+            row.estado === 'VIGENTE'
+              ? 'bg-[#0d6b68]/10 text-[#0d6b68] border-[#0d6b68]/20'
+              : 'bg-[#D9182A]/10 text-[#D9182A] border-[#D9182A]/20'
+          "
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border uppercase tracking-wide">
+          <span
+            class="w-1.5 h-1.5 rounded-full"
+            [ngClass]="row.estado === 'VIGENTE' ? 'bg-[#0d6b68]' : 'bg-[#D9182A]'"
+          ></span>
+          {{ row.estado === 'VIGENTE' ? 'Vigente' : 'Cancelado' }}
+        </span>
+      }
+
+      @if (field === 'id') {
+        <div class="flex items-center justify-end gap-2" (click)="$event.stopPropagation()">
+
+          <button
+            type="button"
+            (click)="documentoVer = row"
+            class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
+            <span class="material-icons text-[18px]">visibility</span>
+            Ver
+          </button>
+
+          <button
+            type="button"
+            (click)="documentoHistorial = row"
+            class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#58595B] hover:bg-gray-50 transition-colors">
+            <span class="material-icons text-[18px]">history</span>
+            Historial
+          </button>
+
+          @if (row.estado === 'VIGENTE') {
+            <button
+              type="button"
+              (click)="documentoCancelar = row"
+              class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] transition-colors">
+              <span class="material-icons text-[18px]">event_busy</span>
+              Cancelar
+            </button>
+          }
+
+        </div>
+      }
+
+    </ng-template>
+
+  </app-custom-table>
+
+</div>
+
+@if (documentoVer) {
+  <app-descanso-detalle-modal
+    [descanso]="documentoVer"
+    (close)="documentoVer = null"
+  ></app-descanso-detalle-modal>
+}
+
+@if (documentoHistorial) {
+  <app-descanso-historial-modal
+    [descanso]="documentoHistorial"
+    (close)="documentoHistorial = null"
+  ></app-descanso-historial-modal>
+}
+
+@if (documentoCancelar) {
+  <app-descanso-cancelar-modal
+    [descanso]="documentoCancelar"
+    (close)="documentoCancelar = null"
+    (cancelado)="handleCancelado($event)"
+  ></app-descanso-cancelar-modal>
+}

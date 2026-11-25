@@ -19,30 +19,19 @@ export interface NavItem {
 
 export const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   '/dashboard/inicio': { title: 'Inicio', subtitle: 'Resumen del consultorio' },
-  '/dashboard/horario': {
-    title: 'Horarios Médicos',
-    subtitle: 'Planificación de turnos y disponibilidad',
-  },
-  '/dashboard/horariosXD': {
-    title: 'Gestión de Horarios',
-    subtitle: 'Horarios de trabajo de doctores y recepcionistas',
-  },
+  '/dashboard/horario': { title: 'Horarios Médicos', subtitle: 'Planificación de turnos y disponibilidad', },
+  '/dashboard/horariosXD': { title: 'Gestión de Horarios', subtitle: 'Horarios de trabajo de doctores y recepcionistas', },
   '/dashboard/citasXD': { title: 'Citas médicas', subtitle: 'Agenda y consultas programadas' },
   '/dashboard/citas/nuevo': { title: 'Nueva cita', subtitle: 'Registrar cita médica' },
-  '/dashboard/citas/por-doctor': { title: 'Citas por doctor',
-    subtitle: 'Panel de consultas asignadas al médico',
-  },
+  '/dashboard/citas/por-doctor': { title: 'Citas por doctor', subtitle: 'Panel de consultas asignadas al médico', },
   '/dashboard/pacientes': { title: 'Pacientes', subtitle: 'Historial y datos de pacientes' },
   '/dashboard/pacientes/nuevo': { title: 'Nuevo paciente', subtitle: 'Registro de paciente' },
   '/dashboard/doctores': { title: 'Doctores', subtitle: 'Equipo médico del consultorio' },
   '/dashboard/doctores/nuevo': { title: 'Nuevo doctor', subtitle: 'Alta de especialista' },
   '/dashboard/especialidades': { title: 'Especialidades', subtitle: 'Áreas médicas disponibles' },
-  '/dashboard/historias-clinicas': { title: 'Historias Clinicas', subtitle: 'Áreas de historias clinicas',
-  },
-  '/dashboard/mi-historias-clinicas': {
-    title: 'Mis Historias Clinicas',
-    subtitle: 'Áreas de historias clinicas',
-  },
+  '/dashboard/historias-clinicas': { title: 'Historias Clinicas', subtitle: 'Áreas de historias clinicas', },
+  '/dashboard/descansos-medicos': { title: 'Documentos Emitidos', subtitle: 'Área de documentos emitidos', },
+  '/dashboard/mi-historias-clinicas': { title: 'Mis Historias Clinicas', subtitle: 'Áreas de historias clinicas', },
   '/dashboard/roles': { title: 'Roles', subtitle: 'Roles disponibles' },
   '/dashboard/usuarios': { title: 'Usuarios', subtitle: 'Usuarios disponibles' },
   '/dashboard/horarios': { title: 'Horarios', subtitle: 'Horarios disponibles' },
@@ -53,25 +42,14 @@ export const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = 
   '/dashboard/medicos': { title: 'Medicos', subtitle: 'Medicos disponibles' },
   '/dashboard/cargos': { title: 'Cargos', subtitle: 'Áreas de cargos' },
   '/dashboard/recepcionistas': { title: 'Recepcionistas', subtitle: 'Personal de recepción' },
-  '/dashboard/recepcionistas/nuevo': {
-    title: 'Nuevo recepcionista',
-    subtitle: 'Alta de recepcionista',
-  },
+  '/dashboard/recepcionistas/nuevo': { title: 'Nuevo recepcionista', subtitle: 'Alta de recepcionista', },
   '/dashboard/usuariosXD': { title: 'Usuarios', subtitle: 'Cuentas del sistema' },
   '/dashboard/usuarios/nuevo': { title: 'Nuevo usuario', subtitle: 'Crear cuenta de acceso' },
   '/dashboard/rolesXD': { title: 'Roles', subtitle: 'Perfiles de acceso del sistema' },
   '/dashboard/mis-citas': { title: 'Mis Citas', subtitle: 'Consulta y atiende tus citas' },
-  '/dashboard/mis-pacientes': {
-    title: 'Mis Pacientes',
-    subtitle: 'Pacientes relacionados con tu actividad',
-  },
-  '/dashboard/mis-citas-paciente': {
-    title: 'Mis Citas',
-    subtitle: 'Consulta el estado de tus citas médicas',
-  },
-  '/dashboard/mi-historia': {
-    title: 'Mi Historia Clínica',
-    subtitle: 'Tu historial de atenciones médicas',
+  '/dashboard/mis-pacientes': { title: 'Mis Pacientes', subtitle: 'Pacientes relacionados con tu actividad', },
+  '/dashboard/mis-citas-paciente': { title: 'Mis Citas', subtitle: 'Consulta el estado de tus citas médicas', },
+  '/dashboard/mi-historia': { title: 'Mi Historia Clínica', subtitle: 'Tu historial de atenciones médicas',
   },
 };
 
@@ -179,6 +157,13 @@ export const MENU_BASE: NavItem[] = [
     roles: ['MEDICO'],
     icon: 'folder_open',
     sub: [{ label: 'Historias Clinicas', route: '/dashboard/historias-clinicas' }],
+  },
+  {
+    grupo: 'LOGISTICA',
+    label: 'Documentos Emitidos',
+    roles: ['MEDICO'],
+    icon: 'folder_open',
+    sub: [{ label: 'Documentos Emitidos', route: '/dashboard/descansos-medicos' }],
   },
   {
     grupo: 'ADMINISTRACION',
