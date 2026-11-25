@@ -14,6 +14,8 @@ import { HcSeccionVaciaComponent } from '../hc-seccion-vacia/hc-seccion-vacia.co
   templateUrl: './hc-panel-alergias.component.html',
 })
 export class HcPanelAlergiasComponent {
+  /** true cuando se muestra dentro de un modal (sin tarjeta propia). */
+  @Input() sinMarco = false;
   @Input() items: Alergia[] = [];
 
   tipo(item: Alergia): string {

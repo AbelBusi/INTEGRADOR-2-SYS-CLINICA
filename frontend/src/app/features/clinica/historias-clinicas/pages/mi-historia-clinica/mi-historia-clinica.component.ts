@@ -2,16 +2,14 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 
 import { ToastService } from '../../../../../core/services/toast.service';
-import { HcAuditoriaComponent } from '../../components/hc-auditoria/hc-auditoria.component';
-import { HcPanelAlergiasComponent } from '../../components/hc-panel-alergias/hc-panel-alergias.component';
-import { HcPanelAntecedentesFamiliaresComponent } from '../../components/hc-panel-antecedentes-familiares/hc-panel-antecedentes-familiares.component';
-import { HcPanelAntecedentesPersonalesComponent } from '../../components/hc-panel-antecedentes-personales/hc-panel-antecedentes-personales.component';
-import { HcPanelAtencionesComponent } from '../../components/hc-panel-atenciones/hc-panel-atenciones.component';
+import {
+  HcPacienteDetalleModalComponent,
+  SeccionPaciente,
+} from '../../components/hc-paciente-detalle-modal/hc-paciente-detalle-modal.component';
 import { HcPanelCaratulaComponent } from '../../components/hc-panel-caratula/hc-panel-caratula.component';
-import { HcPanelSeccionComponent } from '../../components/hc-panel/hc-panel-seccion.component';
 import { AtencionHistoria, HistoriaClinica } from '../../interface/historia-clinica.interface';
 import { HistoriaClinicaService } from '../../services/historia-clinica.service';
-import { mensajeError } from '../../utils/historia-clinica.util';
+import { formatearFecha, mensajeError } from '../../utils/historia-clinica.util';
 import { descargarHistoriaClinicaPdf } from '../../utils/historia-clinica-pdf.util';
 
 /**
@@ -21,27 +19,12 @@ import { descargarHistoriaClinicaPdf } from '../../utils/historia-clinica-pdf.ut
 @Component({
   selector: 'app-mi-historia-clinica',
   standalone: true,
-  imports: [
-    CommonModule,
-    HcPanelCaratulaComponent,
-    HcPanelSeccionComponent,
-    HcPanelAntecedentesPersonalesComponent,
-    HcPanelAntecedentesFamiliaresComponent,
-    HcPanelAlergiasComponent,
-    HcPanelAtencionesComponent,
-    HcAuditoriaComponent,
-  ],
+  imports: [CommonModule, HcPanelCaratulaComponent, HcPacienteDetalleModalComponent],
   templateUrl: './mi-historia-clinica.component.html',
 })
 export class MiHistoriaClinicaComponent implements OnInit {
-  readonly indice = [
-    { id: 'hc-datos', texto: 'Datos generales', icono: 'badge' },
-    { id: 'hc-personales', texto: 'Antecedentes personales', icono: 'history_edu' },
-    { id: 'hc-familiares', texto: 'Antecedentes familiares', icono: 'family_restroom' },
-    { id: 'hc-alergias', texto: 'Alergias', icono: 'warning_amber' },
-    { id: 'hc-atenciones', texto: 'Atenciones médicas', icono: 'medical_services' },
-    { id: 'hc-auditoria', texto: 'Registro de cambios', icono: 'history' },
-  ];
+  /** Sección abierta en el modal (null = ninguna). */
+  seccionAbierta = signal<SeccionPaciente | null>(null);
 
   historia = signal<HistoriaClinica | null>(null);
   cargando = signal(true);
@@ -52,7 +35,6 @@ export class MiHistoriaClinicaComponent implements OnInit {
   cargandoAtenciones = signal(false);
   errorAtenciones = signal<string | null>(null);
 
-  auditoriaAbierta = signal(false);
   generandoPdf = signal(false);
 
   constructor(
@@ -109,12 +91,133 @@ export class MiHistoriaClinicaComponent implements OnInit {
     });
   }
 
-  irA(id: string): void {
-    document.getElementById(id)?.scrollIntoView({ block: 'start' });
+  abrir(seccion: SeccionPaciente): void {
+    this.seccionAbierta.set(seccion);
   }
 
-  verAuditoria(): void {
-    this.auditoriaAbierta.set(true);
+  totalDiagnosticos(): number {
+    return this.atenciones().reduce((n, a) => n + a.diagnosticos.length, 0);
+  }
+
+  totalTratamientos(): number {
+    return this.atenciones().reduce(
+      (n, a) => n + a.diagnosticos.reduce((m, d) => m + d.tratamientos.length, 0),
+      0,
+    );
+  }
+
+  readonly grupos = [
+    {
+      id: 'atencion',
+      titulo: 'Mi atención médica',
+      descripcion: 'Lo que ocurrió en tus consultas.',
+    },
+    {
+      id: 'antecedentes',
+      titulo: 'Mis antecedentes de salud',
+      descripcion: 'Alergias y enfermedades previas, tuyas y de tu familia.',
+    },
+    {
+      id: 'control',
+      titulo: 'Control de la información',
+      descripcion: 'Seguimiento de los cambios hechos a tu historia.',
+    },
+  ] as const;
+
+  tarjetasDe(hc: HistoriaClinica, grupo: string) {
+    return this.tarjetas(hc).filter((t) => t.grupo === grupo);
+  }
+
+  /** Tarjetas del panel: qué quiere ver el paciente, con un dato resumen de cada una. */
+  tarjetas(hc: HistoriaClinica): {
+    id: SeccionPaciente;
+    titulo: string;
+    pregunta: string;
+    icono: string;
+    grupo: 'atencion' | 'antecedentes' | 'control';
+    cifra: string;
+    unidad: string;
+    detalle: string;
+    alerta?: boolean;
+  }[] {
+    const cargando = this.cargandoAtenciones();
+    const fallo = !!this.errorAtenciones();
+    const dato = (n: number) => (cargando ? '…' : fallo ? '–' : `${n}`);
+    const ultima = this.atenciones()[0];
+
+    return [
+      {
+        id: 'atenciones',
+        grupo: 'atencion',
+        unidad: 'citas',
+        titulo: 'Mis citas atendidas',
+        pregunta: '¿Cuándo y con quién me atendí?',
+        icono: 'event_available',
+        cifra: dato(this.atenciones().length),
+        detalle: ultima ? `Última: ${formatearFecha(ultima.fechaCita)}` : 'Aún sin atenciones',
+      },
+      {
+        id: 'tratamientos',
+        grupo: 'atencion',
+        unidad: 'medicamentos',
+        titulo: 'Mis tratamientos',
+        pregunta: '¿Qué medicinas me recetaron?',
+        icono: 'medication',
+        cifra: dato(this.totalTratamientos()),
+        detalle: 'Medicamentos recetados',
+      },
+      {
+        id: 'diagnosticos',
+        grupo: 'atencion',
+        unidad: 'diagnósticos',
+        titulo: 'Mis diagnósticos',
+        pregunta: '¿Qué me han diagnosticado?',
+        icono: 'fact_check',
+        cifra: dato(this.totalDiagnosticos()),
+        detalle: 'Registrados por mis médicos',
+      },
+      {
+        id: 'alergias',
+        grupo: 'antecedentes',
+        unidad: 'alergias',
+        titulo: 'Mis alergias',
+        pregunta: '¿A qué soy alérgico?',
+        icono: 'warning_amber',
+        cifra: `${hc.alergias.length}`,
+        detalle: hc.alergias.length ? 'Importante tenerlas presentes' : 'Ninguna registrada',
+        alerta: hc.alergias.length > 0,
+      },
+      {
+        id: 'personales',
+        grupo: 'antecedentes',
+        unidad: 'registros',
+        titulo: 'Antecedentes personales',
+        pregunta: '¿Qué enfermedades o cirugías he tenido?',
+        icono: 'history_edu',
+        cifra: `${hc.antecedentesPersonales.length}`,
+        detalle: 'Mi historial de salud',
+      },
+      {
+        id: 'familiares',
+        grupo: 'antecedentes',
+        unidad: 'registros',
+        titulo: 'Antecedentes familiares',
+        pregunta: '¿Qué enfermedades hay en mi familia?',
+        icono: 'family_restroom',
+        cifra: `${hc.antecedentesFamiliares.length}`,
+        detalle: 'Condiciones en mi familia',
+      },
+      {
+        id: 'auditoria',
+        grupo: 'control',
+        unidad: '',
+        titulo: 'Registro de cambios',
+        pregunta: '¿Quién modificó mi historia?',
+        icono: 'history',
+        cifra: '',
+        detalle: 'Ver quién cambió qué y cuándo',
+      },
+    ];
   }
 
   generarPdf(): void {

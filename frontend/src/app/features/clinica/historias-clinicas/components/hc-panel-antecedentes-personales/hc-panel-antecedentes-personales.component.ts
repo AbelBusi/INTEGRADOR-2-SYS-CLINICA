@@ -13,6 +13,8 @@ import { HcSeccionVaciaComponent } from '../hc-seccion-vacia/hc-seccion-vacia.co
   templateUrl: './hc-panel-antecedentes-personales.component.html',
 })
 export class HcPanelAntecedentesPersonalesComponent {
+  /** true cuando se muestra dentro de un modal (sin tarjeta propia). */
+  @Input() sinMarco = false;
   @Input() items: AntecedentePersonal[] = [];
 
   /** Agrupados por tipo, en el orden clínico habitual; dentro de cada grupo, del año más reciente al más antiguo. */

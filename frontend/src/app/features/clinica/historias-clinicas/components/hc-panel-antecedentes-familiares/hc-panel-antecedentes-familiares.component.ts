@@ -17,6 +17,8 @@ import { HcSeccionVaciaComponent } from '../hc-seccion-vacia/hc-seccion-vacia.co
   templateUrl: './hc-panel-antecedentes-familiares.component.html',
 })
 export class HcPanelAntecedentesFamiliaresComponent {
+  /** true cuando se muestra dentro de un modal (sin tarjeta propia). */
+  @Input() sinMarco = false;
   @Input() items: AntecedenteFamiliar[] = [];
 
   get grupos() {

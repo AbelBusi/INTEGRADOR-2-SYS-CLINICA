@@ -1,0 +1,60 @@
+<app-hc-modal-shell
+  [titulo]="textos.titulo"
+  [subtitulo]="historia.numeroHistoria + ' · ' + historia.paciente.nombreCompleto"
+  [icono]="textos.icono"
+  [ancho]="textos.ancho"
+  (cerrar)="cerrar.emit()">
+
+  <div class="p-6">
+    @switch (seccion) {
+
+      @case ('atenciones') {
+        <app-hc-panel-atenciones [sinMarco]="true" [atenciones]="atenciones"
+          [cargando]="cargandoAtenciones" [error]="errorAtenciones" (reintentar)="reintentar.emit()">
+        </app-hc-panel-atenciones>
+      }
+
+      @case ('tratamientos') {
+        <app-hc-panel-tratamientos [atenciones]="atenciones"
+          [cargando]="cargandoAtenciones" [error]="errorAtenciones" (reintentar)="reintentar.emit()">
+        </app-hc-panel-tratamientos>
+      }
+
+      @case ('diagnosticos') {
+        <app-hc-panel-diagnosticos [atenciones]="atenciones"
+          [cargando]="cargandoAtenciones" [error]="errorAtenciones" (reintentar)="reintentar.emit()">
+        </app-hc-panel-diagnosticos>
+      }
+
+      @case ('alergias') {
+        <app-hc-panel-alergias [sinMarco]="true" [items]="historia.alergias"></app-hc-panel-alergias>
+      }
+
+      @case ('personales') {
+        <app-hc-panel-antecedentes-personales [sinMarco]="true" [items]="historia.antecedentesPersonales">
+        </app-hc-panel-antecedentes-personales>
+      }
+
+      @case ('familiares') {
+        <app-hc-panel-antecedentes-familiares [sinMarco]="true" [items]="historia.antecedentesFamiliares">
+        </app-hc-panel-antecedentes-familiares>
+      }
+
+      @case ('auditoria') {
+        <p class="mb-4 text-sm text-gray-600">
+          Aquí ves quién agregó, corrigió o eliminó información de tu historia, y cuándo.
+        </p>
+        <app-hc-auditoria [historia]="historia" [miHistoria]="true"></app-hc-auditoria>
+      }
+
+    }
+  </div>
+
+  <div hc-footer class="flex shrink-0 justify-end border-t border-gray-200 bg-white px-6 py-3">
+    <button type="button" (click)="cerrar.emit()"
+      class="h-10 rounded-md border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition-colors hover:border-[#58595B] hover:bg-gray-50">
+      Cerrar
+    </button>
+  </div>
+
+</app-hc-modal-shell>

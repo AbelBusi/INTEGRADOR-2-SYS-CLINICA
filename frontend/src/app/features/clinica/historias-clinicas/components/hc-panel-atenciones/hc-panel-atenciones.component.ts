@@ -25,6 +25,8 @@ const POR_BLOQUE = 5;
   templateUrl: './hc-panel-atenciones.component.html',
 })
 export class HcPanelAtencionesComponent {
+  /** true cuando se muestra dentro de un modal (sin tarjeta propia). */
+  @Input() sinMarco = false;
   @Input() atenciones: AtencionHistoria[] = [];
   @Input() cargando = false;
   @Input() error: string | null = null;

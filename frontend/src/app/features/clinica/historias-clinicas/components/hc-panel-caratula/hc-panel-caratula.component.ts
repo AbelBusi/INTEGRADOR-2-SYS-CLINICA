@@ -15,6 +15,7 @@ import {
   selector: 'app-hc-panel-caratula',
   standalone: true,
   imports: [CommonModule],
+  host: { class: 'block' },
   templateUrl: './hc-panel-caratula.component.html',
 })
 export class HcPanelCaratulaComponent {

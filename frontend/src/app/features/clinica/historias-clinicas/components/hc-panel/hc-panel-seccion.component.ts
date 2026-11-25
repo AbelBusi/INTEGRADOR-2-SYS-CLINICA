@@ -18,4 +18,6 @@ export class HcPanelSeccionComponent {
   @Input() descripcion = '';
   @Input() icono = 'assignment';
   @Input() contador: number | null = null;
+  /** true = solo el contenido, sin tarjeta ni cabecera (cuando ya va dentro de un modal). */
+  @Input() sinMarco = false;
 }
