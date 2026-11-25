@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 
 public record DescansoMedicoRespuestaDTO(
         Integer id,
+        Integer idCita,
+        String estado,
         String numero,
         String codigoDocumento,
         DescansoMedicoDatosBaseDTO datos,
@@ -18,6 +20,7 @@ public record DescansoMedicoRespuestaDTO(
         String tipoFirma,
         String algoritmoFirma,
         String firma,
-        String hashContenido
+        String hashContenido,
+        CancelacionDescansoMedicoDTO cancelacion
 ) {
 }

@@ -6,7 +6,6 @@ import com.salud.consultorio.model.entity.DescansoMedico;
 import com.salud.consultorio.model.entity.Usuario;
 import com.salud.consultorio.repository.ICitaMedicaRepositorio;
 import com.salud.consultorio.repository.IDescansoMedicoRepositorio;
-import com.salud.consultorio.repository.IUsuarioRepositorio;
 import com.salud.consultorio.service.IAuditoriaDescansoMedicoServicio;
 import com.salud.consultorio.service.IDescansoMedicoServicio;
 import com.salud.consultorio.service.IFirmaElectronicaServicio;
@@ -16,8 +15,6 @@ import com.salud.consultorio.service.IVerificacionDobleFactorServicio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -35,7 +32,7 @@ public class DescansoMedicoServicioImpl implements IDescansoMedicoServicio {
     private static final int HORAS_LIMITE = 24;
 
     private final ICitaMedicaRepositorio citaRepositorio;
-    private final IUsuarioRepositorio usuarioRepositorio;
+    private final UsuarioActualResolver usuarioActualResolver;
     private final IDescansoMedicoRepositorio descansoRepositorio;
     private final IVerificacionDobleFactorServicio verificacionServicio;
     private final IFirmaElectronicaServicio firmaServicio;
@@ -54,7 +51,7 @@ public class DescansoMedicoServicioImpl implements IDescansoMedicoServicio {
                     "Ya existe un descanso médico para esta atención.", null);
         }
 
-        ResponseStatusException bloqueo = bloqueo(cita, usuarioActual());
+        ResponseStatusException bloqueo = bloqueo(cita, usuarioActualResolver.obtener());
         return new DescansoMedicoContextoDTO(null, datos, bloqueo == null,
                 bloqueo == null ? null : bloqueo.getReason(), limiteEmision(cita));
     }
@@ -63,7 +60,7 @@ public class DescansoMedicoServicioImpl implements IDescansoMedicoServicio {
     @Transactional
     public DescansoMedicoRespuestaDTO emitir(Integer idCita, DescansoMedicoCrearDTO dto, String ipOrigen) {
         CitaMedica cita = buscarCita(idCita);
-        Usuario usuario = usuarioActual();
+        Usuario usuario = usuarioActualResolver.obtener();
 
         if (descansoRepositorio.existsByCitaMedica_Id(idCita)) {
             throw yaExiste();
@@ -188,14 +185,4 @@ public class DescansoMedicoServicioImpl implements IDescansoMedicoServicio {
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Cita médica no encontrada."));
     }
 
-    // ADAPTAR: reemplaza por el mismo mecanismo que ya usa CitaMedicaServicioImpl para obtener
-    // al usuario autenticado (aquí se asume findByUsername sobre el nombre del JWT).
-    private Usuario usuarioActual() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no autenticado.");
-        }
-        return usuarioRepositorio.findByUsuario(auth.getName()).orElseThrow(() ->
-                new ResponseStatusException(HttpStatus.FORBIDDEN, "Usuario no válido."));
-    }
 }

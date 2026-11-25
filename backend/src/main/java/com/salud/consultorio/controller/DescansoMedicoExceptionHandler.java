@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ResponseStatusException;
 
-@RestControllerAdvice(assignableTypes = DescansoMedicoController.class)
+@RestControllerAdvice(assignableTypes = {DescansoMedicoController.class, DescansoMedicoGestionController.class})
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class DescansoMedicoExceptionHandler {
 

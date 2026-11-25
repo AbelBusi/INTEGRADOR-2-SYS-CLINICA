@@ -67,6 +67,9 @@ public class AuditoriaDescansoMedico {
     @Column(name = "justificacion", length = 1000, updatable = false)
     private String justificacion;
 
+    @Column(name = "observacion", length = 500, updatable = false)
+    private String observacion;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "resultado", nullable = false, length = 20, updatable = false)
     private ResultadoAuditoriaDescanso resultado;

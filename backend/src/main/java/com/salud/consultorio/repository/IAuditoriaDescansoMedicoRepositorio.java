@@ -10,4 +10,6 @@ public interface IAuditoriaDescansoMedicoRepositorio extends Repository<Auditori
     AuditoriaDescansoMedico save(AuditoriaDescansoMedico auditoria);
 
     List<AuditoriaDescansoMedico> findByCitaMedica_IdOrderByFechaEventoDesc(Integer idCita);
+
+    List<AuditoriaDescansoMedico> findByCitaMedica_IdOrderByFechaEventoAsc(Integer idCita);
 }
