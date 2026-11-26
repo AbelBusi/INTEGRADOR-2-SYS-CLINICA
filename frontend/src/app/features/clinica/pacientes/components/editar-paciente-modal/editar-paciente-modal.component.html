@@ -41,9 +41,8 @@
                 <select
                   name="idTipoDocumento"
                   [(ngModel)]="pacienteForm.idTipoDocumento"
-                  (ngModelChange)="onTipoDocumentoChange()"
-                  required
-                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors">
+                  disabled
+                  class="w-full bg-neutral-100 border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-500 outline-none cursor-not-allowed">
                   <option [ngValue]="null" disabled>Seleccione...</option>
                   @for (tipo of tiposDocumento; track tipo.idTipoDocumento) {
                     <option [ngValue]="tipo.idTipoDocumento">{{ tipo.codigo }}</option>
@@ -56,26 +55,15 @@
                 <input
                   type="text"
                   name="numeroDocumento"
-                  #documentoInput="ngModel"
                   [(ngModel)]="pacienteForm.numeroDocumento"
-                  [attr.maxlength]="longitudDocumento ?? 15"
-                  (keypress)="soloNumeros($event)"
-                  pattern="^[0-9]+$"
-                  required
-                  inputmode="numeric"
-                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
-                  [class.border-[#D9182A]]="documentoInput.invalid && (documentoInput.dirty || documentoInput.touched)"
+                  readonly
+                  class="w-full bg-neutral-100 border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-500 outline-none cursor-not-allowed"
                 />
-                <div class="flex justify-between mt-1">
-                  <span class="text-[10px] text-[#D9182A] font-medium">
-                    @if (documentoInput.invalid && (documentoInput.dirty || documentoInput.touched)) {
-                      Solo números, obligatorio.
-                    }
-                  </span>
+                <div class="flex justify-end mt-1">
                   @if (longitudDocumento) {
                     <span class="text-[10px] text-neutral-400">
-                      {{ pacienteForm.numeroDocumento.length }}/{{ longitudDocumento }}
-                    </span>
+      {{ pacienteForm.numeroDocumento.length }}/{{ longitudDocumento }}
+    </span>
                   }
                 </div>
               </div>
@@ -86,11 +74,8 @@
                   type="text"
                   name="nombre"
                   [(ngModel)]="pacienteForm.nombre"
-                  (keydown)="soloLetras($event)"
-                  (input)="limpiarNombre()"
-                  maxlength="60"
-                  required
-                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                  readonly
+                  class="w-full bg-neutral-100 border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-500 outline-none cursor-not-allowed"
                 />
                 <div class="text-right text-[10px] text-neutral-400 mt-1">{{ pacienteForm.nombre.length }}/60</div>
               </div>
@@ -101,11 +86,8 @@
                   type="text"
                   name="apellidos"
                   [(ngModel)]="pacienteForm.apellidos"
-                  (keydown)="soloLetras($event)"
-                  (input)="limpiarApellidos()"
-                  maxlength="100"
-                  required
-                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                  readonly
+                  class="w-full bg-neutral-100 border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-500 outline-none cursor-not-allowed"
                 />
                 <div class="text-right text-[10px] text-neutral-400 mt-1">{{ pacienteForm.apellidos.length }}/100</div>
               </div>
@@ -116,9 +98,8 @@
                   type="date"
                   name="fechaNacimiento"
                   [(ngModel)]="pacienteForm.fechaNacimiento"
-                  [max]="fechaMaxima"
-                  required
-                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
+                  disabled
+                  class="w-full bg-neutral-100 border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-500 outline-none cursor-not-allowed"
                 />
               </div>
 
@@ -127,8 +108,8 @@
                 <select
                   name="genero"
                   [(ngModel)]="pacienteForm.genero"
-                  required
-                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-700 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors">
+                  disabled
+                  class="w-full bg-neutral-100 border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-500 outline-none cursor-not-allowed">
                   <option value="" disabled>Seleccione...</option>
                   @for (g of generos; track g) {
                     <option [value]="g">{{ g }}</option>
@@ -182,15 +163,11 @@
                 <select
                   name="nacionalidad"
                   [(ngModel)]="pacienteForm.nacionalidad"
-                  required
-                  class="w-full bg-white border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-800 outline-none hover:border-[#58595B] focus:border-[#58595B] transition-colors"
-                >
+                  disabled
+                  class="w-full bg-neutral-100 border border-neutral-300 rounded px-3 py-2 text-sm text-neutral-500 outline-none cursor-not-allowed">
                   <option value="" disabled>Seleccionar nacionalidad</option>
-
                   @for (nacionalidad of nacionalidades; track nacionalidad) {
-                    <option [value]="nacionalidad">
-                      {{ nacionalidad }}
-                    </option>
+                    <option [value]="nacionalidad">{{ nacionalidad }}</option>
                   }
                 </select>
               </div>

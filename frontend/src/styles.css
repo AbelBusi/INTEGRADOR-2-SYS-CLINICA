@@ -1,6 +1,74 @@
+
+/* ============================================
+   TIPOGRAFÍAS
+   ============================================ */
+
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Playfair+Display:wght@600;700&display=swap');
+
 @import 'tailwindcss';
 
+
+/* ============================================
+   MATERIAL SYMBOLS OUTLINED
+   ============================================ */
+
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  src: url('/fonts/MaterialSymbolsOutlined-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: 400;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  direction: ltr;
+  display: inline-block;
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+
+/* ============================================
+   MATERIAL ICONS
+   ============================================ */
+
+@font-face {
+  font-family: 'Material Icons';
+  src: url('/fonts/MaterialIcons-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: block;
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: 400;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  direction: ltr;
+  display: inline-block;
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+
+/* ============================================
+   ANIMACIONES
+   ============================================ */
 
 .heading-enter {
   animation: heading-enter 400ms ease-out both;
@@ -38,6 +106,11 @@
   transform: translateX(-3px);
 }
 
+
+/* ============================================
+   KEYFRAMES
+   ============================================ */
+
 @keyframes heading-enter {
   from {
     opacity: 0;
@@ -61,6 +134,11 @@
     transform: translateY(0);
   }
 }
+
+
+/* ============================================
+   ACCESIBILIDAD
+   ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
   .heading-enter,
