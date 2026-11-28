@@ -23,7 +23,8 @@ export class RegistroPacienteComponent {
 
   private readonly servicio = inject(RegistroPacienteService);
   private readonly toast = inject(ToastService);
-
+  readonly nombresEnmascarados = computed(() => this.elegibilidad()?.nombresEnmascarados ?? '');
+  readonly apellidosEnmascarados = computed(() => this.elegibilidad()?.apellidosEnmascarados ?? '');
   readonly tiposDocumento = [
     { codigo: 'DNI', etiqueta: 'DNI' },
     { codigo: 'CE', etiqueta: 'Carné de extranjería (CE)' },
@@ -39,7 +40,7 @@ export class RegistroPacienteComponent {
 
   private readonly subtitulos: Record<PasoRegistro, string> = {
     identificacion: 'Ingrese su documento para validar que es paciente del establecimiento.',
-    datos: 'Confirme sus datos personales tal como figuran en su documento.',
+    datos: 'Confirme su fecha de nacimiento para verificar su identidad.',
     correo: 'Verificaremos su correo electrónico antes de crear su cuenta.',
     verificacion: 'Ingrese el código de verificación que recibió.',
     exito: 'Registro completado.',
@@ -54,8 +55,6 @@ export class RegistroPacienteComponent {
 
   readonly tipoDocumento = signal<string>('DNI');
   readonly numeroDocumento = signal<string>('');
-  readonly nombres = signal<string>('');
-  readonly apellidos = signal<string>('');
   readonly fechaNacimiento = signal<string>('');
   readonly correoNuevo = signal<string>('');
   readonly codigo = signal<string>('');
@@ -77,8 +76,6 @@ export class RegistroPacienteComponent {
 
   readonly datosValidos = computed(
     () =>
-      this.nombres().trim().length > 0 &&
-      this.apellidos().trim().length > 0 &&
       /^\d{4}-\d{2}-\d{2}$/.test(this.fechaNacimiento()) &&
       this.fechaNacimiento() < this.fechaMaxima,
   );
@@ -113,8 +110,6 @@ export class RegistroPacienteComponent {
     return {
       tipoDocumento: this.tipoDocumento(),
       numeroDocumento: this.numeroDocumento().trim(),
-      nombres: this.nombres().trim(),
-      apellidos: this.apellidos().trim(),
       fechaNacimiento: this.fechaNacimiento(),
     };
   }
@@ -196,8 +191,6 @@ export class RegistroPacienteComponent {
   volverAIdentificacion(): void {
     this.codigo.set('');
     this.correoNuevo.set('');
-    this.nombres.set('');
-    this.apellidos.set('');
     this.fechaNacimiento.set('');
     this.elegibilidad.set(null);
     this.paso.set('identificacion');

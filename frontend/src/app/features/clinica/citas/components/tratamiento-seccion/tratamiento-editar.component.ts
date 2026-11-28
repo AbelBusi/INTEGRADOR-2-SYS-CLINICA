@@ -5,11 +5,14 @@ import { ToastService } from '../../../../../core/services/toast.service';
 import { Tratamiento, TratamientoActualizarDTO } from '../../interface/tratamiento.interface';
 import { TratamientoService } from '../../services/tratamiento.service';
 import { VIAS_ADMINISTRACION } from '../../utils/atencion-clinica.util';
+import { MedicamentoCatalogoBuscadorComponent } from '../../../medicamentos/components/medicamento-catalogo-buscador/medicamento-catalogo-buscador.component';
+import { MedicamentoBusqueda } from '../../../medicamentos/interface/medicamento.interface';
+import { etiquetaMedicamento } from '../../../medicamentos/utils/medicamento.util';
 
 @Component({
   selector: 'app-tratamiento-editar',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, MedicamentoCatalogoBuscadorComponent],
   templateUrl: './tratamiento-editar.component.html',
 })
 export class TratamientoEditarComponent implements OnInit {
@@ -45,6 +48,17 @@ export class TratamientoEditarComponent implements OnInit {
       totCantidad: this.tratamiento.totCantidad,
       descIndicacion: this.tratamiento.descIndicacion,
     });
+  }
+
+  /** Al cambiar de medicamento se reemplaza el nombre guardado por el del catálogo. */
+  alSeleccionarMedicamento(medicamento: MedicamentoBusqueda): void {
+    const control = this.form.controls.nombreMedicamento;
+    control.setValue(etiquetaMedicamento(medicamento));
+    control.markAsDirty();
+  }
+
+  alLimpiarMedicamento(): void {
+    this.form.controls.nombreMedicamento.setValue('');
   }
 
   guardar(): void {

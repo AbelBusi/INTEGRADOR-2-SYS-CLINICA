@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -6,6 +6,9 @@ import { Medicamento } from '../../interface/medicamento.interface';
 import { MedicamentoService } from '../../services/medicamento.service';
 import { ToastService } from '../../../../../core/services/toast.service';
 import { mensajeError, textoGrupo, textoIndicacion, urlImagen } from '../../utils/medicamento.util';
+import { ExportModalComponent } from '../../../../../shared/components/export-modal/export-modal.component';
+import { ExportDataSource } from '../../../../../shared/export/interface/export.interface';
+import { crearMedicamentoExportConfig } from '../../export/medicamento-export.config';
 
 import { MedicamentoFormModalComponent } from '../../components/medicamento-form-modal/medicamento-form-modal.component';
 import { VerDetalleMedicamentoModalComponent } from '../../components/ver-detalle-medicamento-modal/ver-detalle-medicamento-modal.component';
@@ -24,6 +27,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     CustomTableComponent,
     MedicamentoFormModalComponent,
     VerDetalleMedicamentoModalComponent,
+    ExportModalComponent,
   ],
   templateUrl: './lista-medicamentos.component.html',
 })
@@ -42,7 +46,27 @@ export class ListaMedicamentosComponent implements OnInit {
   readonly imagen = urlImagen;
   readonly grupo = textoGrupo;
   readonly indicacion = textoIndicacion;
+  @ViewChild(CustomTableComponent) tabla?: CustomTableComponent<Medicamento>;
+  isExportOpen = false;
 
+  readonly exportConfig = crearMedicamentoExportConfig(() => this.filtrosExportacion());
+  readonly exportDataSource: ExportDataSource<Medicamento> = {
+    getPageRows: () => this.tabla?.paginatedData() ?? [],
+    getFilteredRows: () => this.medicamentosFiltrados,
+  };
+
+  private filtrosExportacion(): string[] {
+    const estados: Record<FiltroEstado, string> = {
+      todos: 'Todos',
+      activo: 'Activos',
+      inactivo: 'Inactivos',
+    };
+    const filtros = [`Estado: ${estados[this.filtroEstado]}`];
+    if (this.search.trim()) {
+      filtros.push('Búsqueda por texto aplicada');
+    }
+    return filtros;
+  }
   columns: TableColumn<Medicamento>[] = [
     { header: 'Medicamento', field: 'nombre', sortable: true, type: 'custom' },
     { header: 'Concentración', field: 'concentracion', type: 'text' },

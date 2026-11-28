@@ -128,14 +128,14 @@ export const MENU_BASE: NavItem[] = [
     grupo: 'ATENCION MEDICA',
     label: 'Medicamentos',
     roles: ['ADMINISTRADOR'],
-    icon: 'today',
+    icon: 'medication',
     sub: [{ label: 'Medicamentos', route: '/dashboard/medicamentos' }],
   },
   {
     grupo: 'ATENCION MEDICA',
     label: 'Examen Medicos',
     roles: ['ADMINISTRADOR'],
-    icon: 'today',
+    icon: 'science',
     sub: [{ label: 'Examen Medico', route: '/dashboard/examen-medico' }],
   },
   {
@@ -178,7 +178,7 @@ export const MENU_BASE: NavItem[] = [
     grupo: 'LOGISTICA',
     label: 'Documentos Emitidos',
     roles: ['MEDICO'],
-    icon: 'folder_open',
+    icon: 'description',
     sub: [{ label: 'Documentos Emitidos', route: '/dashboard/descansos-medicos' }],
   },
   {

@@ -92,3 +92,14 @@ export interface MedicamentoSimilar {
   grupoTerapeutico: GrupoTerapeutico;
   estado: number;
 }
+
+/** Resultado del buscador de catálogo (lo usa Tratamiento para elegir el medicamento). */
+export interface MedicamentoBusqueda {
+  id: number;
+  nombre: string;
+  concentracion: string | null;
+  principioActivo: string | null;
+  grupoTerapeutico: GrupoTerapeutico;
+  requiereReceta: boolean;
+  foto: string | null;
+}

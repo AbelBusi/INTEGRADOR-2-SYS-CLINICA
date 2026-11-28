@@ -1,11 +1,13 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { ExamenMedico } from '../../interface/examen-medico.interface';
 import { ExamenMedicoService } from '../../services/examen-medico.service';
 import { ToastService } from '../../../../../core/services/toast.service';
-
+import { ExportModalComponent } from '../../../../../shared/components/export-modal/export-modal.component';
+import { ExportDataSource } from '../../../../../shared/export/interface/export.interface';
+import { crearExamenMedicoExportConfig } from '../../export/examen-medico-export.config';
 import { CrearExamenMedicoModalComponent } from '../../components/crear-examen-medico/crear-examen-medico-modal.component';
 import { VerDetalleExamenMedicoModalComponent } from '../../components/ver-detalle-examen-medico-modal/ver-detalle-examen-medico-modal.component';
 import { EditarExamenMedicoModalComponent } from '../../components/editar-examen-medico/editar-examen-medico-modal.component';
@@ -25,6 +27,7 @@ type FiltroEstado = 'todos' | 'activo' | 'inactivo';
     CrearExamenMedicoModalComponent,
     EditarExamenMedicoModalComponent,
     VerDetalleExamenMedicoModalComponent,
+    ExportModalComponent,
   ],
   templateUrl: './lista-examen-medico.component.html',
 })
@@ -37,7 +40,27 @@ export class ListaExamenMedicoComponent implements OnInit {
   examenEditar: ExamenMedico | null = null;
   sortField = 'nombre';
   filtroEstado: FiltroEstado = 'todos';
+  @ViewChild(CustomTableComponent) tabla?: CustomTableComponent<ExamenMedico>;
+  isExportOpen = false;
 
+  readonly exportConfig = crearExamenMedicoExportConfig(() => this.filtrosExportacion());
+  readonly exportDataSource: ExportDataSource<ExamenMedico> = {
+    getPageRows: () => this.tabla?.paginatedData() ?? [],
+    getFilteredRows: () => this.examenesFiltrados,
+  };
+
+  private filtrosExportacion(): string[] {
+    const estados: Record<FiltroEstado, string> = {
+      todos: 'Todos',
+      activo: 'Activos',
+      inactivo: 'Inactivos',
+    };
+    const filtros = [`Estado: ${estados[this.filtroEstado]}`];
+    if (this.search.trim()) {
+      filtros.push('Búsqueda por texto aplicada');
+    }
+    return filtros;
+  }
   columns: TableColumn<ExamenMedico>[] = [
     { header: 'Examen', field: 'nombre', sortable: true, type: 'custom' },
     { header: 'Tipo', field: 'tipoExamen', sortable: true, type: 'text' },

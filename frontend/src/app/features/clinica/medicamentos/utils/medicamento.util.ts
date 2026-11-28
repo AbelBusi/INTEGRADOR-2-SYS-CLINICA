@@ -32,6 +32,16 @@ export function urlImagen(foto: string | null | undefined): string | null {
   return `${origen}${foto.startsWith('/') ? '' : '/'}${foto}`;
 }
 
+/**
+ * Texto que se guarda en Tratamiento.nombreMedicamento al elegir del catálogo: "Nombre concentración"
+ * (ej. "Paracetamol 500 mg"). Tratamiento no tiene relación con Medicamento, así que se guarda el texto.
+ * Si quieres guardar solo el nombre, cambia únicamente esta función. Máx. 100 (límite del campo).
+ */
+export function etiquetaMedicamento(m: { nombre: string; concentracion: string | null }): string {
+  const texto = m.concentracion ? `${m.nombre} ${m.concentracion}` : m.nombre;
+  return texto.slice(0, 100);
+}
+
 export function formatearFechaHora(valor: string | null | undefined): string {
   if (!valor) {
     return '-';

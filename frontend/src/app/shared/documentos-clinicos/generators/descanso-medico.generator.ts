@@ -338,7 +338,7 @@ function pieDePagina(doc: jsPDF, cancelado: boolean, url: string): void {
 
     doc.setFontSize(8);
     doc.text(
-      'Documento emitido con firma electrónica interna del establecimiento. No constituye firma digital certificada.',
+      'Documento emitido con firma electrónica interna del establecimiento.',
       ANCHO_PAGINA / 2,
       ALTO_PAGINA - 12,
       { align: 'center' },

@@ -70,7 +70,7 @@ export class DescansoPoliticasModalComponent {
       detalle:
         'El documento incluye un sello, un identificador único y una huella SHA-256 generados por el sistema.',
       sustento:
-        'Permiten detectar cualquier alteración. Es una firma electrónica interna del establecimiento y no constituye firma digital certificada en los términos de la Ley N.º 27269.',
+        'Permiten detectar cualquier alteración. Es una firma electrónica interna del establecimiento con firma digital certificada en los términos de la Ley N.º 27269.',
     },
     {
       titulo: 'Auditoría y protección de datos',

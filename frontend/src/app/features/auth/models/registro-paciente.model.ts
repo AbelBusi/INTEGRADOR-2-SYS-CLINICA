@@ -9,19 +9,18 @@ export interface DocumentoPaciente {
 }
 
 export interface DatosPersonales {
-  nombres: string;
-  apellidos: string;
   fechaNacimiento: string;
 }
 
 export interface IdentidadPaciente extends DocumentoPaciente, DatosPersonales {}
-
 
 export interface ElegibilidadResponse {
   estado: EstadoRegistro;
   mensaje: string;
   tieneCorreo: boolean;
   correoEnmascarado: string | null;
+  nombresEnmascarados: string | null;
+  apellidosEnmascarados: string | null;
 }
 
 export interface EnviarCodigoRegistroRequest extends IdentidadPaciente {

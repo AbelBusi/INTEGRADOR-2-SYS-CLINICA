@@ -5,6 +5,7 @@ import { environment } from '../../../../../environments/environment';
 
 import {
   Medicamento,
+  MedicamentoBusqueda,
   MedicamentoGuardar,
   MedicamentoSimilar,
 } from '../interface/medicamento.interface';
@@ -44,6 +45,15 @@ export class MedicamentoService {
     }
 
     return this.http.get<MensajeResponses<MedicamentoSimilar[]>>(`${this.baseUrl}/similares`, {
+      params,
+    });
+  }
+
+  /** Buscador del catálogo (solo activos). El backend responde vacío con menos de 3 caracteres. */
+  buscar(nombre: string): Observable<MensajeResponses<MedicamentoBusqueda[]>> {
+    const params = new HttpParams().set('nombre', nombre);
+
+    return this.http.get<MensajeResponses<MedicamentoBusqueda[]>>(`${this.baseUrl}/buscar`, {
       params,
     });
   }

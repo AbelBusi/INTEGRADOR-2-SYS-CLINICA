@@ -4,6 +4,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { ToastService } from '../../../../../core/services/toast.service';
 import { TratamientoEditarComponent } from './tratamiento-editar.component';
+import { MedicamentoCatalogoBuscadorComponent } from '../../../medicamentos/components/medicamento-catalogo-buscador/medicamento-catalogo-buscador.component';
+import { MedicamentoBusqueda } from '../../../medicamentos/interface/medicamento.interface';
+import { etiquetaMedicamento } from '../../../medicamentos/utils/medicamento.util';
 import { TratamientoService } from '../../services/tratamiento.service';
 import { VIAS_ADMINISTRACION } from '../../utils/atencion-clinica.util';
 import { AtencionClinicaService } from '../../services/atencion-clinica.service';
@@ -12,7 +15,12 @@ import { Tratamiento, TratamientoCrearDTO } from '../../interface/tratamiento.in
 @Component({
   selector: 'app-tratamiento-seccion',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TratamientoEditarComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    TratamientoEditarComponent,
+    MedicamentoCatalogoBuscadorComponent,
+  ],
   templateUrl: './tratamiento-seccion.component.html',
 })
 export class TratamientoSeccionComponent {
@@ -46,6 +54,17 @@ export class TratamientoSeccionComponent {
     totCantidad: [null as number | null, [Validators.required, Validators.min(1)]],
     descIndicacion: ['', [Validators.required, Validators.maxLength(300)]],
   });
+
+  /** El nombre guardado en Tratamiento sale del catálogo de medicamentos (sin relación en BD). */
+  alSeleccionarMedicamento(medicamento: MedicamentoBusqueda): void {
+    const control = this.form.controls.nombreMedicamento;
+    control.setValue(etiquetaMedicamento(medicamento));
+    control.markAsDirty();
+  }
+
+  alLimpiarMedicamento(): void {
+    this.form.controls.nombreMedicamento.setValue('');
+  }
 
   iniciarEdicion(id: number): void {
     if (this.soloLectura) return;

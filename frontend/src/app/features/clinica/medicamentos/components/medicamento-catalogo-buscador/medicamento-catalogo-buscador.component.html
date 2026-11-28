@@ -1,0 +1,74 @@
+<div class="relative">
+
+  <div class="flex h-11 items-center gap-2 border border-neutral-400 bg-white px-3 focus-within:border-[#58595B]">
+    <span class="material-icons text-[20px] text-neutral-400">search</span>
+
+    <input
+      type="text"
+      autocomplete="off"
+      maxlength="100"
+      [value]="texto()"
+      (input)="alEscribir($any($event.target).value)"
+      (focus)="abierto.set(true)"
+      (blur)="abierto.set(false)"
+      placeholder="Buscar medicamento del catálogo..."
+      class="w-full bg-transparent text-sm text-neutral-900 outline-none placeholder:text-neutral-400"
+    />
+
+    @if (valor) {
+      <button
+        type="button"
+        title="Quitar selección"
+        (mousedown)="$event.preventDefault()"
+        (click)="limpiar()"
+        class="flex shrink-0 items-center text-neutral-400 hover:text-[#D9182A]">
+        <span class="material-icons text-[18px]">close</span>
+      </button>
+    }
+  </div>
+
+  @if (abierto() && texto().trim().length >= minCaracteres) {
+    <ul class="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto border border-neutral-300 bg-white shadow-sm">
+      @for (m of resultados(); track m.id) {
+        <li>
+          <button
+            type="button"
+            (mousedown)="$event.preventDefault(); seleccionar(m)"
+            class="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-neutral-50">
+
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden border border-neutral-200 bg-neutral-100">
+              @if (urlImagen(m.foto) && !fotosRotas().has(m.id)) {
+                <img
+                  [src]="urlImagen(m.foto)"
+                  [alt]="m.nombre"
+                  (error)="marcarFotoRota(m.id)"
+                  class="h-full w-full object-cover" />
+              } @else {
+                <span class="material-icons text-[22px] text-[#58595B]">medication</span>
+              }
+            </div>
+
+            <div class="min-w-0">
+              <p class="truncate text-sm font-bold text-neutral-900">{{ etiqueta(m) }}</p>
+              <p class="truncate text-xs text-neutral-500">
+                {{ m.principioActivo || textoGrupo(m.grupoTerapeutico) }}
+                @if (m.requiereReceta) { · Con receta }
+              </p>
+            </div>
+          </button>
+        </li>
+      } @empty {
+        <li class="px-3 py-3 text-sm text-neutral-500">
+          {{ buscando() ? 'Buscando...' : 'Sin coincidencias en el catálogo.' }}
+        </li>
+      }
+    </ul>
+  }
+
+  @if (texto().trim() && !valor && !abierto()) {
+    <p class="mt-1 text-xs font-medium text-[#D9182A]">Debes seleccionar un medicamento de la lista.</p>
+  } @else {
+    <p class="mt-1 text-xs text-neutral-500">Escribe al menos 3 caracteres del nombre del medicamento.</p>
+  }
+
+</div>
