@@ -21,8 +21,8 @@ public class DescansoMedico {
     @Column(name = "id_descanso_medico", updatable = false)
     private Integer id;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_cita_medica", nullable = false, unique = true, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_cita_medica", nullable = false, updatable = false)
     private CitaMedica citaMedica;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

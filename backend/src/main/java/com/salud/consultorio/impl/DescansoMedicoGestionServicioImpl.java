@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import com.salud.consultorio.util.DescansoMedicoReglas;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -45,10 +46,22 @@ public class DescansoMedicoGestionServicioImpl implements IDescansoMedicoGestion
     @Transactional(readOnly = true)
     public DescansoMedicoHistorialDTO historial(Integer idDescanso) {
         DescansoMedico d = buscar(idDescanso);
+        Integer idCita = d.getCitaMedica().getId();
+
+        // Los intentos con código incorrecto no tienen descanso asociado: se atribuyen al descanso emitido después de ellos.
+        LocalDateTime desde = descansoRepositorio.findByCitaMedica_IdOrderByFechaEmisionDesc(idCita).stream()
+                .map(DescansoMedico::getFechaEmision)
+                .filter(f -> f.isBefore(d.getFechaEmision()))
+                .findFirst()
+                .orElse(LocalDateTime.MIN);
+        LocalDateTime hasta = d.getFechaEmision().plusSeconds(1);
 
         List<AuditoriaDescansoMedicoDTO> eventos = auditoriaRepositorio
-                .findByCitaMedica_IdOrderByFechaEventoAsc(d.getCitaMedica().getId())
+                .findByCitaMedica_IdOrderByFechaEventoAsc(idCita)
                 .stream()
+                .filter(a -> a.getDescansoMedico() != null
+                        ? a.getDescansoMedico().getId().equals(d.getId())
+                        : a.getFechaEvento().isAfter(desde) && !a.getFechaEvento().isAfter(hasta))
                 .map(this::evento)
                 .toList();
 
@@ -68,6 +81,13 @@ public class DescansoMedicoGestionServicioImpl implements IDescansoMedicoGestion
 
         if (cancelacionRepositorio.existsByDescansoMedico_Id(idDescanso)) {
             throw yaCancelado();
+        }
+
+        if (LocalDateTime.now().isAfter(
+                d.getFechaEmision().plusMinutes(DescansoMedicoReglas.MINUTOS_PARA_CANCELAR))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Solo se puede cancelar un descanso médico dentro de los "
+                            + DescansoMedicoReglas.MINUTOS_PARA_CANCELAR + " minutos posteriores a su emisión.");
         }
 
         if (!verificacionServicio.verificar(usuario.getId(), dto.codigoVerificacion())) {

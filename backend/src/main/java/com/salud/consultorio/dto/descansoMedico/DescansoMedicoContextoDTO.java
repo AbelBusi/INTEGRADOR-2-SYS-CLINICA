@@ -7,6 +7,7 @@ public record DescansoMedicoContextoDTO(
         DescansoMedicoDatosBaseDTO datos,
         boolean puedeEmitir,
         String motivoBloqueo,
+        String codigoBloqueo,
         LocalDateTime venceEmision
 ) {
 }

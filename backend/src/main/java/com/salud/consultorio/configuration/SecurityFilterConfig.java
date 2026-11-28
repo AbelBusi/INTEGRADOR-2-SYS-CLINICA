@@ -46,6 +46,7 @@ public class SecurityFilterConfig {
                         .requestMatchers("/api/v1/auth/cambiar-clave").authenticated()
                         .requestMatchers("/api/v1/cargos/**").authenticated()
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/api/v1/publico/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 ).sessionManagement( session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

@@ -12,6 +12,10 @@ import com.salud.consultorio.service.IFirmaElectronicaServicio;
 import com.salud.consultorio.service.IFirmaElectronicaServicio.DatosFirma;
 import com.salud.consultorio.service.IFirmaElectronicaServicio.FirmaElectronica;
 import com.salud.consultorio.service.IVerificacionDobleFactorServicio;
+import com.salud.consultorio.util.DescansoMedicoReglas;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -29,7 +33,6 @@ import java.util.UUID;
 public class DescansoMedicoServicioImpl implements IDescansoMedicoServicio {
 
     private static final int ESTADO_ATENDIDA = 3;
-    private static final int HORAS_LIMITE = 24;
 
     private final ICitaMedicaRepositorio citaRepositorio;
     private final UsuarioActualResolver usuarioActualResolver;
@@ -39,36 +42,44 @@ public class DescansoMedicoServicioImpl implements IDescansoMedicoServicio {
     private final IAuditoriaDescansoMedicoServicio auditoriaServicio;
     private final DescansoMedicoMapeador mapeador;
 
+    @PersistenceContext
+    private EntityManager em;
+
+    private record Bloqueo(String codigo, HttpStatus estado, String mensaje) {
+    }
+
     @Override
     @Transactional(readOnly = true)
     public DescansoMedicoContextoDTO contexto(Integer idCita) {
         CitaMedica cita = buscarCita(idCita);
         DescansoMedicoDatosBaseDTO datos = mapeador.datosBase(cita);
 
-        var existente = descansoRepositorio.findByCitaMedica_Id(idCita);
-        if (existente.isPresent()) {
-            return new DescansoMedicoContextoDTO(mapeador.respuesta(existente.get()), datos, false,
-                    "Ya existe un descanso médico para esta atención.", null);
+        var vigentes = descansoRepositorio.findVigentesByCita(idCita);
+        if (!vigentes.isEmpty()) {
+            return new DescansoMedicoContextoDTO(mapeador.respuesta(vigentes.get(0)), datos, false,
+                    "Ya existe un descanso médico vigente para esta atención.", "YA_EMITIDO", null);
         }
 
-        ResponseStatusException bloqueo = bloqueo(cita, usuarioActualResolver.obtener());
+        Bloqueo bloqueo = bloqueo(cita, usuarioActualResolver.obtener());
         return new DescansoMedicoContextoDTO(null, datos, bloqueo == null,
-                bloqueo == null ? null : bloqueo.getReason(), limiteEmision(cita));
+                bloqueo == null ? null : bloqueo.mensaje(),
+                bloqueo == null ? null : bloqueo.codigo(),
+                limiteEmision(cita));
     }
 
     @Override
     @Transactional
     public DescansoMedicoRespuestaDTO emitir(Integer idCita, DescansoMedicoCrearDTO dto, String ipOrigen) {
-        CitaMedica cita = buscarCita(idCita);
+        CitaMedica cita = buscarCitaBloqueada(idCita);
         Usuario usuario = usuarioActualResolver.obtener();
 
-        if (descansoRepositorio.existsByCitaMedica_Id(idCita)) {
+        if (!descansoRepositorio.findVigentesByCita(idCita).isEmpty()) {
             throw yaExiste();
         }
 
-        ResponseStatusException bloqueo = bloqueo(cita, usuario);
+        Bloqueo bloqueo = bloqueo(cita, usuario);
         if (bloqueo != null) {
-            throw bloqueo;
+            throw new ResponseStatusException(bloqueo.estado(), bloqueo.mensaje());
         }
 
         validarPeriodo(dto);
@@ -81,7 +92,12 @@ public class DescansoMedicoServicioImpl implements IDescansoMedicoServicio {
         // Sin fracciones de segundo: coincide exactamente con lo que guarda la base de datos.
         LocalDateTime ahora = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         String codigoDocumento = UUID.randomUUID().toString();
-        String numero = String.format("DM-%d-%06d", ahora.getYear(), idCita);
+
+        // Primera emisión: DM-2026-000027. Reemisiones tras una cancelación: DM-2026-000027-R1, -R2...
+        long previos = descansoRepositorio.countByCitaMedica_Id(idCita);
+        String base = String.format("DM-%d-%06d", ahora.getYear(), idCita);
+        String numero = previos == 0 ? base : base + "-R" + previos;
+
         String justificacion = dto.justificacion().trim();
         String metodo = verificacionServicio.metodo();
 
@@ -121,7 +137,6 @@ public class DescansoMedicoServicioImpl implements IDescansoMedicoServicio {
                     .hashContenido(firma.hashContenido())
                     .build());
         } catch (DataIntegrityViolationException e) {
-            // La restricción única sobre id_cita_medica cubre la emisión simultánea.
             throw yaExiste();
         }
 
@@ -131,17 +146,18 @@ public class DescansoMedicoServicioImpl implements IDescansoMedicoServicio {
 
     // ---- reglas (todas en backend) ----
 
-    private ResponseStatusException bloqueo(CitaMedica cita, Usuario usuario) {
+    private Bloqueo bloqueo(CitaMedica cita, Usuario usuario) {
         if (cita.getEstado() == null || cita.getEstado() != ESTADO_ATENDIDA) {
-            return new ResponseStatusException(HttpStatus.BAD_REQUEST,
+            return new Bloqueo("NO_ATENDIDA", HttpStatus.BAD_REQUEST,
                     "Solo se puede generar el descanso médico de una atención realizada.");
         }
         if (LocalDateTime.now().isAfter(limiteEmision(cita))) {
-            return new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Pasaron más de 24 horas desde la atención médica.");
+            return new Bloqueo("PLAZO_VENCIDO", HttpStatus.BAD_REQUEST,
+                    "Pasaron más de " + DescansoMedicoReglas.HORAS_PARA_EMITIR
+                            + " horas desde la atención médica.");
         }
         if (!esMedicoResponsable(cita, usuario)) {
-            return new ResponseStatusException(HttpStatus.FORBIDDEN,
+            return new Bloqueo("NO_RESPONSABLE", HttpStatus.FORBIDDEN,
                     "Solo el médico responsable de la atención puede generar el descanso médico.");
         }
         return null;
@@ -151,7 +167,7 @@ public class DescansoMedicoServicioImpl implements IDescansoMedicoServicio {
         LocalDateTime fin = cita.getFinAtencion() != null
                 ? cita.getFinAtencion()
                 : LocalDateTime.of(cita.getFechaCita(), cita.getHoraSalida());
-        return fin.plusHours(HORAS_LIMITE);
+        return fin.plusHours(DescansoMedicoReglas.HORAS_PARA_EMITIR);
     }
 
     private boolean esMedicoResponsable(CitaMedica cita, Usuario usuario) {
@@ -169,6 +185,10 @@ public class DescansoMedicoServicioImpl implements IDescansoMedicoServicio {
                     "La fecha de fin no puede ser anterior a la fecha de inicio.");
         }
         long esperados = ChronoUnit.DAYS.between(dto.fechaInicio(), dto.fechaFin()) + 1;
+        if (esperados > DescansoMedicoReglas.MAX_DIAS_DESCANSO) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El descanso médico no puede superar los " + DescansoMedicoReglas.MAX_DIAS_DESCANSO + " días.");
+        }
         if (dto.dias() != esperados) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "La cantidad de días no corresponde al periodo indicado (" + esperados + ").");
@@ -177,7 +197,7 @@ public class DescansoMedicoServicioImpl implements IDescansoMedicoServicio {
 
     private ResponseStatusException yaExiste() {
         return new ResponseStatusException(HttpStatus.CONFLICT,
-                "Ya existe un descanso médico para esta atención.");
+                "Ya existe un descanso médico vigente para esta atención.");
     }
 
     private CitaMedica buscarCita(Integer idCita) {
@@ -185,4 +205,12 @@ public class DescansoMedicoServicioImpl implements IDescansoMedicoServicio {
                 new ResponseStatusException(HttpStatus.NOT_FOUND, "Cita médica no encontrada."));
     }
 
+    /** Serializa las emisiones de una misma atención: nunca habrá dos descansos vigentes a la vez. */
+    private CitaMedica buscarCitaBloqueada(Integer idCita) {
+        CitaMedica cita = em.find(CitaMedica.class, idCita, LockModeType.PESSIMISTIC_WRITE);
+        if (cita == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Cita médica no encontrada.");
+        }
+        return cita;
+    }
 }

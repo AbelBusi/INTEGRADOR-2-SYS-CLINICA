@@ -21,6 +21,7 @@ public record DescansoMedicoRespuestaDTO(
         String algoritmoFirma,
         String firma,
         String hashContenido,
-        CancelacionDescansoMedicoDTO cancelacion
+        CancelacionDescansoMedicoDTO cancelacion,
+        Long segundosParaCancelar
 ) {
 }

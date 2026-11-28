@@ -1,5 +1,8 @@
 package com.salud.consultorio.impl;
+import com.salud.consultorio.util.DescansoMedicoReglas;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import com.salud.consultorio.dto.descansoMedico.CancelacionDescansoMedicoDTO;
 import com.salud.consultorio.dto.descansoMedico.DescansoMedicoDatosBaseDTO;
 import com.salud.consultorio.dto.descansoMedico.DescansoMedicoRespuestaDTO;
@@ -77,7 +80,16 @@ public class DescansoMedicoMapeador {
                 d.getFirma(),
                 d.getHashContenido(),
                 c == null ? null : new CancelacionDescansoMedicoDTO(
-                        c.getFechaCancelacion(), c.getMotivo(), nombreUsuario(c.getUsuario())));
+                        c.getFechaCancelacion(), c.getMotivo(), nombreUsuario(c.getUsuario())),
+                segundosParaCancelar(d, c));
+    }
+
+    private Long segundosParaCancelar(DescansoMedico d, CancelacionDescansoMedico c) {
+        if (c != null) {
+            return null;
+        }
+        LocalDateTime limite = d.getFechaEmision().plusMinutes(DescansoMedicoReglas.MINUTOS_PARA_CANCELAR);
+        return Math.max(0L, Duration.between(LocalDateTime.now(), limite).getSeconds());
     }
 
     public String nombreUsuario(Usuario u) {
