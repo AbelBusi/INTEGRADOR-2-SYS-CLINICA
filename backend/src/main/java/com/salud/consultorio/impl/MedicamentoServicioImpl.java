@@ -10,6 +10,7 @@ import com.salud.consultorio.service.IMedicamentoServicio;
 import com.salud.consultorio.util.NormalizadorTexto;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -34,6 +35,9 @@ public class MedicamentoServicioImpl implements IMedicamentoServicio {
     /** Desde este parecido (0 a 1) dos nombres se consideran posible duplicado mal escrito. */
     private static final double UMBRAL_SIMILITUD = 0.75;
     private static final int MAXIMO_SIMILARES = 6;
+
+    private static final int MINIMO_CARACTERES_BUSQUEDA = 3;
+    private static final int MAXIMO_RESULTADOS_BUSQUEDA = 10;
 
     private final IMedicamentoRepositorio medicamentoRepositorio;
     private final IArchivoServicio archivoServicio;
@@ -284,6 +288,30 @@ public class MedicamentoServicioImpl implements IMedicamentoServicio {
                         c.medicamento().getConcentracion(),
                         c.medicamento().getGrupoTerapeutico(),
                         c.medicamento().getEstado()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<MedicamentoBusquedaDTO> buscar(String texto) {
+
+        String buscado = NormalizadorTexto.normalizar(texto);
+
+        if (buscado.length() < MINIMO_CARACTERES_BUSQUEDA) {
+            return List.of();
+        }
+
+        return medicamentoRepositorio
+                .buscarPorTexto(buscado, ESTADO_ACTIVO, PageRequest.of(0, MAXIMO_RESULTADOS_BUSQUEDA))
+                .stream()
+                .map(m -> new MedicamentoBusquedaDTO(
+                        m.getId(),
+                        m.getNombre(),
+                        m.getConcentracion(),
+                        m.getPrincipioActivo(),
+                        m.getGrupoTerapeutico(),
+                        m.getRequiereReceta(),
+                        m.getFoto()))
                 .toList();
     }
 

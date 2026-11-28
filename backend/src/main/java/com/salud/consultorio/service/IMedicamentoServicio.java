@@ -22,4 +22,7 @@ public interface IMedicamentoServicio {
 
     /** Medicamentos ya registrados con un nombre parecido (para evitar duplicados mal escritos). */
     List<MedicamentoSimilarDTO> similares(String nombre, Integer idExcluir);
+
+    /** Buscador para otros módulos (Tratamiento): solo activos, desde 3 caracteres, con foto. */
+    List<MedicamentoBusquedaDTO> buscar(String texto);
 }

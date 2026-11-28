@@ -19,14 +19,6 @@ public record VerificarIdentidadRequest(
         @Pattern(regexp = "^[A-Za-z0-9]+$", message = "El número de documento solo admite letras y números")
         String numeroDocumento,
 
-        @NotBlank(message = "Ingresa tus nombres")
-        @Size(max = 60, message = "Los nombres son demasiado largos")
-        String nombres,
-
-        @NotBlank(message = "Ingresa tus apellidos")
-        @Size(max = 100, message = "Los apellidos son demasiado largos")
-        String apellidos,
-
         @NotNull(message = "Ingresa tu fecha de nacimiento")
         @Past(message = "La fecha de nacimiento debe ser anterior a hoy")
         LocalDate fechaNacimiento

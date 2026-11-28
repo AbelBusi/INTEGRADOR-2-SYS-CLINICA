@@ -20,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 import java.security.SecureRandom;
 import java.text.Normalizer;
@@ -80,13 +82,17 @@ public class AutorregistroPacienteServicioImpl implements IAutorregistroPaciente
 
         return switch (ctx.estado()) {
             case NO_ELEGIBLE -> new ElegibilidadResponse(
-                    EstadoRegistro.NO_ELEGIBLE, MSG_NO_ELEGIBLE, false, null);
+                    EstadoRegistro.NO_ELEGIBLE, MSG_NO_ELEGIBLE, false, null, null, null);
             case CUENTA_EXISTENTE -> new ElegibilidadResponse(
-                    EstadoRegistro.CUENTA_EXISTENTE, MSG_CUENTA_EXISTENTE, false, null);
+                    EstadoRegistro.CUENTA_EXISTENTE, MSG_CUENTA_EXISTENTE, false, null, null, null);
             case PUEDE_AGREGAR_ROL -> new ElegibilidadResponse(
-                    EstadoRegistro.PUEDE_AGREGAR_ROL, MSG_AGREGAR_ROL, false, null);
+                    EstadoRegistro.PUEDE_AGREGAR_ROL, MSG_AGREGAR_ROL, false, null,
+                    enmascararTexto(ctx.persona().getNombre()),
+                    enmascararTexto(ctx.persona().getApellidos()));
             case PUEDE_CREAR_CUENTA -> new ElegibilidadResponse(
-                    EstadoRegistro.PUEDE_CREAR_CUENTA, MSG_PUEDE_CREAR, false, null);
+                    EstadoRegistro.PUEDE_CREAR_CUENTA, MSG_PUEDE_CREAR, false, null,
+                    enmascararTexto(ctx.persona().getNombre()),
+                    enmascararTexto(ctx.persona().getApellidos()));
         };
     }
 
@@ -97,7 +103,7 @@ public class AutorregistroPacienteServicioImpl implements IAutorregistroPaciente
         Contexto ctx = exigirElegible(evaluar(dto.tipoDocumento(), dto.numeroDocumento()));
         Persona persona = ctx.persona();
 
-        validarIdentidad(persona, dto.nombres(), dto.apellidos(), dto.fechaNacimiento());
+        validarIdentidad(persona, dto.fechaNacimiento());
 
         boolean tieneCorreo = !normalizarCorreo(persona.getCorreo()).isEmpty();
 
@@ -105,7 +111,9 @@ public class AutorregistroPacienteServicioImpl implements IAutorregistroPaciente
                 ctx.estado(),
                 ctx.estado() == EstadoRegistro.PUEDE_AGREGAR_ROL ? MSG_AGREGAR_ROL : MSG_DATOS_VALIDADOS,
                 tieneCorreo,
-                tieneCorreo ? enmascarar(persona.getCorreo()) : null);
+                tieneCorreo ? enmascarar(persona.getCorreo()) : null,
+                enmascararTexto(persona.getNombre()),
+                enmascararTexto(persona.getApellidos()));
     }
 
     @Transactional
@@ -115,7 +123,7 @@ public class AutorregistroPacienteServicioImpl implements IAutorregistroPaciente
         Contexto ctx = exigirElegible(evaluar(dto.tipoDocumento(), dto.numeroDocumento()));
         Persona persona = ctx.persona();
 
-        validarIdentidad(persona, dto.nombres(), dto.apellidos(), dto.fechaNacimiento());
+        validarIdentidad(persona, dto.fechaNacimiento());
 
         String registrado = normalizarCorreo(persona.getCorreo());
         String destino;
@@ -172,7 +180,7 @@ public class AutorregistroPacienteServicioImpl implements IAutorregistroPaciente
         Contexto ctx = exigirElegible(evaluar(dto.tipoDocumento(), dto.numeroDocumento()));
         Persona persona = ctx.persona();
 
-        validarIdentidad(persona, dto.nombres(), dto.apellidos(), dto.fechaNacimiento());
+        validarIdentidad(persona, dto.fechaNacimiento());
 
         CodigoAutorregistro registro = validarCodigo(persona, dto.codigo());
 
@@ -262,21 +270,35 @@ public class AutorregistroPacienteServicioImpl implements IAutorregistroPaciente
         return ctx;
     }
 
-    private void validarIdentidad(Persona persona, String nombres, String apellidos, LocalDate fechaNacimiento) {
+    private void validarIdentidad(Persona persona, LocalDate fechaNacimiento) {
 
         if (intentoServicio.bloqueado(persona.getId())) {
             throw new IllegalArgumentException(MSG_BLOQUEADO);
         }
 
         boolean coincide = fechaNacimiento != null
-                && fechaNacimiento.equals(persona.getFechaNacimiento())
-                && normalizarTexto(nombres).equals(normalizarTexto(persona.getNombre()))
-                && normalizarTexto(apellidos).equals(normalizarTexto(persona.getApellidos()));
+                && fechaNacimiento.equals(persona.getFechaNacimiento());
 
         if (!coincide) {
             intentoServicio.registrarFallo(persona.getId());
             throw new IllegalArgumentException(MSG_DATOS_INCORRECTOS);
         }
+    }
+
+    private String enmascararTexto(String texto) {
+
+        String valor = Objects.toString(texto, "").trim();
+
+        if (valor.isEmpty()) {
+            return "";
+        }
+
+        return Arrays.stream(valor.split("\\s+"))
+                .map(palabra -> {
+                    int visibles = (palabra.length() + 1) / 2;
+                    return palabra.substring(0, visibles) + "*".repeat(palabra.length() - visibles);
+                })
+                .collect(Collectors.joining(" "));
     }
 
     private CodigoAutorregistro validarCodigo(Persona persona, String codigo) {
@@ -316,13 +338,6 @@ public class AutorregistroPacienteServicioImpl implements IAutorregistroPaciente
         return correo == null ? "" : correo.trim().toLowerCase(Locale.ROOT);
     }
 
-    private String normalizarTexto(String texto) {
-        return Normalizer.normalize(Objects.toString(texto, ""), Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "")
-                .toLowerCase(Locale.ROOT)
-                .replaceAll("[^a-z0-9]+", " ")
-                .trim();
-    }
 
     private String enmascarar(String correo) {
 

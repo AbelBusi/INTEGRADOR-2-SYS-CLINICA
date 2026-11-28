@@ -45,6 +45,16 @@ public class MedicamentoController {
                 .object(medicamentoServicio.similares(nombre, idExcluir)).build(), HttpStatus.OK);
     }
 
+    @Operation(summary = "Buscar medicamentos del catálogo",
+            description = "Solo activos. Con menos de 3 caracteres devuelve lista vacía. Máximo 10 resultados, con foto.")
+    @GetMapping("/buscar")
+    public ResponseEntity<MensajeResponse> buscar(@RequestParam String nombre) {
+
+        return new ResponseEntity<>(MensajeResponse.builder()
+                .mensaje("Resultados de la búsqueda")
+                .object(medicamentoServicio.buscar(nombre)).build(), HttpStatus.OK);
+    }
+
     @Operation(summary = "Detalle de un medicamento")
     @GetMapping("/{id}")
     public ResponseEntity<MensajeResponse> detalle(@PathVariable Integer id) {

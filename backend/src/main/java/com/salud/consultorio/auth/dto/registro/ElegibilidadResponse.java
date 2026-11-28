@@ -4,5 +4,7 @@ public record ElegibilidadResponse(
         EstadoRegistro estado,
         String mensaje,
         boolean tieneCorreo,
-        String correoEnmascarado
+        String correoEnmascarado,
+        String nombresEnmascarados,
+        String apellidosEnmascarados
 ) {}
