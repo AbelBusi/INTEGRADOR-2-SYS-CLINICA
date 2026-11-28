@@ -12,10 +12,10 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
-import { SelloFirmaComponent } from '../sello-firma/sello-firma.component';
 
 import { ToastService } from '../../../../core/services/toast.service';
 import { CitaFila } from '../../../../features/clinica/citas/interface/cita.interface';
+import { DescansoCancelarModalComponent } from '../../../../features/clinica/descansos-medicos/components/descanso-cancelar-modal/descanso-cancelar-modal.component';
 import { ESTABLECIMIENTO } from '../../constants/documento-clinico.constants';
 import {
   DescansoMedico,
@@ -25,22 +25,35 @@ import {
 import { ArchivoGenerado } from '../../interface/documento-clinico.interface';
 import { DescansoMedicoService } from '../../services/descanso-medico.service';
 import {
+  LIMITE_DIAS_DESCANSO,
+  MINUTOS_PARA_CANCELAR,
   calcularDias,
   etiquetaMetodo,
+  formatearCuenta,
   formatearFecha,
   formatearFechaHora,
-  hoyIso,
   hashCorto,
+  hoyIso,
   mensajeError,
+  sumarDias,
   textoDias,
 } from '../../utils/descanso-medico.util';
 import { abrirEnPestana, descargarArchivo } from '../../utils/pdf-salida.util';
+import { DescansoPoliticasModalComponent } from '../descanso-politicas-modal/descanso-politicas-modal.component';
 import { DescansoVerificacionModalComponent } from '../descanso-verificacion-modal/descanso-verificacion-modal.component';
+import { SelloFirmaComponent } from '../sello-firma/sello-firma.component';
 
 @Component({
   selector: 'app-descanso-medico-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, DescansoVerificacionModalComponent, SelloFirmaComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    DescansoVerificacionModalComponent,
+    DescansoPoliticasModalComponent,
+    DescansoCancelarModalComponent,
+    SelloFirmaComponent,
+  ],
   templateUrl: './descanso-medico-modal.component.html',
 })
 export class DescansoMedicoModalComponent implements OnInit, OnDestroy {
@@ -51,15 +64,20 @@ export class DescansoMedicoModalComponent implements OnInit, OnDestroy {
   private readonly sanitizer = inject(DomSanitizer);
   private readonly toast = inject(ToastService);
 
+  private temporizador: ReturnType<typeof setInterval> | null = null;
+
   readonly limiteJustificacion = 1000;
+  readonly limiteDias = LIMITE_DIAS_DESCANSO;
+  readonly minutosCancelacion = MINUTOS_PARA_CANCELAR;
   readonly hoy = hoyIso();
   readonly establecimiento = ESTABLECIMIENTO.nombre;
   readonly logoUrl = ESTABLECIMIENTO.logoUrl;
-  readonly hashCorto = hashCorto;
+
   readonly formatearFecha = formatearFecha;
   readonly formatearFechaHora = formatearFechaHora;
   readonly textoDias = textoDias;
   readonly etiquetaMetodo = etiquetaMetodo;
+  readonly hashCorto = hashCorto;
 
   cargando = signal(true);
   errorCarga = signal<string | null>(null);
@@ -69,8 +87,11 @@ export class DescansoMedicoModalComponent implements OnInit, OnDestroy {
   fechaFin = signal('');
   dias = signal<number | null>(null);
   justificacion = signal('');
+  aceptaPoliticas = signal(false);
   intentado = signal(false);
 
+  mostrarPoliticas = signal(false);
+  mostrarCancelar = signal(false);
   verificando = signal(false);
   emitiendo = signal(false);
   errorVerificacion = signal<string | null>(null);
@@ -80,12 +101,36 @@ export class DescansoMedicoModalComponent implements OnInit, OnDestroy {
   generandoPdf = signal(false);
   errorPdf = signal<string | null>(null);
 
+  reloj = signal(Date.now());
+  recibidoEn = signal(Date.now());
+
   descanso = computed(() => this.contexto()?.descanso ?? null);
   datos = computed(() => this.contexto()?.datos ?? null);
   puedeEmitir = computed(() => !this.descanso() && (this.contexto()?.puedeEmitir ?? false));
-  bloqueado = computed(() => !this.descanso() && !this.puedeEmitir());
+  bloqueadoSinDescanso = computed(
+    () => !!this.contexto() && !this.descanso() && !this.puedeEmitir(),
+  );
+  plazoVencido = computed(
+    () => this.bloqueadoSinDescanso() && this.contexto()?.codigoBloqueo === 'PLAZO_VENCIDO',
+  );
+
+  segundosCancelar = computed(() => {
+    const d = this.descanso();
+
+    if (!d || d.estado !== 'VIGENTE' || d.segundosParaCancelar == null) {
+      return 0;
+    }
+
+    const transcurridos = Math.floor((this.reloj() - this.recibidoEn()) / 1000);
+    return Math.max(0, d.segundosParaCancelar - transcurridos);
+  });
+  puedeCancelar = computed(() => this.segundosCancelar() > 0);
+  cuentaCancelar = computed(() => formatearCuenta(this.segundosCancelar()));
 
   diasCalculados = computed(() => calcularDias(this.fechaInicio(), this.fechaFin()));
+  fechaMaxima = computed(() =>
+    this.fechaInicio() ? sumarDias(this.fechaInicio(), this.limiteDias - 1) : '',
+  );
 
   errores = computed<ErroresDescanso>(() => {
     const e: ErroresDescanso = {};
@@ -104,16 +149,24 @@ export class DescansoMedicoModalComponent implements OnInit, OnDestroy {
       e.fechaFin = 'La fecha de fin es obligatoria.';
     } else if (inicio && fin < inicio) {
       e.fechaFin = 'La fecha de fin no puede ser anterior a la de inicio.';
+    } else if (calculados !== null && calculados > this.limiteDias) {
+      e.fechaFin = `El periodo no puede superar los ${this.limiteDias} días.`;
     }
 
     if (dias === null || dias < 1) {
       e.dias = 'Indica la cantidad de días.';
+    } else if (dias > this.limiteDias) {
+      e.dias = `No puede superar los ${this.limiteDias} días.`;
     } else if (calculados !== null && dias !== calculados) {
       e.dias = `No corresponde al periodo indicado (${calculados}).`;
     }
 
     if (!this.justificacion().trim()) {
       e.justificacion = 'La justificación médica es obligatoria.';
+    }
+
+    if (!this.aceptaPoliticas()) {
+      e.politicas = 'Debes aceptar las políticas y términos.';
     }
 
     return e;
@@ -131,6 +184,7 @@ export class DescansoMedicoModalComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.detenerReloj();
     this.service.liberar(this.archivo());
   }
 
@@ -145,6 +199,7 @@ export class DescansoMedicoModalComponent implements OnInit, OnDestroy {
         this.cargando.set(false);
 
         if (contexto?.descanso) {
+          this.iniciarReloj();
           void this.generarPdf(contexto.descanso);
         }
       },
@@ -156,6 +211,27 @@ export class DescansoMedicoModalComponent implements OnInit, OnDestroy {
         this.cargando.set(false);
       },
     });
+  }
+
+  private iniciarReloj(): void {
+    this.detenerReloj();
+    this.recibidoEn.set(Date.now());
+    this.reloj.set(Date.now());
+
+    this.temporizador = setInterval(() => {
+      this.reloj.set(Date.now());
+
+      if (this.segundosCancelar() <= 0) {
+        this.detenerReloj();
+      }
+    }, 1000);
+  }
+
+  private detenerReloj(): void {
+    if (this.temporizador !== null) {
+      clearInterval(this.temporizador);
+      this.temporizador = null;
+    }
   }
 
   cambiarFechaInicio(valor: string): void {
@@ -174,6 +250,11 @@ export class DescansoMedicoModalComponent implements OnInit, OnDestroy {
     if (calculados !== null) {
       this.dias.set(calculados);
     }
+  }
+
+  alAceptarPoliticas(): void {
+    this.aceptaPoliticas.set(true);
+    this.mostrarPoliticas.set(false);
   }
 
   solicitarEmision(): void {
@@ -215,10 +296,19 @@ export class DescansoMedicoModalComponent implements OnInit, OnDestroy {
           const descanso = response.object as DescansoMedico;
 
           this.contexto.update((c) =>
-            c ? { ...c, descanso, puedeEmitir: false, motivoBloqueo: null } : c,
+            c
+              ? {
+                  ...c,
+                  descanso,
+                  puedeEmitir: false,
+                  motivoBloqueo: null,
+                  codigoBloqueo: 'YA_EMITIDO',
+                }
+              : c,
           );
           this.emitiendo.set(false);
           this.verificando.set(false);
+          this.iniciarReloj();
           this.toast.success(response?.mensaje || 'Descanso médico generado con éxito');
           void this.generarPdf(descanso);
         },
@@ -236,6 +326,23 @@ export class DescansoMedicoModalComponent implements OnInit, OnDestroy {
           this.cargar();
         },
       });
+  }
+
+  alCancelarDescanso(cancelado: DescansoMedico): void {
+    this.mostrarCancelar.set(false);
+    this.detenerReloj();
+    this.service.liberar(this.archivo());
+    this.archivo.set(null);
+
+    this.fechaInicio.set(cancelado.fechaInicio);
+    this.fechaFin.set(cancelado.fechaFin);
+    this.dias.set(cancelado.dias);
+    this.justificacion.set(cancelado.justificacion);
+    this.aceptaPoliticas.set(false);
+    this.intentado.set(false);
+    this.errorEmision.set(null);
+
+    this.cargar();
   }
 
   async generarPdf(descanso: DescansoMedico): Promise<void> {

@@ -34,13 +34,17 @@ export interface DescansoMedico {
   firma: string;
   hashContenido: string;
   cancelacion: CancelacionDescanso | null;
+  segundosParaCancelar: number | null;
 }
+
+export type CodigoBloqueo = 'YA_EMITIDO' | 'NO_ATENDIDA' | 'PLAZO_VENCIDO' | 'NO_RESPONSABLE';
 
 export interface DescansoMedicoContexto {
   descanso: DescansoMedico | null;
   datos: DescansoMedicoDatosBase;
   puedeEmitir: boolean;
   motivoBloqueo: string | null;
+  codigoBloqueo: CodigoBloqueo | null;
   venceEmision: string | null;
 }
 
@@ -84,4 +88,25 @@ export interface ErroresDescanso {
   fechaFin?: string;
   dias?: string;
   justificacion?: string;
+  politicas?: string;
+}
+
+export type EstadoVerificacion = 'VIGENTE' | 'CANCELADO' | 'ALTERADO' | 'NO_ENCONTRADO';
+
+export interface VerificacionDescanso {
+  estado: EstadoVerificacion;
+  numero: string | null;
+  fechaEmision: string | null;
+  fechaInicio: string | null;
+  fechaFin: string | null;
+  dias: number | null;
+  medicoNombre: string | null;
+  medicoEspecialidad: string | null;
+  medicoColegiatura: string | null;
+  pacienteNombre: string | null;
+  pacienteDocumento: string | null;
+  hashContenido: string | null;
+  tipoFirma: string | null;
+  firmaIntegra: boolean;
+  fechaCancelacion: string | null;
 }

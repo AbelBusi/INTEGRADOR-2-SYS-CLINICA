@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
@@ -14,6 +14,8 @@ import {
   hashCorto,
   mensajeError,
   textoDias,
+  formatearCuenta,
+  MINUTOS_PARA_CANCELAR,
 } from '../../../../../shared/documentos-clinicos/utils/descanso-medico.util';
 import { DescansoCancelarModalComponent } from '../../components/descanso-cancelar-modal/descanso-cancelar-modal.component';
 import { DescansoDetalleModalComponent } from '../../components/descanso-detalle-modal/descanso-detalle-modal.component';
@@ -35,12 +37,15 @@ type FiltroEstado = 'todos' | 'vigente' | 'cancelado';
   ],
   templateUrl: './lista-descansos-medicos.component.html',
 })
-export class ListaDescansosMedicosComponent implements OnInit {
+export class ListaDescansosMedicosComponent implements OnInit, OnDestroy {
   search = '';
   documentos: DescansoMedico[] = [];
   cargando = false;
   sortField = 'fechaEmision';
   filtroEstado: FiltroEstado = 'todos';
+  private cargadoEn = Date.now();
+  private temporizador: ReturnType<typeof setInterval> | null = null;
+  readonly minutosCancelacion = MINUTOS_PARA_CANCELAR;
 
   documentoVer: DescansoMedico | null = null;
   documentoHistorial: DescansoMedico | null = null;
@@ -69,6 +74,30 @@ export class ListaDescansosMedicosComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+
+    this.temporizador = setInterval(() => {
+      if (this.documentos.some((d) => this.segundosParaCancelar(d) > 0)) {
+        this.cdr.detectChanges();
+      }
+    }, 1000);
+  }
+
+  segundosParaCancelar(doc: DescansoMedico): number {
+    if (doc.estado !== 'VIGENTE' || doc.segundosParaCancelar == null) {
+      return 0;
+    }
+
+    return Math.max(0, doc.segundosParaCancelar - Math.floor((Date.now() - this.cargadoEn) / 1000));
+  }
+
+  cuenta(doc: DescansoMedico): string {
+    return formatearCuenta(this.segundosParaCancelar(doc));
+  }
+
+  ngOnDestroy(): void {
+    if (this.temporizador !== null) {
+      clearInterval(this.temporizador);
+    }
   }
 
   cargar(): void {
@@ -77,6 +106,7 @@ export class ListaDescansosMedicosComponent implements OnInit {
     this.descansoService.listarMisDocumentos().subscribe({
       next: (response) => {
         this.documentos = response.object || [];
+        this.cargadoEn = Date.now();
         this.cargando = false;
         this.cdr.detectChanges();
       },

@@ -1,0 +1,90 @@
+<div class="fixed inset-0 z-[95] overflow-y-auto bg-neutral-900/50" (click)="close.emit()">
+  <div class="flex min-h-full items-center justify-center p-4">
+
+    <div
+      class="w-full max-w-2xl overflow-hidden rounded border border-neutral-300 bg-white"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="politicas-titulo"
+      (click)="$event.stopPropagation()">
+
+      <div class="flex items-center justify-between bg-[#58595B] px-6 py-4">
+        <h3 id="politicas-titulo" class="flex items-center gap-2.5 text-base font-bold text-white">
+          <div class="flex h-7 w-7 items-center justify-center rounded bg-[#D9182A]">
+            <span class="material-icons text-[18px] text-white">policy</span>
+          </div>
+          Políticas y términos de emisión
+        </h3>
+        <button type="button" (click)="close.emit()" aria-label="Cerrar"
+                class="rounded p-1 text-neutral-300 transition-colors hover:bg-neutral-700 hover:text-white">
+          <span class="material-icons text-[20px]">close</span>
+        </button>
+      </div>
+
+      <div class="flex h-1">
+        <div class="w-1/2 bg-[#58595B]"></div>
+        <div class="w-1/2 bg-[#D9182A]"></div>
+      </div>
+
+      <div class="max-h-[62vh] space-y-4 overflow-y-auto p-6">
+
+        <p class="text-sm leading-6 text-neutral-700">
+          Antes de generar un descanso médico, revisa las condiciones con las que opera el establecimiento. Estas reglas son
+          políticas internas; no sustituyen el criterio clínico del médico ni la normativa vigente.
+        </p>
+
+        <ol class="space-y-3">
+          @for (politica of politicas; track politica.titulo; let i = $index) {
+            <li class="rounded border border-neutral-200 bg-white">
+              <div class="flex items-start gap-3 px-4 py-3">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-[#58595B] text-xs font-bold text-white">
+                  {{ i + 1 }}
+                </span>
+                <div class="min-w-0">
+                  <p class="text-sm font-bold text-neutral-900">{{ politica.titulo }}</p>
+                  <p class="mt-1 text-sm leading-5 text-neutral-700">{{ politica.detalle }}</p>
+                </div>
+              </div>
+              <div class="border-t border-neutral-100 border-l-2 border-l-[#D9182A] bg-neutral-50 px-4 py-2.5">
+                <p class="text-[10px] font-bold uppercase tracking-wide text-neutral-500">Sustento</p>
+                <p class="text-xs leading-5 text-neutral-700">{{ politica.sustento }}</p>
+              </div>
+            </li>
+          }
+        </ol>
+
+        <div class="rounded border border-neutral-200 bg-neutral-50 px-4 py-3">
+          <p class="text-[10px] font-bold uppercase tracking-wide text-neutral-500">Marco de referencia</p>
+          <p class="mt-1 text-xs leading-5 text-neutral-700">
+            Ley N.º 26842, Ley General de Salud · Ley N.º 29733, Ley de Protección de Datos Personales · Ley N.º 27269,
+            Ley de Firmas y Certificados Digitales. Los plazos y límites indicados son políticas internas del establecimiento.
+          </p>
+        </div>
+
+        @if (!soloLectura) {
+          <div class="border-l-2 border-l-[#58595B] bg-neutral-50 px-4 py-3">
+            <p class="text-[10px] font-bold uppercase tracking-wide text-neutral-500">Declaración del médico</p>
+            <p class="mt-1 text-sm leading-5 text-neutral-700">
+              Al aceptar, declaro que otorgo el descanso médico según mi criterio clínico y mi evaluación del paciente, que
+              la información consignada es veraz y que conozco que esta emisión queda registrada en auditoría.
+            </p>
+          </div>
+        }
+      </div>
+
+      <div class="flex flex-col-reverse gap-3 border-t border-neutral-200 bg-neutral-50 px-6 py-3 sm:flex-row sm:justify-end">
+        <button type="button" (click)="close.emit()"
+                class="rounded border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900">
+          Cerrar
+        </button>
+        @if (!soloLectura) {
+          <button type="button" (click)="aceptar.emit()"
+                  class="rounded bg-[#D9182A] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#B81424]">
+            Aceptar políticas y términos
+          </button>
+        }
+      </div>
+
+    </div>
+  </div>
+</div>

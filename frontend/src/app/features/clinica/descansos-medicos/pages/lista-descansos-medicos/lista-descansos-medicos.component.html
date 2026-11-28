@@ -167,15 +167,25 @@
             <span class="material-icons text-[18px]">history</span>
             Historial
           </button>
-
           @if (row.estado === 'VIGENTE') {
-            <button
-              type="button"
-              (click)="documentoCancelar = row"
-              class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] transition-colors">
-              <span class="material-icons text-[18px]">event_busy</span>
-              Cancelar
-            </button>
+            @if (segundosParaCancelar(row) > 0) {
+              <button
+                type="button"
+                (click)="documentoCancelar = row"
+                title="Puedes cancelarlo hasta 20 minutos después de su emisión"
+                class="inline-flex items-center gap-1.5 px-3 h-9 rounded-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:border-[#D9182A] hover:bg-[#D9182A]/10 hover:text-[#D9182A] transition-colors">
+                <span class="material-icons text-[18px]">event_busy</span>
+                Cancelar
+                <span class="font-mono text-xs text-[#D9182A]">{{ cuenta(row) }}</span>
+              </button>
+            } @else {
+              <span
+                class="inline-flex items-center gap-1.5 px-3 h-9 text-xs font-medium text-gray-400"
+                title="Solo se puede cancelar dentro de los 20 minutos posteriores a la emisión">
+                <span class="material-icons text-[16px]">lock</span>
+                Cancelación cerrada
+              </span>
+            }
           }
 
         </div>

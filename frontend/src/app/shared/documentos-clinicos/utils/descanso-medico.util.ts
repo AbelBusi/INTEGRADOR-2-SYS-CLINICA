@@ -87,3 +87,29 @@ export function formatearFechaEvento(iso: string | null | undefined): string {
 
   return `${dia} · ${hora}`;
 }
+
+export const LIMITE_DIAS_DESCANSO = 30;
+export const MINUTOS_PARA_CANCELAR = 20;
+
+/** Suma días a una fecha 'YYYY-MM-DD' sin pasar por zonas horarias. */
+export function sumarDias(iso: string, dias: number): string {
+  if (!iso) {
+    return '';
+  }
+
+  const [a, m, d] = iso.split('-').map(Number);
+  const fecha = new Date(Date.UTC(a, m - 1, d + dias));
+
+  return `${fecha.getUTCFullYear()}-${pad(fecha.getUTCMonth() + 1)}-${pad(fecha.getUTCDate())}`;
+}
+
+/** 872 -> '14:32' */
+export function formatearCuenta(segundos: number): string {
+  const total = Math.max(0, Math.floor(segundos));
+  return `${pad(Math.floor(total / 60))}:${pad(total % 60)}`;
+}
+
+/** URL pública que se imprime en el QR del documento. */
+export function urlVerificacion(codigoDocumento: string): string {
+  return `${window.location.origin}/verificar/${codigoDocumento}`;
+}

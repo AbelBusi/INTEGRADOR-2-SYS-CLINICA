@@ -8,6 +8,7 @@ import {
   formatearFecha,
   formatearFechaHora,
   textoDias,
+  urlVerificacion,
 } from '../utils/descanso-medico.util';
 
 const MARGEN = 20;
@@ -29,7 +30,8 @@ export async function generarPdfDescansoMedico(
   const { jsPDF: JsPdf } = await import('jspdf');
   const doc = new JsPdf({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
   const cancelado = descanso.estado === 'CANCELADO';
-
+  const url = urlVerificacion(descanso.codigoDocumento);
+  const qr = await generarQr(url);
   doc.setProperties({
     title: `Descanso médico ${descanso.numero}${cancelado ? ' (cancelado)' : ''}`,
     subject: descanso.numero,
@@ -108,11 +110,8 @@ export async function generarPdfDescansoMedico(
   doc.setFont('courier', 'normal');
   doc.setFontSize(8);
   doc.text(`ID ${descanso.codigoDocumento}`, x0, y + 27.5);
-
+  dibujarQr(doc, qr, ANCHO_PAGINA - MARGEN - 26.5, y, 25);
   y += 33;
-  y = filaMono(doc, `Firma (${descanso.algoritmoFirma})`, descanso.firma, y);
-  y = filaMono(doc, 'Huella SHA-256', descanso.hashContenido, y);
-
   // ---- Cancelación ----
   if (cancelado && descanso.cancelacion) {
     y = asegurarEspacio(doc, y + 3, 40);
@@ -122,7 +121,7 @@ export async function generarPdfDescansoMedico(
     y = fila(doc, 'Motivo', descanso.cancelacion.motivo, y);
   }
 
-  pieDePagina(doc, cancelado);
+  pieDePagina(doc, cancelado, url);
 
   return doc.output('blob');
 }
@@ -289,23 +288,6 @@ function fila(doc: jsPDF, etiqueta: string, valor: string, y: number): number {
   return y + lineas.length * 5 + 1;
 }
 
-function filaMono(doc: jsPDF, etiqueta: string, valor: string, y: number): number {
-  const lineas = valor.match(/.{1,32}/g) ?? [valor];
-  y = asegurarEspacio(doc, y, lineas.length * 4 + 2);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(9);
-  doc.setTextColor(...GRIS);
-  doc.text(etiqueta, MARGEN, y);
-
-  doc.setFont('courier', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(...TEXTO);
-  lineas.forEach((linea, i) => doc.text(linea, X_VALOR, y + i * 4));
-
-  return y + lineas.length * 4 + 2;
-}
-
 function asegurarEspacio(doc: jsPDF, y: number, necesario: number): number {
   if (y + necesario <= ALTO_PAGINA - 22) {
     return y;
@@ -317,7 +299,26 @@ function asegurarEspacio(doc: jsPDF, y: number, necesario: number): number {
   return MARGEN;
 }
 
-function pieDePagina(doc: jsPDF, cancelado: boolean): void {
+async function generarQr(url: string): Promise<string> {
+  const modulo = await import('qrcode');
+  const fabrica = (modulo as unknown as { default?: typeof modulo }).default ?? modulo;
+
+  return fabrica.toDataURL(url, { margin: 0, width: 300, errorCorrectionLevel: 'M' });
+}
+
+function dibujarQr(doc: jsPDF, dataUrl: string, x: number, y: number, lado: number): void {
+  doc.setDrawColor(...GRIS);
+  doc.setLineWidth(0.3);
+  doc.rect(x - 1.5, y - 1.5, lado + 3, lado + 3, 'S');
+  doc.addImage(dataUrl, 'PNG', x, y, lado, lado);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...GRIS);
+  doc.text('ESCANEE PARA VERIFICAR', x + lado / 2, y + lado + 5, { align: 'center' });
+}
+
+function pieDePagina(doc: jsPDF, cancelado: boolean, url: string): void {
   const total = doc.getNumberOfPages();
 
   for (let pagina = 1; pagina <= total; pagina++) {
@@ -328,14 +329,22 @@ function pieDePagina(doc: jsPDF, cancelado: boolean): void {
     }
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
     doc.setTextColor(...GRIS);
+
+    doc.setFontSize(7);
+    doc.text(`Verificación pública: ${url}`, ANCHO_PAGINA / 2, ALTO_PAGINA - 16, {
+      align: 'center',
+    });
+
+    doc.setFontSize(8);
     doc.text(
-      'Documento emitido con firma electrónica interna del establecimiento.',
+      'Documento emitido con firma electrónica interna del establecimiento. No constituye firma digital certificada.',
       ANCHO_PAGINA / 2,
       ALTO_PAGINA - 12,
       { align: 'center' },
     );
-    doc.text(`Página ${pagina} de ${total}`, ANCHO_PAGINA / 2, ALTO_PAGINA - 8, { align: 'center' });
+    doc.text(`Página ${pagina} de ${total}`, ANCHO_PAGINA / 2, ALTO_PAGINA - 8, {
+      align: 'center',
+    });
   }
 }

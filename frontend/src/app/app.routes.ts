@@ -14,6 +14,13 @@ export const routes: Routes = [
       import('./features/auth/pages/login/login.component').then((m) => m.LoginComponent),
   },
   {
+    path: 'verificar/:codigo',
+    loadComponent: () =>
+      import('./features/verificacion/pages/verificar-descanso/verificar-descanso.component').then(
+        (m) => m.VerificarDescansoComponent,
+      ),
+  },
+  {
     path: 'dashboard',
     canActivate: [authGuard],
     loadComponent: () =>
