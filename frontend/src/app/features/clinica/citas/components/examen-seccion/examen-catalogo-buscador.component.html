@@ -1,0 +1,61 @@
+<div class="relative">
+
+  <div class="flex h-11 items-center gap-2 border border-neutral-400 bg-white px-3 focus-within:border-[#58595B]">
+    <span class="material-icons text-[20px] text-neutral-400">search</span>
+
+    <input
+      type="text"
+      autocomplete="off"
+      maxlength="150"
+      [value]="texto()"
+      (input)="alEscribir($any($event.target).value)"
+      (focus)="abierto.set(true)"
+      (blur)="abierto.set(false)"
+      placeholder="Buscar examen del catálogo..."
+      class="w-full bg-transparent text-sm text-neutral-900 outline-none placeholder:text-neutral-400"
+    />
+
+    @if (valor) {
+      <button
+        type="button"
+        title="Quitar selección"
+        (mousedown)="$event.preventDefault()"
+        (click)="limpiar()"
+        class="flex shrink-0 items-center text-neutral-400 hover:text-[#D9182A]">
+        <span class="material-icons text-[18px]">close</span>
+      </button>
+    }
+  </div>
+
+  @if (abierto() && texto().trim().length >= minCaracteres) {
+    <ul class="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto border border-neutral-300 bg-white shadow-sm">
+      @for (e of resultados(); track e.id) {
+        <li>
+          <button
+            type="button"
+            (mousedown)="$event.preventDefault(); seleccionar(e)"
+            class="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-neutral-50">
+            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-100">
+              <span class="material-icons text-[19px] text-[#58595B]">science</span>
+            </div>
+            <div class="min-w-0">
+              <p class="truncate text-sm font-bold text-neutral-900">{{ e.nombre }}</p>
+              <p class="truncate text-xs text-neutral-500">{{ e.tipoExamen }}</p>
+            </div>
+          </button>
+        </li>
+      } @empty {
+        <li class="px-3 py-3 text-sm text-neutral-500">
+          {{ buscando() ? 'Buscando...' : 'Sin coincidencias en el catálogo.' }}
+        </li>
+      }
+    </ul>
+  }
+
+  @if (texto().trim() && !valor && !abierto()) {
+    <p class="mt-1 text-xs font-medium text-[#D9182A]">Debes seleccionar un examen de la lista.</p>
+  } @else {
+    <p class="mt-1 text-xs text-neutral-500">Escribe al menos 3 caracteres del nombre del examen.</p>
+  }
+
+</div>

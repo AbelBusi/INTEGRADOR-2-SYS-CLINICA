@@ -1,6 +1,9 @@
-import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ExamenMedicoBusqueda } from '../../../examen-medico/interface/examen-medico.interface';
+import { ExamenCatalogoBuscadorComponent } from './examen-catalogo-buscador.component';
+import { ExamenMedicoService } from '../../../examen-medico/services/examen-medico.service';
 
 import { ToastService } from '../../../../../core/services/toast.service';
 import {
@@ -19,17 +22,23 @@ import { ExamenEditarComponent } from './examen-editar.component';
 @Component({
   selector: 'app-examen-seccion',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, ExamenEditarComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    ExamenEditarComponent,
+    ExamenCatalogoBuscadorComponent,
+  ],
   templateUrl: './examen-seccion.component.html',
 })
-export class ExamenSeccionComponent {
+export class ExamenSeccionComponent implements OnInit {
   @Input({ required: true }) idDiagnostico!: number;
   @Input() examenes: ExamenSolicitado[] = [];
   @Input() soloLectura = false;
   @Output() creado = new EventEmitter<void>();
   @Output() editado = new EventEmitter<void>();
   @Output() eliminado = new EventEmitter<void>();
-
+  private readonly examenMedicoService = inject(ExamenMedicoService);
+  private readonly tiposCatalogo = signal<Map<string, string>>(new Map());
   private readonly fb = inject(FormBuilder);
   private readonly examenService = inject(ExamenSolicitadoService);
   private readonly toastService = inject(ToastService);
@@ -61,6 +70,19 @@ export class ExamenSeccionComponent {
     this.mostrarFormulario.set(!this.mostrarFormulario());
   }
 
+  seleccionarExamenCatalogo(examen: ExamenMedicoBusqueda): void {
+    this.form.patchValue({
+      nombreExamen: examen.nombre,
+      tipoExamen: examen.tipoExamen,
+    });
+    this.form.controls.tipoExamen.disable();
+  }
+
+  limpiarExamenCatalogo(): void {
+    this.form.patchValue({ nombreExamen: '', tipoExamen: '' });
+    this.form.controls.tipoExamen.enable();
+  }
+
   guardar(): void {
     if (this.form.invalid || this.guardando()) {
       this.form.markAllAsTouched();
@@ -75,6 +97,7 @@ export class ExamenSeccionComponent {
         this.toastService.success(response?.mensaje || 'Examen registrado con éxito');
         this.guardando.set(false);
         this.form.reset({ prioridad: 'NORMAL', requiereAyuno: false });
+        this.form.controls.tipoExamen.enable();
         this.mostrarFormulario.set(false);
         this.creado.emit();
       },
@@ -86,6 +109,25 @@ export class ExamenSeccionComponent {
         this.guardando.set(false);
       },
     });
+  }
+
+  ngOnInit(): void {
+    this.examenMedicoService.listarResumen().subscribe({
+      next: (response) => {
+        this.tiposCatalogo.set(
+          new Map((response.object || []).map((e) => [this.claveNombre(e.nombre), e.tipoExamen])),
+        );
+      },
+      error: (error) => console.error(error), // si falla, se muestra el tipo guardado
+    });
+  }
+
+  tipoActual(examen: ExamenSolicitado): string {
+    return this.tiposCatalogo().get(this.claveNombre(examen.nombreExamen)) ?? examen.tipoExamen;
+  }
+
+  private claveNombre(nombre: string): string {
+    return (nombre ?? '').trim().toLowerCase();
   }
 
   iniciarEdicion(id: number): void {

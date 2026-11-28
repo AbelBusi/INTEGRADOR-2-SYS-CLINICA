@@ -24,20 +24,17 @@
 
       <div class="md:col-span-2">
         <label class="mb-1 block text-sm font-semibold text-neutral-700">Nombre del examen</label>
-        <input
-          type="text"
-          formControlName="nombreExamen"
-          maxlength="150"
-          placeholder="Ej. Hemograma completo, Radiografía de tórax"
-          class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-[#58595B]"
-        />
+        <app-examen-catalogo-buscador
+          [valor]="form.controls.nombreExamen.value"
+          (seleccionado)="seleccionarExamenCatalogo($event)"
+          (limpiado)="limpiarExamenCatalogo()" />
       </div>
 
       <div>
         <label class="mb-1 block text-sm font-semibold text-neutral-700">Tipo de examen</label>
         <select
           formControlName="tipoExamen"
-          class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B]">
+          class="h-11 w-full border border-neutral-400 bg-white px-3 text-sm text-neutral-900 outline-none focus:border-[#58595B] disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500">
           <option value="" disabled>Seleccionar tipo de examen</option>
           @for (tipo of tipos; track tipo) {
             <option [value]="tipo">{{ tipo }}</option>
@@ -122,6 +119,7 @@
             <app-examen-editar
               [idDiagnostico]="idDiagnostico"
               [examen]="e"
+              [tipoActual]="tipoActual(e)"
               (editado)="alEditado()"
               (cancelado)="cancelarEdicion()" />
           } @else {
@@ -136,7 +134,7 @@
                   <div class="flex flex-wrap items-center gap-2">
                     <p class="text-sm font-bold text-neutral-900">{{ e.nombreExamen }}</p>
                     <span class="border border-neutral-300 bg-neutral-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-neutral-700">
-                      {{ e.tipoExamen }}
+                      {{ tipoActual(e) }}
                     </span>
                     <span
                       class="border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide"

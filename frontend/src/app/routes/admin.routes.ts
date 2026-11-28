@@ -46,6 +46,24 @@ export const ADMIN_ROUTES: Routes = [
       },
       {
         canActivate: [permisoGuard],
+        path: 'medicamentos',
+        data: { roles: ['ADMINISTRADOR'] },
+        loadComponent: () =>
+          import('../features/clinica/medicamentos/pages/lista-medicamentos/lista-medicamentos.component').then(
+            (m) => m.ListaMedicamentosComponent,
+          ),
+      },
+      {
+        canActivate: [permisoGuard],
+        path: 'examen-medico',
+        data: { roles: ['ADMINISTRADOR'] },
+        loadComponent: () =>
+          import('../features/clinica/examen-medico/pages/lista-examen-medico/lista-examen-medico.component').then(
+            (m) => m.ListaExamenMedicoComponent,
+          ),
+      },
+      {
+        canActivate: [permisoGuard],
         path: 'cargos',
         data: { permisos: ['CARGO_VER'] },
         loadComponent: () =>

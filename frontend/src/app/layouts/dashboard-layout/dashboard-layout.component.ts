@@ -1,4 +1,4 @@
-import { Component, inject, computed, signal, OnInit } from '@angular/core';
+import { Component, HostListener, inject, computed, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet, NavigationEnd } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
@@ -51,7 +51,11 @@ export class DashboardLayoutComponent implements OnInit {
   rolActivo = this.authService.getRole()[0] ?? '';
   readonly cambioClave = inject(CambioClaveService);
 
-  open = true;
+  /** Ancho (px) desde el cual el menú lateral es fijo (breakpoint `lg` de Tailwind). */
+  private static readonly ANCHO_ESCRITORIO = 1024;
+
+  /** En celular el menú nace cerrado: es un panel superpuesto, no una barra fija. */
+  open = this.esEscritorio();
   expandedItem: string | null = 'Inicio';
 
   usuarioInfo = signal<UsuarioRolInfo | null>(null);
@@ -100,9 +104,6 @@ export class DashboardLayoutComponent implements OnInit {
       return true;
     });
 
-    console.log('Rol activo:', this.authService.getActiveRole());
-    console.log('Roles del token:', this.authService.getRole());
-
     let grupoAnterior: string | undefined;
 
     return visibles.map((item) => {
@@ -150,8 +151,32 @@ export class DashboardLayoutComponent implements OnInit {
   }
 
   abrirPerfil() {
+    this.cerrarEnMovil();
     this.perfilAbierto.set(true);
   }
+
+  private esEscritorio(): boolean {
+    return typeof window === 'undefined' || window.innerWidth >= DashboardLayoutComponent.ANCHO_ESCRITORIO;
+  }
+
+  /** En celular, al elegir una opción el menú se cierra solo y se ve la pantalla de inmediato. */
+  cerrarEnMovil() {
+    if (!this.esEscritorio()) {
+      this.open = false;
+    }
+  }
+
+  /** Al girar el celular o cambiar el tamaño: abierto en escritorio, cerrado en celular. */
+  @HostListener('window:resize')
+  alRedimensionar() {
+    const escritorio = this.esEscritorio();
+    if (escritorio !== this.menuEnEscritorio) {
+      this.menuEnEscritorio = escritorio;
+      this.open = escritorio;
+    }
+  }
+
+  private menuEnEscritorio = this.esEscritorio();
 
   cerrarPerfil() {
     this.perfilAbierto.set(false);

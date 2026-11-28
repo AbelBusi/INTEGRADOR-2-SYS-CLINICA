@@ -1,5 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ExamenMedicoBusqueda } from '../../../examen-medico/interface/examen-medico.interface';
+import { ExamenCatalogoBuscadorComponent } from './examen-catalogo-buscador.component';
 
 import { ToastService } from '../../../../../core/services/toast.service';
 import {
@@ -12,7 +14,7 @@ import { PRIORIDADES_EXAMEN, TIPOS_EXAMEN } from '../../utils/atencion-clinica.u
 @Component({
   selector: 'app-examen-editar',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, ExamenCatalogoBuscadorComponent],
   templateUrl: './examen-editar.component.html',
 })
 export class ExamenEditarComponent implements OnInit {
@@ -20,7 +22,7 @@ export class ExamenEditarComponent implements OnInit {
   @Input({ required: true }) examen!: ExamenSolicitado;
   @Output() editado = new EventEmitter<void>();
   @Output() cancelado = new EventEmitter<void>();
-
+  @Input() tipoActual = '';
   private readonly fb = inject(FormBuilder);
   private readonly examenService = inject(ExamenSolicitadoService);
   private readonly toastService = inject(ToastService);
@@ -42,13 +44,27 @@ export class ExamenEditarComponent implements OnInit {
   ngOnInit(): void {
     this.form.patchValue({
       nombreExamen: this.examen.nombreExamen,
-      tipoExamen: this.examen.tipoExamen,
+      tipoExamen: this.tipoActual || this.examen.tipoExamen,
       prioridad: this.examen.prioridad,
       requiereAyuno: this.examen.requiereAyuno,
       motivo: this.examen.motivo,
       indicaciones: this.examen.indicaciones ?? '',
       observacion: this.examen.observacion ?? '',
     });
+    this.form.controls.tipoExamen.disable();
+  }
+
+  seleccionarExamenCatalogo(examen: ExamenMedicoBusqueda): void {
+    this.form.patchValue({
+      nombreExamen: examen.nombre,
+      tipoExamen: examen.tipoExamen,
+    });
+    this.form.controls.tipoExamen.disable();
+  }
+
+  limpiarExamenCatalogo(): void {
+    this.form.patchValue({ nombreExamen: '', tipoExamen: '' });
+    this.form.controls.tipoExamen.enable();
   }
 
   guardar(): void {

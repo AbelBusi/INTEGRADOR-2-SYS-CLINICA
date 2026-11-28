@@ -201,9 +201,10 @@
 
               <a
                 [routerLink]="item.route"
+                (click)="cerrarEnMovil()"
                 routerLinkActive="bg-[#FDEBED] text-[#D9182A] font-bold border-l-2 border-[#D9182A]"
                 [title]="open ? '' : item.label"
-                class="sass-nav-item w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#58595B] hover:bg-neutral-100 hover:text-[#292929] transition-colors"
+                class="sass-nav-item w-full flex items-center gap-3 px-3 py-3 text-sm font-medium text-[#58595B] hover:bg-neutral-100 hover:text-[#292929] transition-colors lg:py-2"
                 [class.justify-center]="!open"
               >
 
@@ -225,7 +226,8 @@
 
               <button
                 (click)="toggleMenu(item.label)"
-                class="sass-nav-item w-full flex items-center gap-3 px-3 py-2 text-sm font-medium text-[#58595B] hover:bg-neutral-100 hover:text-[#292929] transition-colors"
+                [attr.aria-expanded]="expandedItem === item.label"
+                class="sass-nav-item w-full flex items-center gap-3 px-3 py-3 text-sm font-medium text-[#58595B] hover:bg-neutral-100 hover:text-[#292929] transition-colors lg:py-2"
                 [class.justify-center]="!open"
                 [class.bg-[#FDEBED]]="expandedItem === item.label && open"
                 [class.text-[#D9182A]]="expandedItem === item.label && open"
@@ -265,15 +267,16 @@
               @if (item.sub && expandedItem === item.label && open) {
 
                 <div
-                  class="mt-1 mb-2 pl-4 border-l border-neutral-200 ml-5 space-y-1"
+                  class="mt-1 mb-2 ml-6 border-l border-neutral-200 space-y-0.5"
                 >
 
                   @for (sub of item.sub; track sub.route) {
 
                     <a
                       [routerLink]="sub.route"
-                      routerLinkActive="text-[#D9182A] font-bold"
-                      class="sass-nav-item block px-2 py-1.5 text-xs font-medium text-[#58595B] hover:text-[#D9182A] transition-colors"
+                      (click)="cerrarEnMovil()"
+                      routerLinkActive="bg-[#FDEBED] text-[#D9182A] font-bold"
+                      class="sass-nav-item block w-full py-3 pl-4 pr-3 text-[13px] font-medium text-[#58595B] transition-colors hover:bg-neutral-100 hover:text-[#D9182A] lg:py-2"
                     >
                       {{ sub.label }}
                     </a>
